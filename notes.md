@@ -13,3 +13,5 @@ Contains some thoughts over the development time of the project.
 - Shift register is CMOS and the inputs have high-impedances so leaving out current limiting resistors.
   - However they are needed for N-MOSFET and P-MOSFET for example (to protect the device that is delivering the current).
   - I think they can be left out if the power supply delivers the current, and not a µC which has output current limitations.
+- Pullups for Logic Shifter Drains / Shift Register Inputs are not suitable for the full size board.
+  - It seems like it takes a few microseconds to charge up through a 10K, this will be a big problem depending on the video properties. 24fps / 8bpp will need much lower resistor values.
