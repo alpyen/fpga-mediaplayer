@@ -92,7 +92,7 @@
   (net 16 "ShiftRowData_n")
   (net 17 "ApplyNewRow_n")
   (net 18 "ApplyNewRowStrobe_n")
-  (net 19 "RowStrobeAdvance_n")
+  (net 19 "ShiftRowStrobe_n")
   (net 20 "RowStrobeIn_n")
   (net 21 "Net-(Q1-G)")
   (net 22 "Net-(Q1-D)")
@@ -272,7 +272,7 @@
     (pad "1" thru_hole circle (at 0 0) (size 1.6 1.6) (drill 0.8) (layers "*.Cu" "*.Mask")
       (net 53 "Net-(Q19-G)") (pintype "passive") (tstamp ea8df92d-18c3-45ad-876b-950191140279))
     (pad "2" thru_hole oval (at 7.62 0) (size 1.6 1.6) (drill 0.8) (layers "*.Cu" "*.Mask")
-      (net 19 "RowStrobeAdvance_n") (pintype "passive") (tstamp fbdfd2dc-78b2-43a3-a8ec-63bd59eaf0f0))
+      (net 19 "ShiftRowStrobe_n") (pintype "passive") (tstamp fbdfd2dc-78b2-43a3-a8ec-63bd59eaf0f0))
     (model "${KICAD6_3DMODEL_DIR}/Resistor_THT.3dshapes/R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal.wrl"
       (offset (xyz 0 0 0))
       (scale (xyz 1 1 1))
@@ -3390,7 +3390,7 @@
     (pad "7" thru_hole oval (at 0 7.62 180) (size 1.7 1.7) (drill 1) (layers "*.Cu" "*.Mask")
       (net 15 "RowDataIn_n") (pinfunction "Pin_7") (pintype "passive") (tstamp db11cf5d-2d5e-411b-83a8-aded5a02caae))
     (pad "8" thru_hole oval (at -2.54 7.62 180) (size 1.7 1.7) (drill 1) (layers "*.Cu" "*.Mask")
-      (net 19 "RowStrobeAdvance_n") (pinfunction "Pin_8") (pintype "passive") (tstamp 2072bdcd-a6a1-4c70-af5e-927702d00218))
+      (net 19 "ShiftRowStrobe_n") (pinfunction "Pin_8") (pintype "passive") (tstamp 2072bdcd-a6a1-4c70-af5e-927702d00218))
     (model "${KICAD6_3DMODEL_DIR}/Connector_PinSocket_2.54mm.3dshapes/PinSocket_2x04_P2.54mm_Horizontal.wrl"
       (offset (xyz 0 0 0))
       (scale (xyz 1 1 1))
