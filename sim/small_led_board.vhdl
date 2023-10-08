@@ -32,7 +32,7 @@ begin
     -- For ease of simulation we'll simply assume it can drive both.
     row_data_in <= not row_data_in_n;
     shift_row_data <= not shift_row_data_n;
-    apply_new_row <= apply_new_row_n;
+    apply_new_row <= not apply_new_row_n;
 
     row_strobe_in <= not row_strobe_in_n;
     shift_row_strobe <= not shift_row_strobe_n;

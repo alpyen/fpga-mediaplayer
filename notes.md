@@ -15,3 +15,5 @@ Contains some thoughts over the development time of the project.
   - I think they can be left out if the power supply delivers the current, and not a µC which has output current limitations.
 - Pullups for Logic Shifter Drains / Shift Register Inputs are not suitable for the full size board.
   - It seems like it takes a few microseconds to charge up through a 10K, this will be a big problem depending on the video properties. 24fps / 8bpp will need much lower resistor values.
+- The small board uses two shift registers for the column selection on purpose even though it could have been implemented with a single one.
+  - The only difference to the full size board will be that we are wiring QC to SER from the first to the second register and this only works if the data is present on QC, instead of it only being present in the buffer stage as for example with QH'.

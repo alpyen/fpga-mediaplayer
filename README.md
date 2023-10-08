@@ -3,8 +3,8 @@
 Stuff that needs to be done, may be incomplete.
 
 ## HDL
-- Write a functional model that represents the small LED board
-- Calculate timings / timing limits (shift register clocks, strobing frequency, ...)
+- Export the simulation helper constants and procedures into a different package
+
 
 # Project Goal
 

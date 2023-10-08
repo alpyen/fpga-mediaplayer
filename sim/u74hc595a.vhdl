@@ -29,7 +29,8 @@ begin
     q <= q_output when oe_n = '0' else (others => 'Z');
     qh_buf <= q_buffer(7);
 
-    buffer_stage: process (srclk, srclr_n) begin
+    buffer_stage: process (srclk, srclr_n)
+    begin
         if srclr_n = '0' then
             q_buffer <= (others => '0');
         elsif rising_edge(srclk) then
@@ -37,7 +38,8 @@ begin
         end if;
     end process;
 
-    output_stage: process (rclk) begin
+    output_stage: process (rclk)
+    begin
         if rising_edge(rclk) then
             q_output <= q_output_next;
         end if;
