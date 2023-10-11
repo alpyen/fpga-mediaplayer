@@ -1,17 +1,14 @@
-# Todos (in order)
+# Todos
 
-Stuff that needs to be done, may be incomplete.
+Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
 - Conceptually layout entities and their tasks
   - How to control the device?
   - How to feed data?
-- Finalize media specification that can be fed from the FPGA
-  - Resolution
-  - "Color" depth
-  - framerate
-  - Sample Rate
-  - "Sound" depth
+
+## Software
+- Codec development
 
 
 # Project Goal
