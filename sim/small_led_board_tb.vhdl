@@ -2,22 +2,13 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library work;
+use work.sim_pkg.all;
+
 entity small_led_board_tb is
 end entity;
 
-architecture tb of small_led_board_tb is
-    constant T: time := 10 ns;
-    
-    procedure sim_wait (clock_cycles: integer := 1) is
-    begin
-        wait for clock_cycles * T;
-    end procedure;
-
-    procedure sim_done is
-    begin
-        assert false report "Simulation done!" severity failure;
-    end procedure;
-
+architecture tb of small_led_board_tb is    
     signal 
         row_data_in, row_data_in_n, 
         shift_row_data, shift_row_data_n, 
@@ -32,14 +23,7 @@ architecture tb of small_led_board_tb is
 
     signal row_values: std_ulogic_vector(7 downto 0);
     signal row_selection_values: std_ulogic_vector(15 downto 0);
-    
-    signal clk: std_ulogic := '0';
 begin
-	process begin
-		wait for T/2;
-		clk <= not clk;
-	end process;
-
     row_data_in_n <= not row_data_in;
     shift_row_data_n <= not shift_row_data;
     apply_new_row_n <= not apply_new_row;
@@ -64,50 +48,51 @@ begin
         procedure shift_row_data_in (data: in std_ulogic_vector(7 downto 0)) is
         begin
             row_data_in <= data(data'left);
-            wait for T;
+            sim_step;
 
             for i in data'left-1 downto data'right loop
                 shift_row_data <= '1';
                 row_data_in <= data(i);
-                wait for T/2;
+                sim_halfstep;
                 shift_row_data <= '0';
-                wait for T/2;
+                sim_halfstep;
             end loop;
 
             shift_row_data <= '1';
-            wait for T/2;
+            sim_halfstep;
             shift_row_data <= '0';
-            wait for T/2;
+            sim_halfstep;
         end procedure;
 
         procedure apply_new_row_data is
         begin
             apply_new_row <= '1';
-            wait for T/2;
+            sim_halfstep;
             apply_new_row <= '0';
-            wait for T/2;
+            sim_halfstep;
         end procedure;
 
         procedure shift_row_strobe_in (strobe: in integer) is
         begin
             row_strobe_in <= std_ulogic(to_unsigned(strobe, 1)(0));
-            wait for T;
+            sim_step;
             shift_row_strobe <= '1';
             row_strobe_in <= '0';
-            wait for T/2;
+            sim_halfstep;
             shift_row_strobe <= '0';
-            wait for T/2;
+            sim_halfstep;
         end procedure;
 
         procedure apply_row_selection is
         begin
             apply_new_row_strobe <= '1';
-            wait for T/2;
+            sim_halfstep;
             apply_new_row_strobe <= '0';
-            wait for T/2;
+            sim_halfstep;
         end procedure;
     begin
-        sim_wait;
+        sim_setup(10 ns);
+        sim_wait(2);
 
         row_data_in <= '0';
         shift_row_data <= '0';
@@ -117,7 +102,7 @@ begin
         shift_row_strobe <= '0';
         apply_new_row_strobe <= '0';
 
-        sim_wait;
+        sim_wait(2);
 
         shift_row_data_in("10111101");
         assert row_values = (row_values'range => 'U');

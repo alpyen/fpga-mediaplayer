@@ -3,7 +3,15 @@
 Stuff that needs to be done, may be incomplete.
 
 ## HDL
-- Export the simulation helper constants and procedures into a different package
+- Conceptually layout entities and their tasks
+  - How to control the device?
+  - How to feed data?
+- Finalize media specification that can be fed from the FPGA
+  - Resolution
+  - "Color" depth
+  - framerate
+  - Sample Rate
+  - "Sound" depth
 
 
 # Project Goal
@@ -20,6 +28,7 @@ hdl descriptions for components that already exist to have it done myself and to
 Topics I want to cover (includes, but is not limited to):
 - Develop a full FPGA project with everything necessary
 - Write HDL and verify with testbenches
+- Write packages and make them accessible
 - Make use of existing IP
 - Prototyping
 - Schematics, Layouting and Manufacturing a PCB
