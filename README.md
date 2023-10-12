@@ -3,9 +3,12 @@
 Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
-- Conceptually layout entities and their tasks
-  - How to control the device?
-  - How to feed data?
+- Implement the Memory Driver
+  - Implement the interface to the control unit
+  - Implement the SPI communication with the flash chip
+- Implement the Audio Driver
+- Implement the Video Driver
+- Implement the Control Unit
 
 ## Software
 - Codec development

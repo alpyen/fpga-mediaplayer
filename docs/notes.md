@@ -17,3 +17,6 @@ Contains some thoughts over the development time of the project.
   - It seems like it takes a few microseconds to charge up through a 10K, this will be a big problem depending on the video properties. 24fps / 8bpp will need much lower resistor values.
 - The small board uses two shift registers for the column selection on purpose even though it could have been implemented with a single one.
   - The only difference to the full size board will be that we are wiring QC to SER from the first to the second register and this only works if the data is present on QC, instead of it only being present in the buffer stage as for example with QH'.
+- I think it's worth dividing the memory access, the audio playback, the video playback and the control unit into different modules / entities so they can be interchanged for different implementations such as different memory storages (Flash, SD-Card, USB-Stick) or different codecs.
+- The audio and video drivers will be fed through FIFOs and some additional control signals.
+- The memory driver does not need a FIFO really.
