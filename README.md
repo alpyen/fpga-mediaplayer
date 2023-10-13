@@ -4,6 +4,7 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
 - Implement the Memory Driver
+  - Implement SPI flash model
   - Implement the interface to the control unit
   - Implement the SPI communication with the flash chip
 - Implement the Audio Driver
@@ -13,6 +14,18 @@ Stuff that needs to be done, may be incomplete and not in order.
 ## Software
 - Codec development
 
+# How to open with Vivado
+
+The vivado project has to be regenerated from the project tcl file.
+Simply run Vivado and use the tcl console to `cd` into the vivado subfolder of this repository and run `source ./fpga-mediaplayer.tcl`.
+
+If you want to update the tcl file make sure to pass the correct project folder.
+Vivado creates a subfolder with the name of the project by default which creates unnecessary nesting so you need to run the tcl command manually.
+
+To write the project tcl make sure you're in the vivado subfolder and run this command: `write_project_tcl -target_proj_dir . fpga-mediaplayer.tcl -force`
+
+Vivado stores absolute paths in the tcl comments, make sure to delete those if you don't want them public.
+They can be found at the very top in the big comment.
 
 # Project Goal
 
