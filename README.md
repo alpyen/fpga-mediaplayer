@@ -5,12 +5,16 @@ Stuff that needs to be done, may be incomplete and not in order.
 ## HDL
 - Test the Memory Driver on the Board
   - Use switches to determine address and use the LEDs above to display
+  - Provide this as a standalone TLE with constraints maybe?
 - Implement the Audio Driver
 - Implement the Video Driver
 - Implement the Control Unit
 
 ## Vivado
 - Change the board store in the project-tcl to be OS-independent
+
+## IP
+- Figure out how to add IP to the repository without generated files
 
 ## Software
 - Codec development
