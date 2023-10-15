@@ -4,9 +4,7 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
 - Implement the Memory Driver
-  - Implement SPI flash model
   - Implement the interface to the control unit
-  - Implement the SPI communication with the flash chip
 - Implement the Audio Driver
 - Implement the Video Driver
 - Implement the Control Unit

@@ -13,7 +13,7 @@ architecture tb of small_led_board_tb is
         shift_row_data, shift_row_data_n, 
         apply_new_row, apply_new_row_n
     : std_ulogic;
-    
+
     signal 
         row_strobe_in, row_strobe_in_n, 
         shift_row_strobe, shift_row_strobe_n, 
@@ -46,18 +46,21 @@ begin
 	process
         procedure shift_row_data_in (data: in std_ulogic_vector(7 downto 0)) is
         begin
+            wait for T/2;
             row_data_in <= data(data'left);
-            wait for T;
+            wait for T/2;
 
             for i in data'left-1 downto data'right loop
                 shift_row_data <= '1';
-                row_data_in <= data(i);
                 wait for T/2;
+
+                row_data_in <= data(i);
                 shift_row_data <= '0';
                 wait for T/2;
             end loop;
 
             shift_row_data <= '1';
+            row_data_in <= 'U';
             wait for T/2;
             shift_row_data <= '0';
             wait for T/2;
@@ -73,11 +76,14 @@ begin
 
         procedure shift_row_strobe_in (strobe: in integer) is
         begin
-            row_strobe_in <= std_ulogic(to_unsigned(strobe, 1)(0));
-            wait for T;
-            shift_row_strobe <= '1';
-            row_strobe_in <= '0';
             wait for T/2;
+            row_strobe_in <= std_ulogic(to_unsigned(strobe, 1)(0));
+            wait for T/2;
+
+            shift_row_strobe <= '1';
+            row_strobe_in <= 'U';
+            wait for T/2;
+
             shift_row_strobe <= '0';
             wait for T/2;
         end procedure;
@@ -92,39 +98,39 @@ begin
     begin
         wait for 2*T;
 
-        row_data_in <= '0';
+        row_data_in <= 'U';
         shift_row_data <= '0';
         apply_new_row <= '0';
 
-        row_strobe_in <= '0';
+        row_strobe_in <= 'U';
         shift_row_strobe <= '0';
         apply_new_row_strobe <= '0';
 
         wait for 2*T;
 
         shift_row_data_in("10111101");
-        assert row_values = (row_values'range => 'U');
+        assert row_values = (row_values'range => 'U') severity failure;
 
         apply_new_row_data;
         assert row_values = "10111101";
         
         shift_row_strobe_in(0);
-        assert row_selection_values = (15 downto 0 => 'U');
+        assert row_selection_values = (15 downto 0 => 'U') severity failure;
 
         apply_row_selection;
-        assert row_selection_values = (15 downto 1 => 'U') & '0';
+        assert row_selection_values = (15 downto 1 => 'U') & '0' severity failure;
         
         shift_row_data_in("01000010");
         shift_row_strobe_in(1);
 
-        assert row_values = "10111101";
-        assert row_selection_values = (15 downto 1 => 'U') & '0';
+        assert row_values = "10111101" severity failure;
+        assert row_selection_values = (15 downto 1 => 'U') & '0' severity failure;
         
         apply_new_row_data;
         apply_row_selection;
 
-        assert row_values = "01000010";
-        assert row_selection_values = (15 downto 2 => 'U') & "10";
+        assert row_values = "01000010" severity failure;
+        assert row_selection_values = (15 downto 2 => 'U') & "01" severity failure;
         
         wait;
     end process;
