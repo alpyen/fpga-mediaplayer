@@ -3,11 +3,14 @@
 Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
-- Implement the Memory Driver
-  - Implement the interface to the control unit
+- Test the Memory Driver on the Board
+  - Use switches to determine address and use the LEDs above to display
 - Implement the Audio Driver
 - Implement the Video Driver
 - Implement the Control Unit
+
+## Vivado
+- Change the board store in the project-tcl to be OS-independent
 
 ## Software
 - Codec development

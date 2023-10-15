@@ -9,7 +9,7 @@ architecture tb of spi_flash_model_tb is
     constant T: time := 10 ns;
     signal sim_done: boolean;
 
-    signal FLASH_SIZE: integer := 256;
+    constant FLASH_SIZE: integer := 256;
 
     signal sclk: std_ulogic := '0';
     signal cs_n, sdi, sdo: std_ulogic;
@@ -20,7 +20,7 @@ begin
     generic map (
         SIZE      => FLASH_SIZE, -- 256 B
         INIT_FILE => "../../../../../sim/memory/memory_file.dat",
-        INIT_VALUE => x"FF"
+        INIT_VALUE => x"ff"
     )
     port map (
         sclk => sclk,

@@ -20,3 +20,5 @@ Contains some thoughts over the development time of the project.
 - I think it's worth dividing the memory access, the audio playback, the video playback and the control unit into different modules / entities so they can be interchanged for different implementations such as different memory storages (Flash, SD-Card, USB-Stick) or different codecs.
 - The audio and video drivers will be fed through FIFOs and some additional control signals.
 - The memory driver does not need a FIFO really.
+- Pull all simulations signals to 'U' when they shouldn't be read instead of driving them with '0' for example?
+- 'done' was registered in the spi_memory_driver. Is this really necessary? The simulation reacts badly on it, but it should work on hardware?
