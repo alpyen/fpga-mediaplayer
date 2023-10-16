@@ -22,3 +22,4 @@ Contains some thoughts over the development time of the project.
 - The memory driver does not need a FIFO really.
 - Pull all simulations signals to 'U' when they shouldn't be read instead of driving them with '0' for example?
 - 'done' was registered in the spi_memory_driver. Is this really necessary? The simulation reacts badly on it, but it should work on hardware?
+- Unify the port names, either use "clk and rst" or "clock and reset", not mixed like "clk and reset".
