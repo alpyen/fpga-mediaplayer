@@ -5,7 +5,7 @@ Stuff that needs to be done, may be incomplete and not in order.
 ## HDL
 - Test the Memory Driver on the Board
   - Use switches to determine address and use the LEDs above to display
-  - Provide this as a standalone TLE with constraints maybe?
+  - Implement standalone top level entity
 - Implement the Audio Driver
 - Implement the Video Driver
 - Implement the Control Unit
