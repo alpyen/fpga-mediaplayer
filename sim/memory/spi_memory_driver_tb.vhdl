@@ -16,9 +16,9 @@ architecture tb of spi_memory_driver_tb is
     signal start, done: std_ulogic;
 
     signal sclk, cs_n, sdi, sdo, wp, hold: std_ulogic;
-
+    
     constant FLASH_SIZE: integer := 256;
-
+    signal tb_memory: std_ulogic_vector(FLASH_SIZE * 8 - 1 downto 0); 
 begin
     process
     begin
@@ -42,7 +42,7 @@ begin
         reset <= '0';
         wait until rising_edge(clk);
 
-        for i in 0 to 15 loop
+        for i in 0 to FLASH_SIZE-1 loop
             address <= std_ulogic_vector(to_unsigned(i, address'length));
             start <= '1';
             wait until rising_edge(clk);
@@ -50,7 +50,15 @@ begin
             start <= '0';
             wait until done = '1';
             wait until rising_edge(clk);
+
+            assert data = tb_memory(i*8+7 downto i*8)
+                report "Invalid Data read at address " & integer'image(i) & ". " & 
+                       "Read = " & integer'image(to_integer(unsigned(data))) & " but " & 
+                       "Expected = " & integer'image(to_integer(unsigned(tb_memory(i*8+7 downto i*8))))
+                severity error;
         end loop;
+
+        report "Simulation done.";
 
         sim_done <= true;
         wait;
@@ -88,6 +96,8 @@ begin
         sdi  => sdi,
         sdo  => sdo,
         wp   => wp,
-        hold => hold
+        hold => hold,
+        
+        tb_memory => tb_memory
     );
 end architecture;

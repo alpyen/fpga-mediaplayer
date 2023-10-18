@@ -23,7 +23,9 @@ port (
     sdo: out std_ulogic;
 
     wp: in std_ulogic;
-    hold: in std_ulogic
+    hold: in std_ulogic;
+
+    tb_memory: out std_ulogic_vector(SIZE * 8 - 1 downto 0)
 );
 end entity;
 
@@ -50,9 +52,9 @@ architecture functional of spi_flash_model is
         report "spi_flash_model: " & message severity note;
     end procedure;
 
-    procedure fail (message: in string) is
+    procedure assert_fail (condition: in boolean; message: in string) is
     begin
-        report "spi_flash_model: " & message severity failure;
+        assert condition report "spi_flash_model: " & message severity failure;
     end procedure;
 begin
     init: process
@@ -79,7 +81,7 @@ begin
                         when 'D' => nibble := 13;
                         when 'E' => nibble := 14;
                         when 'F' => nibble := 15;
-                        when others => fail("Bad byte read: " & byte(i+1));
+                        when others => assert_fail(false, "Bad byte read: " & byte(i+1));
                     end case;
 
                     sulv(4*(2-i)+3 downto 4*(2-i)+0) := std_ulogic_vector(to_unsigned(nibble, 4));
@@ -102,24 +104,26 @@ begin
             info("Loading init file: """ & INIT_FILE & """.");
 
             file_open(fos, memory_file, INIT_FILE, read_mode);
-            if fos /= open_ok then
-                fail("Loading init file failed: " & file_open_status'image(fos) & ".");
-            end if;
+            assert_fail(fos = open_ok, "Loading init file failed: " & file_open_status'image(fos) & ".");
 
             while not endfile(memory_file) loop
                 readline(memory_file, current_line);
 
                 while current_line'length > 0 loop
-                    if current_address = SIZE then
-                        fail("spi_flash_model: Init file is bigger than flash size. Aborting!");
-                    end if;
-
+                    assert_fail(
+                        current_address < SIZE,
+                        "Init file is bigger than flash size. Aborting!"
+                    );
+                    
                     read(current_line, byte, good);
-                    assert good report "spi_flash_model: Reading bad byte at: " & integer'image(current_address) & "." severity failure;
+                    assert_fail(good, "Reading bad byte at: " & integer'image(current_address) & ".");
 
                     if current_line'length /= 0 then
                         read(current_line, space, good);
-                        assert good and (space = ' ' or space = cr) report "spi_flash_model: Reading bad byte at: " & integer'image(current_address) & "." severity failure;
+                        assert_fail(
+                            good and (space = ' ' or space = cr),
+                            "Reading bad byte at: " & integer'image(current_address) & "."
+                        );
                     end if;
 
                     memory(current_address) <= byte_to_std_ulogic_vector(byte);
@@ -130,13 +134,20 @@ begin
             info("Flash initialized with " & integer'image(current_address) & " bytes from init file.");
         end procedure;
     begin
-        info("spi_flash_model: Initializing flash with size of " & integer'image(SIZE) & " bytes.");
+        info("Initializing flash with size of " & integer'image(SIZE) & " bytes.");
 
         if INIT_FILE'length /= 0 then
             load_file;
         end if;
 
         wait;
+    end process;
+
+    process (memory)
+    begin
+        for i in memory'range loop
+            tb_memory(i*8+7 downto i*8) <= memory(i);
+        end loop;
     end process;
 
     sdo <= data_out(7);
@@ -181,9 +192,10 @@ begin
                     state_next <= STATE_ADDRESS;
                     counter_next <= 0;
 
-                    if state_next = STATE_ADDRESS and command_next /= READ_COMMAND then
-                        fail("Invalid Command: " & integer'image(to_integer(unsigned(command_next))));
-                    end if;
+                    assert_fail(
+                        (state_next = STATE_ADDRESS and command_next = READ_COMMAND) or state_next = state,
+                        "Invalid Command: " & integer'image(to_integer(unsigned(command_next)))
+                    );
                 end if;
 
             when STATE_ADDRESS =>
@@ -203,9 +215,10 @@ begin
                         data_next <= memory(to_integer(unsigned(address_next)));
                     end if;
 
-                    if state_next = STATE_DATA and unsigned(address_next) >= SIZE then
-                        fail("Invalid Address: " & integer'image(to_integer(unsigned(address_next))));
-                    end if;
+                    assert_fail(
+                        (state_next = STATE_DATA and unsigned(address_next) < SIZE) or state_next = state,
+                        "Invalid Address: " & integer'image(to_integer(unsigned(address_next)))
+                    );
                 end if;
 
             when STATE_DATA =>
