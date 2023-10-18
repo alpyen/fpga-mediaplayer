@@ -12,10 +12,10 @@ use ieee.numeric_std.all;
 
 entity spi_memory_driver is
     port (
-        -- Memory Driver Interface
         clk: in std_ulogic;
         reset: in std_ulogic;
 
+        -- Memory Driver Interface
         address: in std_ulogic_vector(23 downto 0);
         data: out std_ulogic_vector(7 downto 0);
 
@@ -43,19 +43,15 @@ architecture arch of spi_memory_driver is
 
     signal data_int, data_int_next: std_ulogic_vector(data'range);
 
-    -- Need to count 8 command bits, 24 address bits, and 8 data bits
-    signal counter, counter_next: unsigned(5 downto 0);
+    -- Bits to count: 8 command, 24 address, 8 data
+    signal counter, counter_next: unsigned(4 downto 0);
 
-    -- Perhaps this can be done purely combinatoric?
-    -- We are driving 'sdi' combinatorically aswell.
     signal done_int, done_int_next: std_ulogic;
 
     signal cs_n_int, cs_n_int_next: std_ulogic;
 
     constant READ_COMMAND: std_ulogic_vector(command'range) := x"03";
 begin
-    -- This has to be replaced later with that "STARTUPE2" primitive to access SCK
-    -- on the Artix7 devices.
     sclk <= clk;
     done <= done_int;
     data <= data_int;
@@ -99,7 +95,6 @@ begin
         cs_n_int_next <= '1';
 
         sdi <= '0';
-        -- cs_n <= '1';
 
         case state is
             when STATE_IDLE =>
@@ -109,9 +104,6 @@ begin
                     command_next <= READ_COMMAND;
                     address_int_next <= address;
 
-                    -- Does cs_n really need to be clocked?
-                    -- Does this work on the board?
-                    -- Verify how cs_n works in the simulation and on the board!
                     cs_n_int_next <= '0';
 
                     counter_next <= (others => '0');
@@ -119,8 +111,6 @@ begin
                 end if;
 
             when STATE_COMMAND =>
-                -- This could be also done by walking through the indices
-                -- How does this compare in Hardware?
                 cs_n_int_next <= '0';
                 sdi <= command(command'left);
                 command_next <= command(command'left-1 downto 0) & '0';

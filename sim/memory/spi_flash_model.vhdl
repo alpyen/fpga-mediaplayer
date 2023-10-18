@@ -42,7 +42,6 @@ architecture functional of spi_flash_model is
 
     signal data_out, data_out_next: std_ulogic_vector(7 downto 0);
 
-    -- tracks the command, address and data cycles
     signal counter, counter_next: integer;
 
     constant READ_COMMAND: std_ulogic_vector(command'range) := std_ulogic_vector(to_unsigned(3, command'length));
@@ -160,14 +159,14 @@ begin
             data <= (others => 'Z');
             data_out <= (others => 'Z');
         -- sdi is latched in on the rising edge of the clock
-        elsif rising_edge(sclk) and cs_n = '0' then
+        elsif rising_edge(sclk) then
             state <= state_next;
             counter <= counter_next;
             command <= command_next;
             address <= address_next;
             data <= data_next;
         -- sdo is shifted out on the falling edge of the clock
-        elsif falling_edge(sclk) and cs_n = '0' then
+        elsif falling_edge(sclk)then
             data_out <= data_out_next;
         end if;
     end process;
@@ -183,8 +182,6 @@ begin
 
         case state is
             when STATE_COMMAND =>
-                -- check for invalid command
-
                 command_next <= command(command'left-1 downto 0) & sdi;
                 counter_next <= counter + 1;
 
@@ -199,8 +196,6 @@ begin
                 end if;
 
             when STATE_ADDRESS =>
-                -- check for invalid address
-
                 address_next <= address(address'left-1 downto 0) & sdi;
                 counter_next <= counter + 1;
 
@@ -208,9 +203,9 @@ begin
                     state_next <= STATE_DATA;
                     counter_next <= 0;
 
-                    -- Need to check for the next state first, otherwise address_next
-                    -- might have not been set from the first process iteration.
-                    -- This probably can be done more elegant?
+                    -- wait one delta cycle so address_next is correct
+                    -- this has to be done otherwise the address might point
+                    -- to a location that does not exist
                     if state_next = STATE_DATA then
                         data_next <= memory(to_integer(unsigned(address_next)));
                     end if;
@@ -227,10 +222,10 @@ begin
                 counter_next <= counter + 1;
 
                 if counter = data'length - 1 then
+                    -- Increase to the next address and/or wrap around the address range
                     address_next <= std_ulogic_vector(to_unsigned(to_integer((unsigned(address) + 1)) mod SIZE, address_next'length));
                     counter_next <= 0;
 
-                    -- Increase to the next address and/or wrap around the address range
                     if counter_next = 0 then
                         data_next <= memory(to_integer(unsigned(address_next)));
                     end if;

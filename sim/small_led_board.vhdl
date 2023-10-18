@@ -1,3 +1,6 @@
+-- Simulation model of the small LED board
+-- The implementation is different from the bigger board
+
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -11,8 +14,8 @@ port (
     shift_row_strobe_n: in std_ulogic;
     apply_new_row_strobe_n: in std_ulogic;
 
-    row_values: out std_ulogic_vector(7 downto 0);
-    row_selection_values: out std_ulogic_vector(15 downto 0)
+    tb_row_values: out std_ulogic_vector(7 downto 0);
+    tb_row_selection_values: out std_ulogic_vector(15 downto 0)
 );
 end entity;
 
@@ -24,8 +27,8 @@ architecture functional of small_led_board is
     signal row_selection_data: std_ulogic_vector(15 downto 0);
 begin
     -- Route these out for the testbench to assert.
-    row_values <= row_data;
-    row_selection_values <= row_selection_data;
+    tb_row_values <= row_data;
+    tb_row_selection_values <= row_selection_data;
 
     -- The board actually uses pullups and the negated signals
     -- come from the logic shifters which can only pull the line down.

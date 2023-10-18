@@ -20,8 +20,8 @@ architecture tb of small_led_board_tb is
         apply_new_row_strobe, apply_new_row_strobe_n
     : std_ulogic;
 
-    signal row_values: std_ulogic_vector(7 downto 0);
-    signal row_selection_values: std_ulogic_vector(15 downto 0);
+    signal tb_row_values: std_ulogic_vector(7 downto 0);
+    signal tb_row_selection_values: std_ulogic_vector(15 downto 0);
 begin
     row_data_in_n <= not row_data_in;
     shift_row_data_n <= not shift_row_data;
@@ -39,8 +39,8 @@ begin
         row_strobe_in_n        => row_strobe_in_n,
         shift_row_strobe_n     => shift_row_strobe_n,
         apply_new_row_strobe_n => apply_new_row_strobe_n,
-        row_values             => row_values,
-        row_selection_values   => row_selection_values
+        tb_row_values             => tb_row_values,
+        tb_row_selection_values   => tb_row_selection_values
     );
 
 	process
@@ -109,28 +109,28 @@ begin
         wait for 2*T;
 
         shift_row_data_in("10111101");
-        assert row_values = (row_values'range => 'U') severity failure;
+        assert tb_row_values = (tb_row_values'range => 'U') severity failure;
 
         apply_new_row_data;
-        assert row_values = "10111101";
+        assert tb_row_values = "10111101";
         
         shift_row_strobe_in(0);
-        assert row_selection_values = (15 downto 0 => 'U') severity failure;
+        assert tb_row_selection_values = (15 downto 0 => 'U') severity failure;
 
         apply_row_selection;
-        assert row_selection_values = (15 downto 1 => 'U') & '0' severity failure;
+        assert tb_row_selection_values = (15 downto 1 => 'U') & '0' severity failure;
         
         shift_row_data_in("01000010");
         shift_row_strobe_in(1);
 
-        assert row_values = "10111101" severity failure;
-        assert row_selection_values = (15 downto 1 => 'U') & '0' severity failure;
+        assert tb_row_values = "10111101" severity failure;
+        assert tb_row_selection_values = (15 downto 1 => 'U') & '0' severity failure;
         
         apply_new_row_data;
         apply_row_selection;
 
-        assert row_values = "01000010" severity failure;
-        assert row_selection_values = (15 downto 2 => 'U') & "01" severity failure;
+        assert tb_row_values = "01000010" severity failure;
+        assert tb_row_selection_values = (15 downto 2 => 'U') & "01" severity failure;
         
         wait;
     end process;

@@ -20,7 +20,7 @@ architecture tb of spi_flash_model_tb is
 begin
     dut: entity work.spi_flash_model
     generic map (
-        SIZE      => FLASH_SIZE, -- 256 B
+        SIZE      => FLASH_SIZE,
         INIT_FILE => "../../../../../sim/memory/memory_file.dat",
         INIT_VALUE => x"ff"
     )
