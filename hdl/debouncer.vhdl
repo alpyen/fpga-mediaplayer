@@ -1,3 +1,7 @@
+-- Input Synchronizer and Debouncer
+-- synchronizes with a 2-stage flip flop arrangement
+-- debounces for a given amount of clock cycles
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -18,7 +22,9 @@ entity debouncer is
 end entity;
 
 architecture arch of debouncer is
+    signal sync, sync_next: std_ulogic_vector(1 downto 0);
     signal samples, samples_next: std_ulogic_vector(1 downto 0);
+
     signal counter, counter_next: unsigned(integer(ceil(log2(real(COUNT)))) downto 0);
 
     signal output_int, output_int_next: std_ulogic;
@@ -27,10 +33,11 @@ architecture arch of debouncer is
 begin
     output <= output_int;
 
-    process (samples, counter, input, output_int)
+    process (sync, samples, counter, output_int, input)
     begin
+        sync_next <= sync(0) & input;
+        samples_next <= samples(0) & sync(1);
         counter_next <= counter + 1;
-        samples_next <= samples(0) & input;
         output_int_next <= output_int;
 
         if samples(1) /= samples(0) then
@@ -43,6 +50,7 @@ begin
     process (clk)
     begin
         if rising_edge(clk) then
+            sync <= sync_next;
             samples <= samples_next;
             counter <= counter_next;
             output_int <= output_int_next;

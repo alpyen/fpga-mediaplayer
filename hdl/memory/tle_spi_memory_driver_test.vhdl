@@ -40,16 +40,21 @@ architecture tle of tle_spi_memory_driver_test is
 
     signal clk10mhz: std_ulogic;
     signal reset_debounced: std_ulogic;
-    signal reset_sync: std_ulogic_vector(1 downto 0);
 
     signal start_debounced: std_ulogic;
-    signal start_sync: std_ulogic_vector(1 downto 0);
     signal start_pulse, start_is_held: std_ulogic;
     signal address: std_ulogic_vector(23 downto 0);
 
+    -- SPI SCLK is not directly drivable on Artix7 devices
+    -- it has to be accessed through the STARTUPE2 primitive.
+    -- Technically we could route clk10mhz immediately to USRCCLKO
+    -- instead of routing it into the spi_memory_driver and then to it
+    -- but this way it's more consistent and Vivado shortens it anyway.
+    signal spi_sclk: std_ulogic;
     signal wp, hold: std_ulogic;
 
-    constant DEBOUNCE_COUNT: positive := integer(ceil(real(10e6) * (100.0 / 1000.0)));
+    -- Button state has to remain for 100 ms
+    constant DEBOUNCE_THRESHHOLD: positive := integer(ceil(real(10e6) * (100.0 / 1000.0)));
 begin
     STARTUPE2_inst: STARTUPE2
     generic map (
@@ -66,7 +71,7 @@ begin
         GTS       => '0',
         KEYCLEARB => '1',
         PACK      => '0',
-        USRCCLKO  => clk10mhz,
+        USRCCLKO  => spi_sclk,
         USRCCLKTS => '0',
         USRDONEO  => '1',
         USRDONETS => '0'
@@ -80,32 +85,23 @@ begin
         locked    => open
     );
 
-    sync: process (clk10mhz)
-    begin
-        if rising_edge(clk10mhz) then
-            reset_sync <= reset_sync(0) & reset;
-            start_sync <= start_sync(0) & start_button;
-        end if;
-    end process;
-
     reset_debouncer: entity work.debouncer
     generic map (
-        -- 10 MHz clk, sample every 100 ms should be just fine
-        COUNT => DEBOUNCE_COUNT
+        COUNT => DEBOUNCE_THRESHHOLD
     )
     port map (
         clk    => clk10mhz,
-        input  => reset_sync(1),
+        input  => reset,
         output => reset_debounced
     );
 
     start_debouncer: entity work.debouncer
     generic map (
-        COUNT => DEBOUNCE_COUNT
+        COUNT => DEBOUNCE_THRESHHOLD
     )
     port map (
         clk    => clk10mhz,
-        input  => start_sync(1),
+        input  => start_button,
         output => start_debounced
     );
 
@@ -143,7 +139,7 @@ begin
         data    => data_leds,
         start   => start_pulse,
         done    => open,
-        sclk    => open, -- driven through STARTUPE2 on Artix7
+        sclk    => spi_sclk,
         cs_n    => spi_cs_n,
         sdi     => spi_sdi,
         sdo     => spi_sdo,
