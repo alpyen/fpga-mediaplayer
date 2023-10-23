@@ -25,3 +25,4 @@ Contains some thoughts over the development time of the project.
 - Unify the port names, either use "clk and rst" or "clock and reset", not mixed like "clk and reset".
 - Some testbenches could make use of vhdl2008 be pulling out the internal signals as aliases but we're sticking to Vivado's Default for now ('93?)
   - Instead of duplicating the code we simply route the signals outwards, this is ok because none of this will be synthesized so nothing will be wasted.
+- I've implemented some ideas for audio codecs which isn't really something that's worth documenting the process of so I'll just implement one and maybe talk about a bit about the other ideas.

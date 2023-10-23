@@ -11,3 +11,6 @@ vivado/**
 ip/**
 !ip/*/
 !ip/*/*.xci
+
+# Xilinx primitives - do not track symlinked libraries
+unisim/**

@@ -12,9 +12,11 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## Vivado
 - Change the board store in the project-tcl to be OS-independent
+- Add custom command to write project tcl
 
 ## Software
 - Codec development
+  - Find out which one works best for multiple files and implement that
 
 # How to open with Vivado
 
