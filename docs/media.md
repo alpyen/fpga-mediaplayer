@@ -103,4 +103,5 @@ This allows us to vary the encoding without altering the control unit which only
 
 ### Data
 
-The audio and video data start immediately after the header with the order being audio then video.
+Audio and video data follow immediately the header with the complete audio first, then video.
+The data is **not** interleaved.
