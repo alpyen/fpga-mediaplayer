@@ -35,7 +35,7 @@ entity spi_memory_driver is
 end entity;
 
 architecture arch of spi_memory_driver is
-    type state_t is (STATE_IDLE, STATE_COMMAND, STATE_ADDRESS, STATE_DATA);
+    type state_t is (IDLE, SEND_COMMAND, SEND_ADDRESS, GET_DATA);
     signal state, state_next: state_t;
 
     signal command, command_next: std_ulogic_vector(7 downto 0);
@@ -65,7 +65,7 @@ begin
     begin
         if rising_edge(clk) then
             if reset = '1' then
-                state <= STATE_IDLE;
+                state <= IDLE;
                 command <= (others => '0');
                 address_int <= (others => '0');
                 data_int <= (others => '0');
@@ -97,9 +97,9 @@ begin
         sdi <= '0';
 
         case state is
-            when STATE_IDLE =>
+            when IDLE =>
                 if start = '1' then
-                    state_next <= STATE_COMMAND;
+                    state_next <= SEND_COMMAND;
 
                     command_next <= READ_COMMAND;
                     address_int_next <= address;
@@ -110,35 +110,35 @@ begin
                     done_int_next <= '0';
                 end if;
 
-            when STATE_COMMAND =>
+            when SEND_COMMAND =>
                 cs_n_int_next <= '0';
                 sdi <= command(command'left);
                 command_next <= command(command'left-1 downto 0) & '0';
                 counter_next <= counter + 1;
 
                 if counter = 7 then
-                    state_next <= STATE_ADDRESS;
+                    state_next <= SEND_ADDRESS;
                     counter_next <= (others => '0');
                 end if;
 
-            when STATE_ADDRESS =>
+            when SEND_ADDRESS =>
                 cs_n_int_next <= '0';
                 sdi <= address_int(address_int'left);
                 address_int_next <= address_int(address_int'left-1 downto 0) & '0';
                 counter_next <= counter + 1;
 
                 if counter = 23 then
-                    state_next <= STATE_DATA;
+                    state_next <= GET_DATA;
                     counter_next <= (others => '0');
                 end if;
 
-            when STATE_DATA =>
+            when GET_DATA =>
                 cs_n_int_next <= '0';
                 data_int_next <= data_int(data_int'left-1 downto 0) & sdo;
                 counter_next <= counter + 1;
 
                 if counter = 7 then
-                    state_next <= STATE_IDLE;
+                    state_next <= IDLE;
                     done_int_next <= '1';
                 end if;
         end case;
