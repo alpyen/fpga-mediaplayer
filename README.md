@@ -3,7 +3,15 @@
 Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
+- Write python script to encode audio and video
+- Unify Testbench so that the whole board is being tested
+  - delete the testbenches for subcomponents
 - Implement the Audio Driver
+  - Control Unit <-> Audio Fifo <-> Audio Driver
+  - Control Unit to read out memory contents and feed Fifo
+  - Audio Driver to eat data from Fifo and decode
+  - I2S Master to output samples to I2S2 PMOD-Board
+    - How to handle the CDC between Audio Driver and I2S Master?
 - Implement the Video Driver
 - Implement the Control Unit
 
@@ -16,7 +24,12 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## Software
 - Codec development
-  - Find out which one works best for multiple files and implement that
+  - Audio: Up Down 1
+    - 0: Unchanged
+    - 10: +1
+    - 110: -1
+    - 111 xxxx: New Sample
+  - Video: Not tested yet, but probably the same as audio
 
 # How to open with Vivado
 
