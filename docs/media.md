@@ -9,6 +9,10 @@ Lastly there is the specification of the media format.
   - [Constraints](#constraints)
   - [Goals to achieve](#goals-to-achieve)
   - [Specification](#specification)
+  - [Codec](#codec)
+  - [File Structure](#file-structure)
+    - [Header](#header)
+    - [Data](#data)
 
 ## Constraints
 - Digilent Basys3 (Artix7-35T)
@@ -52,4 +56,51 @@ With the configuration, the compression ratio has to be 46% to fit the entire fo
 
 ## Specification
 
-Todo: Invent a codec, lol.
+## Codec
+
+Since the bitwidth of the audio and video is so low the codec will be very simple.
+
+The codec works by encoding differences over time so we compare the current sample to encode with the previous sample and write the data according to the table.
+
+| Coding Table                         | Bit representation |
+|--------------------------------------|--------------------|
+| Current Sample = Previous Sample     | 0                  |
+| Current Sample = Previous Sample + 1 | 1 0                |
+| Current Sample = Previous Sample - 1 | 1 1 0              |
+| else (none of the above)             | 1 1 1 x x x x      |
+
+So as an example if the previous sample is a `4` and the current sample is also a `4` we simply write a `0` bit into the encoded file.
+For the case where the current sample is `5` we simply write the bits `1 0` into the file indicating that the sample is one higher than the previous saving two bits to the non-encoded counterpart.
+For samples that differ too much (e.g. 2 or more) we write `1 1 1` to indicate that the next four bits `x x x x` will define a sample as a whole.
+
+Analysis of some encoded files show that most differences are 0, +-1 and +-2. So even though the last case seems three bits longer than the non-encoded version, it happens less frequently.
+
+For simplicity's sake audio and video will be padded to full bytes.
+This only happens at the end of the file!
+
+With the encoding out of the way, let's define a simple file header for the control unit to read out the metadata of the encoded media file.
+
+## File Structure
+
+### Header
+
+``"A" (1B) #AudioBytes (4B) #VideoBytes (4B) "Z" (1B)``
+
+- "A" (1 Byte):
+  - This is part of the signature so the control unit can make sure that the contents at the given memory location (to look for the media) is actually a valid encoded file so we don't read garbage. Binary representation in 8-Bit ASCII.
+- #AudioBytes (4 Bytes):
+  - Little Endian encoded unsigned integer that contains the number of audio bytes contained within the media file.
+- #VideoBytes (4 Bytes):
+  - Little Endian encoded unsigned integer that contains the number of video bytes contained within the media file.
+- "Z" (1 Byte):
+  - The end of the signature, analog to the "A". Binary representation in 8-Bit ASCII.
+
+As you can see the header contains no information about the actual encoding or the encoded format since this is irrelevant for the control unit which will only relay the data from the flash to the audio and video drivers.
+
+This is also the key reason why the data is padded to full bytes since we expect the flash to return one byte at a time.
+
+This allows us to vary the encoding without altering the control unit which only needs to read the header.
+
+### Data
+
+The audio and video data start immediately after the header with the order being audio then video.
