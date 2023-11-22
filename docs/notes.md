@@ -22,7 +22,6 @@ Contains some thoughts over the development time of the project.
 - The memory driver does not need a FIFO really.
 - Pull all simulations signals to 'U' when they shouldn't be read instead of driving them with '0' for example?
 - 'done' was registered in the spi_memory_driver. Is this really necessary? The simulation reacts badly on it, but it should work on hardware?
-- Unify the port names, either use "clk and rst" or "clock and reset", not mixed like "clk and reset".
 - Some testbenches could make use of vhdl2008 be pulling out the internal signals as aliases but we're sticking to Vivado's Default for now ('93?)
   - Instead of duplicating the code we simply route the signals outwards, this is ok because none of this will be synthesized so nothing will be wasted.
 - I've implemented some ideas for audio codecs which isn't really something that's worth documenting the process of so I'll just implement one and maybe talk about a bit about the other ideas.

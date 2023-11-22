@@ -68,6 +68,7 @@ begin
         reset        => reset,
 
         -- SPI Interface
+        spi_sclk     => spi_sclk,
         spi_cs_n     => spi_cs_n,
         spi_sdi      => spi_sdi,
         spi_sdo      => spi_sdo,
