@@ -19,11 +19,11 @@ port (
     sclk: in std_ulogic;
     cs_n: in std_ulogic;
 
-    sdi: in std_ulogic;
-    sdo: out std_ulogic;
+    sdi: inout std_ulogic;
+    sdo: inout std_ulogic;
 
-    wp: in std_ulogic;
-    hold: in std_ulogic;
+    wp_n: inout std_ulogic;
+    hold_n: inout std_ulogic;
 
     tb_memory: out std_ulogic_vector(SIZE * 8 - 1 downto 0)
 );

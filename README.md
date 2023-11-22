@@ -2,7 +2,12 @@
 
 Stuff that needs to be done, may be incomplete and not in order.
 
+## Project
+
+Refactor
+
 ## HDL
+
 - Unify Testbench so that the whole board is being tested
   - delete the testbenches for subcomponents
 - Implement the Audio Driver

@@ -12,7 +12,7 @@ use ieee.numeric_std.all;
 
 entity spi_memory_driver is
     port (
-        clk: in std_ulogic;
+        clock: in std_ulogic;
         reset: in std_ulogic;
 
         -- Memory Driver Interface
@@ -29,8 +29,8 @@ entity spi_memory_driver is
         sdi: out std_ulogic;
         sdo: in std_ulogic;
 
-        wp: out std_ulogic;
-        hold: out std_ulogic
+        wp_n: out std_ulogic;
+        hold_n: out std_ulogic
     );
 end entity;
 
@@ -52,18 +52,18 @@ architecture arch of spi_memory_driver is
 
     constant READ_COMMAND: std_ulogic_vector(command'range) := x"03";
 begin
-    sclk <= clk;
+    sclk <= clock;
     done <= done_int;
     data <= data_int;
 
     cs_n <= cs_n_int;
 
-    wp <= '0';
-    hold <= '0';
+    wp_n <= '1';
+    hold_n <= '1';
 
-    seq: process (clk)
+    seq: process (clock)
     begin
-        if rising_edge(clk) then
+        if rising_edge(clock) then
             if reset = '1' then
                 state <= IDLE;
                 command <= (others => '0');

@@ -65,8 +65,8 @@
         "CLK_OUT5_USE_FINE_PS_GUI": [ { "value": "false", "resolve_type": "user", "format": "bool", "usage": "all" } ],
         "CLK_OUT6_USE_FINE_PS_GUI": [ { "value": "false", "resolve_type": "user", "format": "bool", "usage": "all" } ],
         "CLK_OUT7_USE_FINE_PS_GUI": [ { "value": "false", "resolve_type": "user", "format": "bool", "usage": "all" } ],
-        "PRIMARY_PORT": [ { "value": "clk100mhz", "value_src": "user", "resolve_type": "user", "usage": "all" } ],
-        "CLK_OUT1_PORT": [ { "value": "clk10mhz", "value_src": "user", "resolve_type": "user", "usage": "all" } ],
+        "PRIMARY_PORT": [ { "value": "clock100mhz", "value_src": "user", "resolve_type": "user", "usage": "all" } ],
+        "CLK_OUT1_PORT": [ { "value": "clock10mhz", "value_src": "user", "resolve_type": "user", "usage": "all" } ],
         "CLK_OUT2_PORT": [ { "value": "clk_out2", "resolve_type": "user", "usage": "all" } ],
         "CLK_OUT3_PORT": [ { "value": "clk_out3", "resolve_type": "user", "usage": "all" } ],
         "CLK_OUT4_PORT": [ { "value": "clk_out4", "resolve_type": "user", "usage": "all" } ],
@@ -338,7 +338,7 @@
         "C_INCLK_SUM_ROW2": [ { "value": "no_secondary_input_clock ", "resolve_type": "generated", "usage": "all" } ],
         "C_OUTCLK_SUM_ROW0A": [ { "value": " Output     Output      Phase    Duty Cycle   Pk-to-Pk     Phase", "resolve_type": "generated", "usage": "all" } ],
         "C_OUTCLK_SUM_ROW0B": [ { "value": "  Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)", "resolve_type": "generated", "usage": "all" } ],
-        "C_OUTCLK_SUM_ROW1": [ { "value": "clk10mhz__10.00000______0.000______50.0______290.478____133.882", "resolve_type": "generated", "usage": "all" } ],
+        "C_OUTCLK_SUM_ROW1": [ { "value": "clock10mhz__10.00000______0.000______50.0______290.478____133.882", "resolve_type": "generated", "usage": "all" } ],
         "C_OUTCLK_SUM_ROW2": [ { "value": "no_CLK_OUT2_output", "resolve_type": "generated", "usage": "all" } ],
         "C_OUTCLK_SUM_ROW3": [ { "value": "no_CLK_OUT3_output", "resolve_type": "generated", "usage": "all" } ],
         "C_OUTCLK_SUM_ROW4": [ { "value": "no_CLK_OUT4_output", "resolve_type": "generated", "usage": "all" } ],
@@ -468,9 +468,9 @@
         "C_CLOCK_MGR_TYPE": [ { "value": "NA", "resolve_type": "generated", "usage": "all" } ],
         "C_OVERRIDE_MMCM": [ { "value": "0", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_OVERRIDE_PLL": [ { "value": "0", "resolve_type": "generated", "format": "long", "usage": "all" } ],
-        "C_PRIMARY_PORT": [ { "value": "clk100mhz", "resolve_type": "generated", "usage": "all" } ],
+        "C_PRIMARY_PORT": [ { "value": "clock100mhz", "resolve_type": "generated", "usage": "all" } ],
         "C_SECONDARY_PORT": [ { "value": "clk_in2", "resolve_type": "generated", "usage": "all" } ],
-        "C_CLK_OUT1_PORT": [ { "value": "clk10mhz", "resolve_type": "generated", "usage": "all" } ],
+        "C_CLK_OUT1_PORT": [ { "value": "clock10mhz", "resolve_type": "generated", "usage": "all" } ],
         "C_CLK_OUT2_PORT": [ { "value": "clk_out2", "resolve_type": "generated", "usage": "all" } ],
         "C_CLK_OUT3_PORT": [ { "value": "clk_out3", "resolve_type": "generated", "usage": "all" } ],
         "C_CLK_OUT4_PORT": [ { "value": "clk_out4", "resolve_type": "generated", "usage": "all" } ],
@@ -609,8 +609,8 @@
     "boundary": {
       "ports": {
         "reset": [ { "direction": "in", "driver_value": "0" } ],
-        "clk100mhz": [ { "direction": "in" } ],
-        "clk10mhz": [ { "direction": "out" } ],
+        "clock100mhz": [ { "direction": "in" } ],
+        "clock10mhz": [ { "direction": "out" } ],
         "locked": [ { "direction": "out" } ]
       },
       "interfaces": {
@@ -643,7 +643,7 @@
             "BOARD.ASSOCIATED_PARAM": [ { "value": "CLK_IN1_BOARD_INTERFACE", "usage": "all", "is_static_object": false } ]
           },
           "port_maps": {
-            "CLK_IN1": [ { "physical_name": "clk100mhz" } ]
+            "CLK_IN1": [ { "physical_name": "clock100mhz" } ]
           }
         },
         "clock_CLK_OUT1": {
@@ -661,7 +661,7 @@
             "INSERT_VIP": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "simulation.rtl", "is_ips_inferred": true, "is_static_object": false } ]
           },
           "port_maps": {
-            "CLK_OUT1": [ { "physical_name": "clk10mhz" } ]
+            "CLK_OUT1": [ { "physical_name": "clock10mhz" } ]
           }
         }
       }
