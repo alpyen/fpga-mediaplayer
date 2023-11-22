@@ -32,15 +32,23 @@ begin
 
     process
     begin
+        -- Signals have to be asserted for atleast 10*T because
+        -- the fabric is clocked with 10 MHz, not 100 MHz.
         wait for 20*T;
-        start <= '0';
+
         reset <= '1';
+        start <= '0';
         wait for 200*T;
-        reset <= '0';
-        start <= '1';
-        wait for 10*T;
         wait until rising_edge(clock);
 
+        reset <= '0';
+        wait for 30*T;
+
+        start <= '1';
+        wait for 30*T;
+        wait until rising_edge(clock);
+
+        start <= '0';
         wait;
     end process;
 
@@ -70,8 +78,10 @@ begin
         -- SPI Interface
         spi_sclk     => spi_sclk,
         spi_cs_n     => spi_cs_n,
+
         spi_sdi      => spi_sdi,
         spi_sdo      => spi_sdo,
+
         spi_wp_n     => spi_wp_n,
         spi_hold_n   => spi_hold_n,
 

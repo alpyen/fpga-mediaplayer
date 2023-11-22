@@ -6,11 +6,13 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
 - Implement the Audio Driver
+  - Fix weird Testbench bahaviour
   - Control Unit <-> Audio Fifo <-> Audio Driver
   - Control Unit to read out memory contents and feed Fifo
   - Audio Driver to eat data from Fifo and decode
   - I2S Master to output samples to I2S2 PMOD-Board
     - How to handle the CDC between Audio Driver and I2S Master?
+  - Add Base Address to the TLE so the data is not assumed to be at address zero
 - Implement the Video Driver
 - Implement the Control Unit
 

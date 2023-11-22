@@ -112,7 +112,7 @@ if args.dump_audio:
 
     print("done!")
 
-print("Encoding input file...", end="")
+print("Encoding reduced file...", end="")
 
 # We assume in HDL the previous sample to be 0 so we can immediately start encoding.
 previous_sample = 0

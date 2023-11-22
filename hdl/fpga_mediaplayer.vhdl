@@ -18,8 +18,10 @@ entity fpga_mediaplayer is
         -- SPI ports
         spi_sclk: out std_ulogic;
         spi_cs_n: out std_ulogic;
+
         spi_sdi: inout std_ulogic;
         spi_sdo: inout std_ulogic;
+        
         spi_wp_n: inout std_ulogic;
         spi_hold_n: inout std_ulogic;
         
@@ -95,7 +97,6 @@ architecture tle of fpga_mediaplayer is
     signal audio_fifo_data_out_slv: std_logic_vector(0 downto 0);
     signal audio_fifo_data_out: std_ulogic_vector(audio_fifo_data_out_slv'range);
     signal audio_fifo_empty: std_ulogic;
-
 begin
     -- Used to wire up the SCLK for the SPI flash
     STARTUPE2_inst: STARTUPE2
@@ -171,14 +172,17 @@ begin
         -- Memory Driver Interface
         address => memory_driver_address,
         data    => memory_driver_data,
+
         start   => memory_driver_start,
         done    => memory_driver_done,
 
         -- SPI Interface
         sclk    => spi_sclk_int,
         cs_n    => spi_cs_n,
+
         sdi     => spi_sdi,
         sdo     => spi_sdo,
+
         wp_n    => spi_wp_n,
         hold_n  => spi_hold_n
     );
