@@ -4,17 +4,7 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## Project
 
-Refactor
-
-Change out memory_file.dat generic in testbench to encoded loop file
-but convert it to a memory image first
-
-Change spi_flash_model to read binary file instead of the text memory file
-
 ## HDL
-
-- Unify Testbench so that the whole board is being tested
-  - delete the testbenches for subcomponents
 - Implement the Audio Driver
   - Control Unit <-> Audio Fifo <-> Audio Driver
   - Control Unit to read out memory contents and feed Fifo

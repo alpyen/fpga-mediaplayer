@@ -29,4 +29,6 @@ end entity;
 architecture arch of control_unit is
     
 begin
+    audio_fifo_write_enable <= '0';
+    audio_fifo_data_in <= (others => '0');
 end architecture;

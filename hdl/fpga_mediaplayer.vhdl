@@ -8,6 +8,9 @@ library unisim;
 use unisim.vcomponents.all;
 
 entity fpga_mediaplayer is
+    generic (
+        SIMULATION: boolean := false
+    );
     port (
         clock100mhz: in std_ulogic;
         reset: in std_ulogic;
@@ -65,6 +68,9 @@ architecture tle of fpga_mediaplayer is
 
     signal reset_debounced: std_ulogic;
     signal start_debounced: std_ulogic;
+
+    signal reset_final: std_ulogic;
+    signal start_final: std_ulogic;
 
     -- Memory Driver Signals
     signal memory_driver_start: std_ulogic;
@@ -138,10 +144,24 @@ begin
         output => start_debounced
     );
 
+    -- Override signals that need to be handled differently in the simulation.
+    -- For example we don't need to debounce the buttons as those are sampled
+    -- every 100ms, this is just wasted simulation time.
+    process (reset, start_button, reset_debounced, start_debounced)
+    begin
+        reset_final <= reset_debounced;
+        start_final <= start_debounced;
+
+        if SIMULATION = true then
+            reset_final <= reset;
+            start_final <= start_button;
+        end if;
+    end process;
+
     spi_memory_driver_inst: entity work.spi_memory_driver
     port map (
         clock   => clock10mhz,
-        reset   => reset_debounced,
+        reset   => reset_final,
 
         -- Memory Driver Interface
         address => memory_driver_address,
@@ -161,7 +181,7 @@ begin
     fifo_audio_inst: fifo_audio
     port map (
         clk   => clock10mhz,
-        srst  => reset_debounced,
+        srst  => reset_final,
         din   => audio_fifo_data_in_slv,
         wr_en => audio_fifo_write_enable,
         rd_en => audio_fifo_read_enable,
@@ -170,15 +190,15 @@ begin
         empty => audio_fifo_empty
     );
 
-    audio_fifo_data_in <= std_ulogic_vector(audio_fifo_data_in_slv);
+    audio_fifo_data_in_slv <= std_logic_vector(audio_fifo_data_in);
     audio_fifo_data_out <= std_ulogic_vector(audio_fifo_data_out_slv);
 
     control_unit_inst: entity work.control_unit
     port map (
         clock                   => clock10mhz,
-        reset                   => reset_debounced,
+        reset                   => reset_final,
 
-        start                   => start_debounced,
+        start                   => start_final,
 
         -- Memory Driver Interface
         memory_driver_start     => memory_driver_start,
@@ -198,7 +218,7 @@ begin
     audio_driver_inst: entity work.audio_driver
     port map (
         clock                  => clock10mhz,
-        reset                  => reset,
+        reset                  => reset_final,
 
         -- Audio Driver Interface
         audio_driver_start     => audio_driver_start,

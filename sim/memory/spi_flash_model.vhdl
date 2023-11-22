@@ -23,9 +23,7 @@ port (
     sdo: inout std_ulogic;
 
     wp_n: inout std_ulogic;
-    hold_n: inout std_ulogic;
-
-    tb_memory: out std_ulogic_vector(SIZE * 8 - 1 downto 0)
+    hold_n: inout std_ulogic
 );
 end entity;
 
@@ -58,47 +56,13 @@ architecture functional of spi_flash_model is
 begin
     init: process
         procedure load_file is
-            function byte_to_std_ulogic_vector (byte: in string(1 to 2)) return std_ulogic_vector is
-                variable sulv: std_ulogic_vector(7 downto 0);
-                variable nibble: integer;
-            begin
-                for i in 1 to 2 loop
-                    case byte(i) is
-                        when '0' => nibble := 0;
-                        when '1' => nibble := 1;
-                        when '2' => nibble := 2;
-                        when '3' => nibble := 3;
-                        when '4' => nibble := 4;
-                        when '5' => nibble := 5;
-                        when '6' => nibble := 6;
-                        when '7' => nibble := 7;
-                        when '8' => nibble := 8;
-                        when '9' => nibble := 9;
-                        when 'A' => nibble := 10;
-                        when 'B' => nibble := 11;
-                        when 'C' => nibble := 12;
-                        when 'D' => nibble := 13;
-                        when 'E' => nibble := 14;
-                        when 'F' => nibble := 15;
-                        when others => assert_fail(false, "Bad byte read: " & byte(i+1));
-                    end case;
+            type file_t is file of character;
+            file memory_file: file_t;
 
-                    sulv(4*(2-i)+3 downto 4*(2-i)+0) := std_ulogic_vector(to_unsigned(nibble, 4));
-                end loop;
-
-                return sulv;
-            end function;
-
-            file memory_file: text;
             variable fos: file_open_status;
 
-            variable current_line: line;
+            variable current_byte: character;
             variable current_address: integer := 0;
-            
-            variable byte: string(1 to 2);
-            variable space: character;
-
-            variable good: boolean;
         begin
             info("Loading init file: """ & INIT_FILE & """.");
 
@@ -106,28 +70,15 @@ begin
             assert_fail(fos = open_ok, "Loading init file failed: " & file_open_status'image(fos) & ".");
 
             while not endfile(memory_file) loop
-                readline(memory_file, current_line);
+                read(memory_file, current_byte);
 
-                while current_line'length > 0 loop
-                    assert_fail(
-                        current_address < SIZE,
-                        "Init file is bigger than flash size. Aborting!"
-                    );
-                    
-                    read(current_line, byte, good);
-                    assert_fail(good, "Reading bad byte at: " & integer'image(current_address) & ".");
-
-                    if current_line'length /= 0 then
-                        read(current_line, space, good);
-                        assert_fail(
-                            good and (space = ' ' or space = cr),
-                            "Reading bad byte at: " & integer'image(current_address) & "."
-                        );
-                    end if;
-
-                    memory(current_address) <= byte_to_std_ulogic_vector(byte);
-                    current_address := current_address + 1;
-                end loop;
+                assert_fail(
+                    current_address < SIZE,
+                    "Init file is bigger than flash size. Aborting!"
+                );
+                
+                memory(current_address) <= std_ulogic_vector(to_unsigned(character'pos(current_byte), 8));
+                current_address := current_address + 1;
             end loop;
 
             info("Flash initialized with " & integer'image(current_address) & " bytes from init file.");
@@ -140,13 +91,6 @@ begin
         end if;
 
         wait;
-    end process;
-
-    process (memory)
-    begin
-        for i in memory'range loop
-            tb_memory(i*8+7 downto i*8) <= memory(i);
-        end loop;
     end process;
 
     sdo <= data_out(7);

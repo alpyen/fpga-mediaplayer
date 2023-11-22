@@ -18,6 +18,7 @@ entity audio_driver is
 end entity;
 
 architecture arch of audio_driver is
-    
+
 begin
+    audio_fifo_read_enable <= '0';
 end architecture;

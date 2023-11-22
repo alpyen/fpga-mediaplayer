@@ -35,11 +35,10 @@ begin
         wait for 20*T;
         start <= '0';
         reset <= '1';
-        wait for 20*T;
-        wait for T/2;
+        wait for 200*T;
         reset <= '0';
-
         start <= '1';
+        wait for 10*T;
         wait until rising_edge(clock);
 
         wait;
@@ -47,8 +46,8 @@ begin
 
     spi_flash_model_inst: entity work.spi_flash_model
     generic map (
-        SIZE       => 256,
-        INIT_FILE  => "../../../../../sim/memory/memory_file.dat",
+        SIZE       => 8 * 1024,
+        INIT_FILE  => "../../../../../python/loop_short.enc",
         INIT_VALUE => x"ff"
     )
     port map (
@@ -57,11 +56,13 @@ begin
         sdi       => spi_sdi,
         sdo       => spi_sdo,
         wp_n      => spi_wp_n,
-        hold_n    => spi_hold_n,
-        tb_memory => open
+        hold_n    => spi_hold_n
     );
 
     fpga_mediaplayer_inst: entity work.fpga_mediaplayer
+    generic map(
+        SIMULATION => true
+    )
     port map (
         clock100mhz  => clock,
         reset        => reset,
