@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser(
                 "Note that the input file must have 44.1 kHz sample rate\n" +
                 "and will be converted down to 4 bits and mono channel.\n" +
                 "\n" +
-                "Video is not implemented yet and will be empty.",
+                "Video is not implemented yet and will be left empty.",
     formatter_class=argparse.RawTextHelpFormatter
 )
 parser.add_argument("-i", "--input", type=str, required=True, help="Input WAVE file")
@@ -39,6 +39,8 @@ if inputfile.getnframes() == 0:
     inputfile.close()
     exit(0)
 
+print("Reading input file...", end="")
+
 depth = inputfile.getsampwidth()
 channels = inputfile.getnchannels()
 length = inputfile.getnframes()
@@ -47,6 +49,9 @@ original_size = length * channels * depth
 reduced_size = original_size / channels / depth * (4 / 8)
 
 inputfile.close()
+
+print("done!")
+print()
 
 # Print Input file statistics
 # Reduced Size is the size that the file after quality loss but before compression.
@@ -57,11 +62,13 @@ print("Size: ".ljust(20) + str(int(original_size / 1024)) + " K")
 print("Reduced Size: ".ljust(20) + str(int(reduced_size / 1024)) + " K")
 print()
 
-print("Reading input file...")
+print("Reducing to mono and 4 bits...", end="")
 
 mono_samples = []
-
 for i in range(0, length):
+    if int(i % (length / 10)) == 0:
+        print(str(int(i / length * 100)) + "%...", end="", flush=True)
+
     mono_samples.append(0)
 
     for j in range(0, channels):
@@ -83,8 +90,10 @@ for i in range(0, length):
     if mono_samples[-1] == 8:
         mono_samples[-1] = 7
 
+print("done!")
+
 if args.dump_audio:
-    print("Dumping reduced audio file...")
+    print("Dumping reduced audio file...", end="")
 
     if os.path.exists(args.input + "_dump.wav"):
         os.remove(args.input + "_dump.wav")
@@ -101,7 +110,9 @@ if args.dump_audio:
     dumpfile.writeframes(wavedata)
     dumpfile.close()
 
-print("Encoding input file...")
+    print("done!")
+
+print("Encoding input file...", end="")
 
 # We assume in HDL the previous sample to be 0 so we can immediately start encoding.
 previous_sample = 0
@@ -109,6 +120,9 @@ previous_sample = 0
 encoded_samples = []
 
 for i in range(0, length):
+    if int(i % (length / 10)) == 0:
+        print(str(int(i / length * 100)) + "%...", end="", flush=True)
+    
     current_sample = mono_samples[i]
 
     if current_sample - previous_sample == 0:
@@ -131,6 +145,8 @@ for i in range(0, length):
 while len(encoded_samples) % 8 != 0:
     encoded_samples.append(0)
 
+print("done!")
+
 print()
 print("Encoded Size: ".ljust(20) + str(int(len(encoded_samples) / 8 / 1024)) + " K")
 
@@ -138,7 +154,7 @@ print("Encoded To Reduced:".ljust(20) + str(int(round(len(encoded_samples) / 8 /
 
 if args.output is not None:
     print()
-    print("Writing output file...")
+    print("Writing output file...", end="")
 
     if os.path.exists(args.output):
         os.remove(args.output)
@@ -152,6 +168,9 @@ if args.output is not None:
     outputfile.write("Z".encode("ascii"))
 
     for i in range(0, len(encoded_samples), 8):
+        if int(i % (len(encoded_samples) / 10)) == 0:
+            print(str(int(i / len(encoded_samples) * 100)) + "%...", end="", flush=True)
+
         byte = 0
 
         for j in range(0, 8):
@@ -160,3 +179,5 @@ if args.output is not None:
         outputfile.write(struct.pack("B", byte))
 
     outputfile.close()
+
+    print("done!")
