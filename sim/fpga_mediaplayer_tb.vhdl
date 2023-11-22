@@ -1,0 +1,78 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity fpga_mediaplayer_tb is
+end entity;
+
+architecture tb of fpga_mediaplayer_tb is
+    constant T: time := 10 ns; -- 100 MHz
+    signal clock, reset: std_ulogic;
+
+    signal start: std_ulogic;
+
+    -- SPI Interface
+    signal spi_sclk: std_ulogic;
+    signal spi_cs_n: std_ulogic;
+
+    signal spi_sdi: std_ulogic;
+    signal spi_sdo: std_ulogic;
+
+    signal spi_wp_n: std_ulogic;
+    signal spi_hold_n: std_ulogic;
+
+begin
+    process
+    begin
+        clock <= '1';
+        wait for T/2;
+        clock <= '0';
+        wait for T/2;
+    end process;
+
+    process
+    begin
+        wait for 20*T;
+        start <= '0';
+        reset <= '1';
+        wait for 20*T;
+        wait for T/2;
+        reset <= '0';
+
+        start <= '1';
+        wait until rising_edge(clock);
+
+        wait;
+    end process;
+
+    spi_flash_model_inst: entity work.spi_flash_model
+    generic map (
+        SIZE       => 256,
+        INIT_FILE  => "../../../../../sim/memory/memory_file.dat",
+        INIT_VALUE => x"ff"
+    )
+    port map (
+        sclk      => spi_sclk,
+        cs_n      => spi_cs_n,
+        sdi       => spi_sdi,
+        sdo       => spi_sdo,
+        wp_n      => spi_wp_n,
+        hold_n    => spi_hold_n,
+        tb_memory => open
+    );
+
+    fpga_mediaplayer_inst: entity work.fpga_mediaplayer
+    port map (
+        clock100mhz  => clock,
+        reset        => reset,
+
+        -- SPI Interface
+        spi_cs_n     => spi_cs_n,
+        spi_sdi      => spi_sdi,
+        spi_sdo      => spi_sdo,
+        spi_wp_n     => spi_wp_n,
+        spi_hold_n   => spi_hold_n,
+
+        start_button => start
+    );
+end architecture;
