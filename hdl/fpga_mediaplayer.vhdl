@@ -16,7 +16,7 @@ entity fpga_mediaplayer is
         reset: in std_ulogic;
         
         -- SPI ports
-        spi_sclk: out std_ulogic;
+        spi_sclk: inout std_ulogic; -- This is not inout, read comment at process "tb_specifics".
         spi_cs_n: out std_ulogic;
 
         spi_sdi: inout std_logic; -- out
@@ -59,15 +59,6 @@ architecture tle of fpga_mediaplayer is
         );
     end component;
 
-    -- SPI SCLK is not directly drivable on Artix7 devices
-    -- it has to be accessed through the STARTUPE2 primitive.
-    -- Technically we could route clock10mhz immediately to USRCCLKO
-    -- instead of routing it into the spi_memory_driver and then to it
-    -- but this way it's more consistent and Vivado shortens it anyway.
-    -- This is also the reason why there is a port called spi_sclk in the tle
-    -- so it's easier for other boards to set up whose SPI SCLK pin is freely accessible.
-    signal spi_sclk_int: std_ulogic;
-
     -- Button state has to remain for 100 ms
     constant DEBOUNCE_THRESHHOLD: positive := integer(ceil(real(10e6) * (100.0 / 1000.0)));
 
@@ -98,7 +89,14 @@ architecture tle of fpga_mediaplayer is
     signal audio_fifo_data_out: std_ulogic_vector(audio_fifo_data_out_slv'range);
     signal audio_fifo_empty: std_ulogic;
 begin
-    -- Used to wire up the SCLK for the SPI flash
+
+    -- SPI SCLK is not directly drivable on Artix7 devices
+    -- it has to be accessed through the STARTUPE2 primitive.
+    -- Technically we could route clock10mhz immediately to USRCCLKO
+    -- instead of routing it into the spi_memory_driver and then to it
+    -- but this way it's more consistent and Vivado shortens it anyway.
+    -- This is also the reason why there is a port called spi_sclk in the tle
+    -- so it's easier for other boards to set up whose SPI SCLK pin is freely accessible.
     STARTUPE2_inst: STARTUPE2
     generic map (
         PROG_USR => "FALSE",
@@ -114,7 +112,7 @@ begin
         GTS       => '0',
         KEYCLEARB => '1',
         PACK      => '0',
-        USRCCLKO  => spi_sclk_int,
+        USRCCLKO  => spi_sclk,
         USRCCLKTS => '0',
         USRDONEO  => '1',
         USRDONETS => '0'
@@ -151,9 +149,15 @@ begin
     -- Override signals that need to be handled differently in the simulation.
     -- For example we don't need to debounce the buttons as those are sampled
     -- every 100ms, this is just wasted simulation time.
-    spi_sclk <= spi_sclk_int;
-
-    process (reset, start_button, reset_debounced, start_debounced)
+    --
+    -- Another important note is that the port spi_sclk is defined as "inout"
+    -- even though it should be only "out". It's completely unnecessary on the Artix7
+    -- but that's a different story.
+    -- The reason why we don't use "out" and an internal signal is that this
+    -- causes the simulator to freak out and generate delta races due to
+    -- the renaming of the clock onto a different signal.
+    -- It would synthesize fine, but the simulation is garbage.
+    tb_specifics: process (reset, start_button, reset_debounced, start_debounced)
     begin
         reset_final <= reset_debounced;
         start_final <= start_debounced;
@@ -177,7 +181,7 @@ begin
         done    => memory_driver_done,
 
         -- SPI Interface
-        sclk    => spi_sclk_int,
+        sclk    => spi_sclk,
         cs_n    => spi_cs_n,
 
         sdi     => spi_sdi,
