@@ -11,7 +11,7 @@ entity control_unit is
 
         -- Memory Driver Interface
         memory_driver_start: out std_ulogic;
-        memory_driver_addr: out std_ulogic_vector(23 downto 0);
+        memory_driver_address: out std_ulogic_vector(23 downto 0);
 
         memory_driver_data: in std_ulogic_vector(7 downto 0);
         memory_driver_done: in std_ulogic;
@@ -30,7 +30,7 @@ architecture arch of control_unit is
     type state_t is (IDLE, READ_HEADER, PARSE_HEADER, FILL_AUDIO_FIFO);
     signal state, state_next: state_t;
 
-    signal address, address_next: std_ulogic_vector(memory_driver_addr'range);
+    signal address, address_next: std_ulogic_vector(memory_driver_address'range);
 
     signal header, header_next: std_ulogic_vector(10 * 8 - 1 downto 0);
 begin
@@ -54,18 +54,16 @@ begin
     end process;
 
     fsm: process (state, start, address, header, memory_driver_done, memory_driver_data)
-        variable i_address: integer;
         variable u_address: unsigned(address'range);
     begin
         u_address := unsigned(address);
-        i_address := to_integer(u_address);
 
         state_next <= state;
         address_next <= address;
         header_next <= header;
 
         memory_driver_start <= '0';
-        memory_driver_addr <= (others => '0');
+        memory_driver_address <= (others => '0');
 
         case state is
             when IDLE =>
@@ -73,20 +71,24 @@ begin
                     state_next <= READ_HEADER;
 
                     memory_driver_start <= '1';
-                    memory_driver_addr <= address;
+                    memory_driver_address <= address;
 
                     address_next <= std_ulogic_vector(u_address + 1);
                 end if;
 
             when READ_HEADER =>
                 if memory_driver_done = '1' then
-                    header_next(i_address * 8 + 7 downto i_address * 8) <= memory_driver_data;
+                    header_next(header'length - 1 downto header'length - memory_driver_data'length) <= memory_driver_data;
+                    header_next(header'length - memory_driver_data'length - 1 downto 0) <= header(header'length - 1 downto memory_driver_data'length);
 
-                    if u_address = header'length / 8 - 1 then
+                    -- Since we are reading from IDLE -> READ_HEADER the address was incremented already.
+                    -- This means that address contains the next address so we have to check for
+                    -- header'lenght / 8 and not -1.
+                    if u_address = header'length / 8 then
                         state_next <= PARSE_HEADER;
                     else
                         memory_driver_start <= '1';
-                        memory_driver_addr <= address;
+                        memory_driver_address <= address;
 
                         address_next <= std_ulogic_vector(u_address + 1);
                     end if;

@@ -19,11 +19,11 @@ entity fpga_mediaplayer is
         spi_sclk: out std_ulogic;
         spi_cs_n: out std_ulogic;
 
-        spi_sdi: inout std_ulogic;
-        spi_sdo: inout std_ulogic;
+        spi_sdi: inout std_logic; -- out
+        spi_sdo: inout std_logic; -- in
         
-        spi_wp_n: inout std_ulogic;
-        spi_hold_n: inout std_ulogic;
+        spi_wp_n: inout std_logic; -- out
+        spi_hold_n: inout std_logic; -- out
         
         start_button: in std_ulogic
     );
@@ -211,7 +211,7 @@ begin
 
         -- Memory Driver Interface
         memory_driver_start     => memory_driver_start,
-        memory_driver_addr      => memory_driver_address,
+        memory_driver_address   => memory_driver_address,
         memory_driver_data      => memory_driver_data,
         memory_driver_done      => memory_driver_done,
 

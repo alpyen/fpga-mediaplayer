@@ -26,11 +26,11 @@ entity spi_memory_driver is
         sclk: out std_ulogic;
         cs_n: out std_ulogic;
 
-        sdi: out std_ulogic;
-        sdo: in std_ulogic;
+        sdi: inout std_logic; -- out
+        sdo: inout std_logic; -- in
 
-        wp_n: out std_ulogic;
-        hold_n: out std_ulogic
+        wp_n: inout std_logic; -- out
+        hold_n: inout std_logic -- out
     );
 end entity;
 
@@ -57,6 +57,8 @@ begin
     data <= data_int;
 
     cs_n <= cs_n_int;
+
+    sdo <= 'Z';
 
     wp_n <= '1';
     hold_n <= '1';
@@ -140,6 +142,7 @@ begin
                 if counter = 7 then
                     state_next <= IDLE;
                     done_int_next <= '1';
+                    cs_n_int_next <= '1';
                 end if;
         end case;
     end process;

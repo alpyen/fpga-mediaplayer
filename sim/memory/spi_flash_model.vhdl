@@ -19,11 +19,11 @@ port (
     sclk: in std_ulogic;
     cs_n: in std_ulogic;
 
-    sdi: inout std_ulogic;
-    sdo: inout std_ulogic;
+    sdi: inout std_logic;
+    sdo: inout std_logic;
 
-    wp_n: inout std_ulogic;
-    hold_n: inout std_ulogic
+    wp_n: inout std_logic;
+    hold_n: inout std_logic
 );
 end entity;
 
@@ -31,7 +31,7 @@ architecture functional of spi_flash_model is
     type memory_t is array (0 to SIZE-1) of std_ulogic_vector(7 downto 0);
     signal memory: memory_t := (others => INIT_VALUE);
 
-    type state_t is (STATE_COMMAND, STATE_ADDRESS, STATE_DATA);
+    type state_t is (STALL, STATE_COMMAND, STATE_ADDRESS, STATE_DATA);
     signal state, state_next: state_t;
 
     signal command, command_next: std_ulogic_vector(7 downto 0);
@@ -95,10 +95,14 @@ begin
 
     sdo <= data_out(7);
 
+    sdi <= 'Z';
+    wp_n <= 'Z';
+    hold_n <= 'Z';
+
     seq: process (sclk, cs_n)
     begin
         if cs_n = '1' then
-            state <= STATE_COMMAND;
+            state <= STALL;
             counter <= 0;
             data <= (others => 'Z');
             data_out <= (others => 'Z');
@@ -125,6 +129,9 @@ begin
         data_out_next <= data_out;
 
         case state is
+            when STALL =>
+                state_next <= STATE_COMMAND;
+                
             when STATE_COMMAND =>
                 command_next <= command(command'left-1 downto 0) & sdi;
                 counter_next <= counter + 1;
