@@ -6,8 +6,6 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
 - Implement the Audio Driver
-  - Test on board to see if it differs from simulation now that there is the STALL state and cs_n 1.
-  - countercheck with old testbench to see if it was a delta race
   - Control Unit <-> Audio Fifo <-> Audio Driver
   - Control Unit to read out memory contents and feed Fifo
   - Audio Driver to eat data from Fifo and decode
