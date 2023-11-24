@@ -89,6 +89,9 @@ architecture tle of fpga_mediaplayer is
     signal audio_fifo_data_out: std_ulogic_vector(audio_fifo_data_out_slv'range);
     signal audio_fifo_empty: std_ulogic;
 begin
+    assert memory_driver_address'length <= 32
+    report "Memory addresses exceed file specification of 32 bits."
+    severity failure;
 
     -- SPI SCLK is not directly drivable on Artix7 devices
     -- it has to be accessed through the STARTUPE2 primitive.

@@ -25,3 +25,10 @@ Contains some thoughts over the development time of the project.
 - Some testbenches could make use of vhdl2008 be pulling out the internal signals as aliases but we're sticking to Vivado's Default for now ('93?)
   - Instead of duplicating the code we simply route the signals outwards, this is ok because none of this will be synthesized so nothing will be wasted.
 - I've implemented some ideas for audio codecs which isn't really something that's worth documenting the process of so I'll just implement one and maybe talk about a bit about the other ideas.
+- The file header stores the sizes in 4 bytes even though the SPI flash can address at most 3 bytes.
+  - This will result in resizing the audio_bytes and video_bytes signal in the control unit to match the 3 bytes address.
+- We don't need to save the signature_begin and signature_end in the control unit as they will only be written and read once, it's a waste of flipflops.
+- REQUEST_DATA in the control unit only dispatches a request if the read_audio_n_video is set accordingly.
+  - This results in one clock cycle loss if for example audio is in order but the audio fifo is full.
+  - Then we need to stall for one cycle for the read_audio_n_video signal to change.
+  - Technically we could check in the previous state. Does this make sense hardwarewise and timingwise?

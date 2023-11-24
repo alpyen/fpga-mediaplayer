@@ -6,7 +6,7 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
 - Implement the Audio Driver
-  - Refactor the FSM to reduce code duplication
+  - Use Generic for Memory Address width
   - Audio Driver to eat data from Fifo and decode
   - I2S Master to output samples to I2S2 PMOD-Board
     - How to handle the CDC between Audio Driver and I2S Master?
