@@ -188,6 +188,9 @@ begin
                         video_pointer_next <= std_ulogic_vector(u_audio_pointer + u_audio_length + 1);
                     else
                         state_next <= IDLE;
+
+                        -- Reset the audio pointer since that is used to parse the header.
+                        audio_pointer_next <= (others => '0');
                     end if;
                 else
                     report "No media file found in memory." severity failure;
@@ -202,18 +205,17 @@ begin
                     if read_audio_n_video = '0' then
                         audio_fifo_write_enable <= '1';
                         audio_fifo_data_in <= memory_driver_data;
-
-                        audio_pointer_next <= std_ulogic_vector(u_audio_pointer + 1);
                     else
                         video_fifo_write_enable <= '1';
                         video_fifo_data_in <= memory_driver_data;
-
-                        video_pointer_next <= std_ulogic_vector(u_video_pointer + 1);
                     end if;
                 end if;
 
             when REQUEST_DATA =>
-                if read_audio_n_video = '0' then
+                if audio_pointer = audio_end_address and video_pointer = video_end_address then
+                    state_next <= IDLE;
+                    audio_pointer_next <= (others => '0');
+                elsif read_audio_n_video = '0' then
                     if audio_fifo_full /= '1' then
                         -- We are done reading audio.
                         -- Comparing two different length ulogic vector will yield false

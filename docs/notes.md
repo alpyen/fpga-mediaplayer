@@ -32,3 +32,4 @@ Contains some thoughts over the development time of the project.
   - This results in one clock cycle loss if for example audio is in order but the audio fifo is full.
   - Then we need to stall for one cycle for the read_audio_n_video signal to change.
   - Technically we could check in the previous state. Does this make sense hardwarewise and timingwise?
+- FSM returns to idle when it's done reading audio and video but should only do so when the playback is stopped completely.
