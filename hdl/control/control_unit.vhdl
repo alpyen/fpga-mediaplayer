@@ -15,7 +15,7 @@ entity control_unit is
 
         memory_driver_data: in std_ulogic_vector(7 downto 0);
         memory_driver_done: in std_ulogic;
-        
+
         -- Audio Driver Interface
         audio_driver_start: out std_ulogic;
 
@@ -28,7 +28,7 @@ end entity;
 
 architecture arch of control_unit is
     type state_t is (
-        IDLE, READ_HEADER, PARSE_HEADER, 
+        IDLE, READ_HEADER, PARSE_HEADER,
         WAIT_FOR_DATA, REQUEST_DATA, WAIT_FOR_EMPTY_SLOT
     );
     signal state, state_next: state_t;
@@ -38,10 +38,10 @@ architecture arch of control_unit is
     alias audio_length: std_ulogic_vector(memory_driver_address'range) is header(8 + memory_driver_address'length - 1 downto 8);
     alias video_length: std_ulogic_vector(memory_driver_address'range) is header(8 + 32 + memory_driver_address'length - 1 downto 8 + 32);
     alias signature_end: std_ulogic_vector(7 downto 0) is header(7 + 32 + 32 + 8 downto 32 + 32 + 8);
-    
+
     signal audio_pointer, audio_pointer_next: std_ulogic_vector(memory_driver_address'range);
     signal audio_end_address, audio_end_address_next: std_ulogic_vector(memory_driver_address'range);
-    
+
     signal video_pointer, video_pointer_next: std_ulogic_vector(memory_driver_address'range);
     signal video_end_address, video_end_address_next: std_ulogic_vector(memory_driver_address'range);
 
@@ -91,7 +91,7 @@ begin
     fsm: process (
         state, start,
         header, memory_driver_done, memory_driver_data,
-        audio_fifo_full, audio_pointer, audio_end_address, 
+        audio_fifo_full, audio_pointer, audio_end_address,
         video_fifo_full, video_pointer, video_end_address,
         read_audio_n_video
     )
@@ -105,12 +105,12 @@ begin
         u_video_length := unsigned(video_length);
 
         state_next <= state;
-        
+
         header_next <= header;
 
         audio_fifo_data_in <= (others => '0');
         audio_fifo_write_enable <= '0';
-        
+
         audio_pointer_next <= audio_pointer;
         audio_end_address_next <= audio_end_address;
 
@@ -267,6 +267,7 @@ begin
                     state_next <= REQUEST_DATA;
                     read_audio_n_video_next <= '1';
                 end if;
+
         end case;
     end process;
 end architecture;

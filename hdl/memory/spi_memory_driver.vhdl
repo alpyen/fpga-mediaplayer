@@ -4,7 +4,7 @@
 -- The implementation is limited on the basic READ command (0x03) shared
 -- by a lot of flash chips using SPI and to an address range of 24 bits.
 -- This driver could be made more generic to support a wider range of flash chips,
--- but for our purposes this should suffice. 
+-- but for our purposes this should suffice.
 
 library ieee;
 use ieee.std_logic_1164.all;

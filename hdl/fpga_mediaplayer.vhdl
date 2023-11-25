@@ -14,17 +14,17 @@ entity fpga_mediaplayer is
     port (
         clock100mhz: in std_ulogic;
         reset: in std_ulogic;
-        
+
         -- SPI ports
         spi_sclk: inout std_ulogic; -- This is not inout, read comment at process "tb_specifics".
         spi_cs_n: out std_ulogic;
 
         spi_sdi: inout std_logic; -- out
         spi_sdo: inout std_logic; -- in
-        
+
         spi_wp_n: inout std_logic; -- out
         spi_hold_n: inout std_logic; -- out
-        
+
         start_button: in std_ulogic
     );
 end entity;
@@ -55,7 +55,7 @@ architecture tle of fpga_mediaplayer is
             rd_en : in std_logic;
             dout : out std_logic_vector(0 downto 0);
             full : out std_logic;
-            empty : out std_logic 
+            empty : out std_logic
         );
     end component;
 
@@ -77,7 +77,7 @@ architecture tle of fpga_mediaplayer is
 
     -- Audio Driver Signals
     signal audio_driver_start: std_ulogic;
-    
+
     -- Audio Fifo
     signal audio_fifo_write_enable: std_ulogic;
     signal audio_fifo_data_in_slv: std_logic_vector(7 downto 0);

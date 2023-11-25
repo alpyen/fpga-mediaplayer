@@ -49,7 +49,7 @@ They can be found at the very top in the big comment.
 This is a personal project to deep dive into FPGA development and get in touch with every part of it
 and to learn also a little bit about electrical engineering.
 
-The vision is to have Basys3 board drive a selfmade LED matrix playing back a grayscale video and 
+The vision is to have Basys3 board drive a selfmade LED matrix playing back a grayscale video and
 outputting sound simultaneously.
 
 Some of the decisions along the way are deliberately made in a non-optimal way such as writing

@@ -76,7 +76,7 @@ begin
                     current_address < SIZE,
                     "Init file is bigger than flash size. Aborting!"
                 );
-                
+
                 memory(current_address) <= std_ulogic_vector(to_unsigned(character'pos(current_byte), 8));
                 current_address := current_address + 1;
             end loop;
