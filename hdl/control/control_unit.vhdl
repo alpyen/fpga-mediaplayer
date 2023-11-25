@@ -29,7 +29,8 @@ end entity;
 architecture arch of control_unit is
     type state_t is (
         IDLE, READ_HEADER, PARSE_HEADER,
-        WAIT_FOR_DATA, REQUEST_DATA, WAIT_FOR_EMPTY_SLOT
+        WAIT_FOR_DATA, REQUEST_DATA, WAIT_FOR_EMPTY_SLOT,
+        DONE
     );
     signal state, state_next: state_t;
 
@@ -48,15 +49,14 @@ architecture arch of control_unit is
     -- If this signal is zero, read and wait for audio, if it's one, read and wait for video.
     signal read_audio_n_video, read_audio_n_video_next: std_ulogic;
 
+    signal start_playback, start_playback_next: std_ulogic;
+
     -- TODO: Remove when Video Fifo is attached
     signal video_driver_start: std_ulogic;
     signal video_fifo_write_enable: std_ulogic;
     signal video_fifo_data_in: std_ulogic_vector(7 downto 0);
     signal video_fifo_full: std_ulogic := '1';
 begin
-    audio_driver_start <= '0';
-    video_driver_start <= '0';
-
     seq: process (clock)
     begin
         if rising_edge(clock) then
@@ -72,6 +72,8 @@ begin
                 video_end_address <= (others => '0');
 
                 read_audio_n_video <= '0';
+
+                start_playback <= '0';
             else
                 state <= state_next;
 
@@ -84,6 +86,8 @@ begin
                 video_end_address <= video_end_address_next;
 
                 read_audio_n_video <= read_audio_n_video_next;
+
+                start_playback <= start_playback_next;
             end if;
         end if;
     end process;
@@ -93,7 +97,7 @@ begin
         header, memory_driver_done, memory_driver_data,
         audio_fifo_full, audio_pointer, audio_end_address,
         video_fifo_full, video_pointer, video_end_address,
-        read_audio_n_video
+        read_audio_n_video, start_playback
     )
         variable u_audio_pointer, u_video_pointer: unsigned(audio_pointer'range);
         variable u_audio_length, u_video_length: unsigned(audio_length'range);
@@ -124,6 +128,11 @@ begin
 
         memory_driver_start <= '0';
         memory_driver_address <= (others => '0');
+
+        start_playback_next <= start_playback;
+
+        audio_driver_start <= '0';
+        video_driver_start <= '0';
 
         case state is
             when IDLE =>
@@ -213,7 +222,17 @@ begin
 
             when REQUEST_DATA =>
                 if audio_pointer = audio_end_address and video_pointer = video_end_address then
-                    state_next <= IDLE;
+                    state_next <= DONE;
+
+                    -- We have to start playback if the audio and video data completely fit inside
+                    -- the Fifos before hitting WAIT_FOR_EMPTY_SLOT.
+                    if start_playback = '0' then
+                        start_playback_next <= '1';
+
+                        audio_driver_start <= '1';
+                        video_driver_start <= '1';
+                    end if;
+
                     audio_pointer_next <= (others => '0');
                 elsif read_audio_n_video = '0' then
                     if audio_fifo_full /= '1' then
@@ -260,6 +279,13 @@ begin
                 end if;
 
             when WAIT_FOR_EMPTY_SLOT =>
+                if start_playback = '0' then
+                    start_playback_next <= '1';
+
+                    audio_driver_start <= '1';
+                    video_driver_start <= '1';
+                end if;
+
                 if audio_fifo_full /= '1' then
                     state_next <= REQUEST_DATA;
                     read_audio_n_video_next <= '0';
@@ -268,6 +294,8 @@ begin
                     read_audio_n_video_next <= '1';
                 end if;
 
+            when DONE =>
+                null;
         end case;
     end process;
 end architecture;
