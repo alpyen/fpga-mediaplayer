@@ -7,29 +7,21 @@ Stuff that needs to be done, may be incomplete and not in order.
 ## HDL
 - Implement the Audio Driver
   - Audio Driver to eat data from Fifo and decode
-    - What happens when 1 bit is eaten
+    - Verify that the bitorder in the encoded file is correct
   - Use Generic for Memory Address width
   - I2S Master to output samples to I2S2 PMOD-Board
     - How to handle the CDC between Audio Driver and I2S Master?
   - Add Base Address to the TLE so the data is not assumed to be at address zero
 - Implement the Video Driver
-- Implement the Control Unit
-
-## Repo
-- Move top level entities somewhere different?
 
 ## Vivado
 - Change the board store in the project-tcl to be OS-independent
 - Add custom command to write project tcl
+  - add two scripts for loading and storing that just need to be sourced?
 
 ## Software
 - Codec development
-  - Audio: Up Down 1
-    - 0: Unchanged
-    - 10: +1
-    - 110: -1
-    - 111 xxxx: New Sample
-  - Video: Not tested yet, but probably the same as audio
+  - Expand the existing script to include video
 
 # How to open with Vivado
 

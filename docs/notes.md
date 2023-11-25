@@ -33,3 +33,6 @@ Contains some thoughts over the development time of the project.
   - Then we need to stall for one cycle for the read_audio_n_video signal to change.
   - Technically we could check in the previous state. Does this make sense hardwarewise and timingwise?
 - FSM returns to idle when it's done reading audio and video but should only do so when the playback is stopped completely.
+- If we calculate the schedule when the modules feed and eat data from the Fifos we could assume some FSM states.
+  - Meaning that we for example don't need to check during bit decoding in audio if the Fifo is empty or not.
+  - But for safety measures we will still to this, so it's safer when we expand it later down the line to higher quality samples.

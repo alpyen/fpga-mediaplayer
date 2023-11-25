@@ -235,7 +235,7 @@ begin
 
                     audio_pointer_next <= (others => '0');
                 elsif read_audio_n_video = '0' then
-                    if audio_fifo_full /= '1' then
+                    if audio_fifo_full = '0' then
                         -- We are done reading audio.
                         -- Comparing two different length ulogic vector will yield false
                         -- if they are not equally long even if they are numerically the same.
@@ -250,7 +250,7 @@ begin
                             state_next <= WAIT_FOR_DATA;
                         end if;
                     else
-                        if video_fifo_full /= '1' then
+                        if video_fifo_full = '0' then
                             read_audio_n_video_next <= '1';
                         else
                             read_audio_n_video_next <= '1';
@@ -258,7 +258,7 @@ begin
                         end if;
                     end if;
                 else
-                    if video_fifo_full /= '1' then
+                    if video_fifo_full = '0' then
                         if u_video_pointer = unsigned(video_end_address) then
                             read_audio_n_video_next <= '0';
                         else
@@ -269,7 +269,7 @@ begin
                             state_next <= WAIT_FOR_DATA;
                         end if;
                     else
-                        if audio_fifo_full /= '1' then
+                        if audio_fifo_full = '0' then
                             read_audio_n_video_next <= '0';
                         else
                             read_audio_n_video_next <= '0';
@@ -286,10 +286,10 @@ begin
                     video_driver_start <= '1';
                 end if;
 
-                if audio_fifo_full /= '1' then
+                if audio_fifo_full = '0' then
                     state_next <= REQUEST_DATA;
                     read_audio_n_video_next <= '0';
-                elsif video_fifo_full /= '1' then
+                elsif video_fifo_full = '0' then
                     state_next <= REQUEST_DATA;
                     read_audio_n_video_next <= '1';
                 end if;
