@@ -124,9 +124,9 @@ begin
     clocking_wizard_inst: clocking_wizard
     port map (
         clock100mhz => clock100mhz,
-        reset     => '0',
+        reset       => '0',
         clock10mhz  => clock10mhz,
-        locked    => open
+        locked      => open
     );
 
     reset_debouncer: entity work.debouncer
@@ -134,7 +134,7 @@ begin
         COUNT => DEBOUNCE_THRESHHOLD
     )
     port map (
-        clk    => clock10mhz,
+        clock  => clock10mhz,
         input  => reset,
         output => reset_debounced
     );
@@ -144,7 +144,7 @@ begin
         COUNT => DEBOUNCE_THRESHHOLD
     )
     port map (
-        clk    => clock10mhz,
+        clock  => clock10mhz,
         input  => start_button,
         output => start_debounced
     );

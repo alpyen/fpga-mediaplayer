@@ -14,7 +14,7 @@ entity debouncer is
         COUNT: positive
     );
     port (
-        clk: in std_ulogic;
+        clock: in std_ulogic;
 
         input: in std_ulogic;
         output: out std_ulogic
@@ -41,15 +41,15 @@ begin
         output_int_next <= output_int;
 
         if samples(1) /= samples(0) then
-            counter_next <= (others => '0');
+            counter_next <= to_unsigned(0, counter'length);
         elsif counter >= COUNTER_END then
             output_int_next <= samples(1);
         end if;
     end process;
 
-    process (clk)
+    process (clock)
     begin
-        if rising_edge(clk) then
+        if rising_edge(clock) then
             sync <= sync_next;
             samples <= samples_next;
             counter <= counter_next;

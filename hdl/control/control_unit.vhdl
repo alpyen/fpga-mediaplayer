@@ -232,8 +232,6 @@ begin
                         audio_driver_start <= '1';
                         video_driver_start <= '1';
                     end if;
-
-                    audio_pointer_next <= (others => '0');
                 elsif read_audio_n_video = '0' then
                     if audio_fifo_full = '0' then
                         -- We are done reading audio.
@@ -295,6 +293,7 @@ begin
                 end if;
 
             when DONE =>
+                audio_pointer_next <= (others => '0');
                 null;
         end case;
     end process;

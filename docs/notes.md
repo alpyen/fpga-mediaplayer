@@ -36,3 +36,4 @@ Contains some thoughts over the development time of the project.
 - If we calculate the schedule when the modules feed and eat data from the Fifos we could assume some FSM states.
   - Meaning that we for example don't need to check during bit decoding in audio if the Fifo is empty or not.
   - But for safety measures we will still to this, so it's safer when we expand it later down the line to higher quality samples.
+  - This is important because the audio and video driver assume the Fifo only to run out **when there is no data left to play**.
