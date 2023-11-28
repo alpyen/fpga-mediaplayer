@@ -213,10 +213,32 @@ begin
 
                     if read_audio_n_video = '0' then
                         audio_fifo_write_enable <= '1';
-                        audio_fifo_data_in <= memory_driver_data;
+
+                        -- Reverse the bit order going into the Fifo because
+                        -- the output is only one bit and it outputs MSB first.
+                        audio_fifo_data_in <=
+                            memory_driver_data(0) &
+                            memory_driver_data(1) &
+                            memory_driver_data(2) &
+                            memory_driver_data(3) &
+                            memory_driver_data(4) &
+                            memory_driver_data(5) &
+                            memory_driver_data(6) &
+                            memory_driver_data(7)
+                        ;
                     else
                         video_fifo_write_enable <= '1';
-                        video_fifo_data_in <= memory_driver_data;
+
+                        video_fifo_data_in <=
+                            memory_driver_data(0) &
+                            memory_driver_data(1) &
+                            memory_driver_data(2) &
+                            memory_driver_data(3) &
+                            memory_driver_data(4) &
+                            memory_driver_data(5) &
+                            memory_driver_data(6) &
+                            memory_driver_data(7)
+                        ;
                     end if;
                 end if;
 
