@@ -122,7 +122,7 @@ encoded_samples = []
 for i in range(0, length):
     if int(i % (length / 10)) == 0:
         print(str(int(i / length * 100)) + "%...", end="", flush=True)
-    
+
     current_sample = mono_samples[i]
 
     if current_sample - previous_sample == 0:
@@ -136,8 +136,8 @@ for i in range(0, length):
 
     else:
         encoded_samples.extend([1, 1, 1])
-        for i in range(0, 4):
-            encoded_samples.append(mono_samples[0] >> (4 - 1 - i) & 0b1)
+        for j in range(0, 4):
+            encoded_samples.append(mono_samples[i] >> (4 - 1 - j) & 0b1)
 
     previous_sample = current_sample
 
