@@ -37,3 +37,5 @@ Contains some thoughts over the development time of the project.
   - Meaning that we for example don't need to check during bit decoding in audio if the Fifo is empty or not.
   - But for safety measures we will still to this, so it's safer when we expand it later down the line to higher quality samples.
   - This is important because the audio and video driver assume the Fifo only to run out **when there is no data left to play**.
+- When playing back the 4 bit sample, we are only adding zeroes at the end.
+  - We could make it louder by adding almost a bit on it so it maxes out the amplitude.

@@ -12,6 +12,8 @@ Stuff that needs to be done, may be incomplete and not in order.
       - Test and see if that causes a problem.
     - i2s_lrck is a fabric clock.
       - Constrain? Test? Does this even work?
+  - Add CDC-XDC
+  - Add reset to debouncer
   - Use Generic for Memory Address width
   - Add Base Address to the TLE so the data is not assumed to be at address zero
   - Remove the SPI clk driving from the spi_memory_driver
