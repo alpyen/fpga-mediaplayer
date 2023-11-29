@@ -6,13 +6,18 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
 - Implement the Audio Driver
-  - Audio Driver to eat data from Fifo and decode
-    - Verify that the bitorder in the encoded file is correct
-  - Use Generic for Memory Address width
   - I2S Master to output samples to I2S2 PMOD-Board
     - How to handle the CDC between Audio Driver and I2S Master?
+    - i2s_mclk is 11.28906 MHz instead of the desired 11.2896 MHz.
+      - Test and see if that causes a problem.
+    - i2s_lrck is a fabric clock.
+      - Constrain? Test? Does this even work?
+  - Use Generic for Memory Address width
   - Add Base Address to the TLE so the data is not assumed to be at address zero
+  - Remove the SPI clk driving from the spi_memory_driver
+    - TLE is supposed to drive it
 - Implement the Video Driver
+- Use 7-Segment Display to display the current runtime / total runtime
 
 ## Vivado
 - Change the board store in the project-tcl to be OS-independent

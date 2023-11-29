@@ -7,7 +7,7 @@ use ieee.math_real.ceil;
 
 entity audio_driver is
     port (
-        clock: in std_logic;
+        clock: in std_ulogic;
         reset: in std_ulogic;
 
         -- Audio Driver Interface
@@ -16,7 +16,12 @@ entity audio_driver is
         -- Audio Fifo
         audio_fifo_read_enable: out std_ulogic;
         audio_fifo_data_out: in std_ulogic_vector(0 downto 0);
-        audio_fifo_empty: in std_ulogic
+        audio_fifo_empty: in std_ulogic;
+
+        -- I2S Interface
+        i2s_mclk: in std_ulogic;
+        i2s_lrck: out std_ulogic;
+        i2s_sdata: out std_ulogic
     );
 end entity;
 
@@ -42,6 +47,13 @@ architecture arch of audio_driver is
 
     signal sample_bit_counter, sample_bit_counter_next: unsigned(integer(ceil(log2(real(SAMPLE_DEPTH)))) - 1 downto 0);
 begin
+    i2s_master_inst: entity work.i2s_master
+    port map (
+        i2s_mclk  =>           i2s_mclk,
+        i2s_lrck  =>           i2s_lrck,
+        i2s_sdata =>           i2s_sdata
+    );
+
     seq: process (clock)
     begin
         if rising_edge(clock) then
@@ -147,7 +159,7 @@ begin
 
             when NEW_SAMPLE =>
                 -- 1 1 1 x x x x ~> new sample = next four bits
-                sample_next <= sample(sample'left - 1 downto 0) & audio_fifo_data_out(0); -- TODO: Correct order?
+                sample_next <= sample(sample'left - 1 downto 0) & audio_fifo_data_out(0);
                 sample_bit_counter_next <= sample_bit_counter + 1;
 
                 if sample_bit_counter = SAMPLE_DEPTH - 1 then

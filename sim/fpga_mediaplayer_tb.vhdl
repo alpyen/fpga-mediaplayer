@@ -20,6 +20,11 @@ architecture tb of fpga_mediaplayer_tb is
 
     signal spi_wp_n: std_logic;
     signal spi_hold_n: std_logic;
+
+    -- I2S interface to I2S2 PMOD
+    signal i2s_mclk: std_ulogic;
+    signal i2s_lrck: std_ulogic;
+    signal i2s_sdata: std_ulogic;
 begin
     process
     begin
@@ -96,6 +101,11 @@ begin
 
         spi_wp_n     => spi_wp_n,
         spi_hold_n   => spi_hold_n,
+
+        -- I2S interface to I2S2 PMOD
+        i2s_mclk     => i2s_mclk,
+        i2s_lrck     => i2s_lrck,
+        i2s_sdata    => i2s_sdata,
 
         start_button => start
     );

@@ -25,6 +25,11 @@ entity fpga_mediaplayer is
         spi_wp_n: inout std_logic; -- out
         spi_hold_n: inout std_logic; -- out
 
+        -- I2S interface to I2S2 PMOD
+        i2s_mclk: out std_ulogic;
+        i2s_lrck: out std_ulogic;
+        i2s_sdata: out std_ulogic;
+
         start_button: in std_ulogic
     );
 end entity;
@@ -32,16 +37,22 @@ end entity;
 architecture tle of fpga_mediaplayer is
     signal clock10mhz: std_ulogic;
 
-    -- PLL/MMCM to generate all the necessary clocks from the base 100 MHz
-    -- The following clocks are necessary:
-    --      10 MHz FPGA Fabric
-    --      10 MHz SPI Flash
-    --      ?? MHz I2S Clocks (MCLK, SCLK, LRCLK)
+    -- CS4344 clocking:
+    --  LRCK: 44.1 kHz
+    --      we need 44.1 kHz
+    --  MCLK: 11.2896 MHz
+    --      lowest possible MCLK (could go higher, but waste of power)
+    --  SCLK: 32 * LRCK = 1.4112 MHz
+    --      (auto-detected by: internal SCLK = Fs * 32 with Fs = LRCK)
+    --      (auto-detectable if MCLK/LRCK ratio = 1024, 512, 256, 128 or 64)
+    signal clock_i2s_mclk: std_ulogic;
+
     component clocking_wizard
         port (
             clock100mhz : in  std_ulogic;
             reset : in std_ulogic;
             clock10mhz : out std_ulogic;
+            clock11_2896mhz: out std_ulogic;
             locked : out std_ulogic
         );
     end component;
@@ -121,12 +132,15 @@ begin
         USRDONETS => '0'
     );
 
+    i2s_mclk <= clock_i2s_mclk;
+
     clocking_wizard_inst: clocking_wizard
     port map (
-        clock100mhz => clock100mhz,
-        reset       => '0',
-        clock10mhz  => clock10mhz,
-        locked      => open
+        clock100mhz     => clock100mhz,
+        reset           => '0',
+        clock10mhz      => clock10mhz,
+        clock11_2896mhz => clock_i2s_mclk,
+        locked          => open
     );
 
     reset_debouncer: entity work.debouncer
@@ -242,7 +256,12 @@ begin
         -- Audio Fifo
         audio_fifo_read_enable => audio_fifo_read_enable,
         audio_fifo_data_out    => audio_fifo_data_out,
-        audio_fifo_empty       => audio_fifo_empty
+        audio_fifo_empty       => audio_fifo_empty,
+
+        -- I2S Interface
+        i2s_mclk               => clock_i2s_mclk,
+        i2s_lrck               => i2s_lrck,
+        i2s_sdata              => i2s_sdata
     );
 
 end architecture;
