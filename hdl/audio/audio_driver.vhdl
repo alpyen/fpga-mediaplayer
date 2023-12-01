@@ -6,6 +6,10 @@ use ieee.math_real.log2;
 use ieee.math_real.ceil;
 
 entity audio_driver is
+    generic (
+        CLOCK_SPEED: positive;
+        I2S_MCLK_SPEED: positive
+    );
     port (
         clock: in std_ulogic;
         reset: in std_ulogic;
@@ -26,15 +30,6 @@ entity audio_driver is
 end entity;
 
 architecture arch of audio_driver is
-    type state_t is (IDLE, DECODE, WAIT_UNTIL_SAMPLE_PLAYED);
-    signal state, state_next: state_t;
-
-    type decode_state_t is (IDLE, BIT_0, BIT_1, BIT_2, NEW_SAMPLE);
-    signal decode_state, decode_state_next: decode_state_t;
-
-    signal decoding_start: std_ulogic;
-    signal decoding_done: std_ulogic;
-
     -- This constant is here to not use magic numbers.
     -- The audio driver is "optimized" to work on four bit samples.
     -- It might work with higher bits, but you'd need to make sure
@@ -43,15 +38,34 @@ architecture arch of audio_driver is
     -- since the jumps are mostly wider than 0/+1/-1.
     constant SAMPLE_DEPTH: positive := 4;
 
-    signal sample, sample_next: signed(SAMPLE_DEPTH - 1 downto 0);
+    -- Audio Driver FSM
+    type state_t is (IDLE, DECODE, WAIT_UNTIL_SAMPLE_PLAYED);
+    signal state, state_next: state_t;
+    signal decoding_start: std_ulogic;
 
+    -- Decoder FSM
+    type decode_state_t is (IDLE, BIT_0, BIT_1, BIT_2, NEW_SAMPLE);
+    signal decode_state, decode_state_next: decode_state_t;
+    signal decoding_done: std_ulogic;
+
+    signal sample, sample_next: signed(SAMPLE_DEPTH - 1 downto 0);
     signal sample_bit_counter, sample_bit_counter_next: unsigned(integer(ceil(log2(real(SAMPLE_DEPTH)))) - 1 downto 0);
+
+    -- I2S Transfer FSM
 begin
     i2s_master_inst: entity work.i2s_master
+    generic map (
+        SAMPLE_DEPTH => SAMPLE_DEPTH,
+
+        I2S_MCLK_SPEED => I2S_MCLK_SPEED,
+        TRANSFER_PARTNER_CLOCK_SPEED => CLOCK_SPEED
+    )
     port map (
-        i2s_mclk  =>           i2s_mclk,
-        i2s_lrck  =>           i2s_lrck,
-        i2s_sdata =>           i2s_sdata
+        reset     => reset,
+
+        i2s_mclk  => i2s_mclk,
+        i2s_lrck  => i2s_lrck,
+        i2s_sdata => i2s_sdata
     );
 
     seq: process (clock)
@@ -61,14 +75,12 @@ begin
                 state <= IDLE;
 
                 decode_state <= IDLE;
-
                 sample <= to_signed(0, sample'length);
                 sample_bit_counter <= to_unsigned(0, sample_bit_counter'length);
             else
                 state <= state_next;
 
                 decode_state <= decode_state_next;
-
                 sample <= sample_next;
                 sample_bit_counter <= sample_bit_counter_next;
             end if;
@@ -99,6 +111,7 @@ begin
                 end if;
 
             when WAIT_UNTIL_SAMPLE_PLAYED =>
+                -- TODO: Transfer to I2S Master
                 state_next <= DECODE;
                 -- assert false report "Audio Driver: WAIT_UNTIL_SAMPLE_PLAYED reached." severity failure;
         end case;
@@ -107,13 +120,12 @@ begin
     decode_fsm: process (decode_state, decoding_start, audio_fifo_data_out, sample, sample_bit_counter)
     begin
         decode_state_next <= decode_state;
-
-        audio_fifo_read_enable <= '0';
-
         decoding_done <= '0';
 
         sample_next <= sample;
         sample_bit_counter_next <= to_unsigned(0, sample_bit_counter'length);
+
+        audio_fifo_read_enable <= '0';
 
         case decode_state is
             when IDLE =>

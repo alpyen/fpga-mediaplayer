@@ -2,8 +2,22 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+use ieee.math_real.log2;
+use ieee.math_real.ceil;
+
 entity i2s_master is
+    generic (
+        SAMPLE_DEPTH: positive;
+
+        I2S_MCLK_SPEED: positive;
+        TRANSFER_PARTNER_CLOCK_SPEED: positive
+    );
     port (
+        -- Audio Driver's reset ~> synchronization necessary!
+        -- We have to guarantee the pulse is long enough
+        -- but since we mapped reset to a button we take it as a given.
+        reset: in std_ulogic;
+
         i2s_mclk: in std_ulogic;
         i2s_lrck: out std_ulogic;
         i2s_sdata: out std_ulogic
@@ -11,28 +25,80 @@ entity i2s_master is
 end entity;
 
 architecture arch of i2s_master is
+    signal reset_sync, reset_sync_next: std_ulogic_vector(1 downto 0);
+
     -- LRCK needs to toggle at 44.1 kHz which is 1/256 of MCLK
     signal lrck_counter, lrck_counter_next: unsigned(7 downto 0) := to_unsigned(0, 8);
-    signal left_right_clock, left_right_clock_next: std_ulogic := '0';
+    signal left_right_select, left_right_select_next: std_ulogic := '0';
+
+    -- The current sample that should be played.
+    signal sample, sample_next: signed(SAMPLE_DEPTH - 1 downto 0);
+    -- The next sample that should be played after sample was played.
+    signal new_sample, new_sample_next: signed(sample'range);
+
+    -- One i2s_mclk has to be stalled after an edge on lrck according to the CS4344 specification.
+    signal i2s_sdata_shiftregister, i2s_sdata_shiftregister_next: std_ulogic_vector(sample'length downto 0);
 begin
-    i2s_lrck <= left_right_clock;
-    i2s_sdata <= '0';
+    i2s_lrck <= left_right_select;
+    i2s_sdata <= i2s_sdata_shiftregister(i2s_sdata_shiftregister'left);
+
+    sync: process (reset, reset_sync)
+    begin
+        reset_sync_next <= reset_sync(0) & reset;
+    end process;
 
     seq: process (i2s_mclk)
     begin
         if falling_edge(i2s_mclk) then
-            lrck_counter <= lrck_counter_next;
-            left_right_clock <= left_right_clock_next;
+            -- Resetting reset_sync to "00" when we encounter a reset
+            -- will not reset it for one cycle as it has to be synchronized again.
+            -- Therefore we simply not reset it at all.
+            -- This also means that we need to clock it regardless of it being reset.
+            reset_sync <= reset_sync_next;
+
+            if reset_sync(1) = '1' then
+                -- reset_sync <= (others => '0');
+
+                lrck_counter <= to_unsigned(0, lrck_counter'length);
+                left_right_select <= '0';
+
+                sample <= to_signed(0, sample'length);
+                new_sample <= to_signed(0, new_sample'length);
+                i2s_sdata_shiftregister <= (others => '0');
+            else
+                lrck_counter <= lrck_counter_next;
+                left_right_select <= left_right_select_next;
+
+                sample <= sample_next;
+                new_sample <= new_sample_next;
+                i2s_sdata_shiftregister <= i2s_sdata_shiftregister_next;
+            end if;
         end if;
     end process;
 
-    left_right_selection: process (lrck_counter, left_right_clock)
+    comb: process (lrck_counter, left_right_select, i2s_sdata_shiftregister, new_sample)
     begin
         lrck_counter_next <= lrck_counter + 1;
-        left_right_clock_next <= left_right_clock;
+        left_right_select_next <= left_right_select;
 
-        if lrck_counter = 0 then
-            left_right_clock_next <= not left_right_clock;
+        sample_next <= sample;
+        i2s_sdata_shiftregister_next <= i2s_sdata_shiftregister(i2s_sdata_shiftregister'left - 1 downto 0) & '0';
+
+        if lrck_counter = 255 then
+            left_right_select_next <= not left_right_select;
+
+            -- One cycle stalling necessary after an edge on left right.
+            i2s_sdata_shiftregister_next <= '0' & std_ulogic_vector(sample);
+
+            -- We are on the right / last channel and about to go to the left / first
+            -- and need to play a new sample if one is available.
+            if left_right_select = '1' then
+                sample_next <= new_sample;
+                i2s_sdata_shiftregister_next <= '0' & std_ulogic_vector(new_sample);
+
+                -- NOTE: We need to flag somehow that new_sample has been played
+                --       and that the transfer fsm is now allowed to override it.
+            end if;
         end if;
     end process;
 

@@ -246,6 +246,10 @@ begin
     );
 
     audio_driver_inst: entity work.audio_driver
+    generic map (
+        CLOCK_SPEED => 10_000_000,
+        I2S_MCLK_SPEED => 11_289_600
+    )
     port map (
         clock                  => clock10mhz,
         reset                  => reset_final,
