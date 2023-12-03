@@ -41,7 +41,7 @@ architecture arch of audio_driver is
     -- Audio Driver FSM
     type state_t is (IDLE, DECODE, WAIT_UNTIL_SAMPLE_PLAYED);
     signal state, state_next: state_t;
-    signal decoding_start: std_ulogic;
+    signal decoding_start, sending_start: std_ulogic;
 
     -- Decoder FSM
     type decode_state_t is (IDLE, BIT_0, BIT_1, BIT_2, NEW_SAMPLE);
@@ -58,6 +58,22 @@ architecture arch of audio_driver is
     signal transfer_data_valid, transfer_data_valid_next: std_ulogic;
     signal transfer_acknowledge: std_ulogic;
     signal transfer_acknowledge_sync, transfer_acknowledge_sync_next: std_ulogic_vector(1 downto 0);
+
+    constant CDC_HOLD_COUNT_NUM: positive := positive(2 * ((CLOCK_SPEED + I2S_MCLK_SPEED - 1) / I2S_MCLK_SPEED));
+    constant CDC_HOLD_COUNT_WIDTH: integer := integer(ceil(log2(real(CDC_HOLD_COUNT_NUM))));
+    constant CDC_HOLD_COUNT: unsigned(CDC_HOLD_COUNT_WIDTH - 1 downto 0) := to_unsigned(CDC_HOLD_COUNT_NUM - 1, CDC_HOLD_COUNT_WIDTH);
+    signal cdc_counter, cdc_counter_next: unsigned(CDC_HOLD_COUNT'range);
+
+    type transfer_state_t is (
+        IDLE,
+        WAIT_UNTIL_READY_ASSERTED,
+        WAIT_UNTIL_DATA_ASSERTED,
+        WAIT_UNTIL_DATA_VALID_ASSERTED,
+        WAIT_UNTIL_ACKNOWLEDGE_ASSERTED,
+        WAIT_UNTIL_DATA_VALID_DEASSERTED
+    );
+    signal transfer_state, transfer_state_next: transfer_state_t;
+    signal sending_done: std_ulogic;
 begin
     i2s_master_inst: entity work.i2s_master
     generic map (
@@ -81,8 +97,8 @@ begin
 
     sync: process (transfer_ready, transfer_ready_sync, transfer_acknowledge, transfer_acknowledge_sync)
     begin
-        transfer_ready_sync <= transfer_ready_sync(0) & transfer_ready;
-        transfer_acknowledge_sync <= transfer_acknowledge_sync(0) & transfer_acknowledge;
+        transfer_ready_sync_next <= transfer_ready_sync(0) & transfer_ready;
+        transfer_acknowledge_sync_next <= transfer_acknowledge_sync(0) & transfer_acknowledge;
     end process;
 
     seq: process (clock)
@@ -95,8 +111,12 @@ begin
                 sample <= to_signed(0, sample'length);
                 sample_bit_counter <= to_unsigned(0, sample_bit_counter'length);
 
+                transfer_state <= IDLE;
                 transfer_ready_sync <= (others => '0');
                 transfer_acknowledge_sync <= (others => '0');
+                transfer_data <= to_signed(0, transfer_data'length);
+                transfer_data_valid <= '0';
+                cdc_counter <= to_unsigned(0, cdc_counter'length);
             else
                 state <= state_next;
 
@@ -104,17 +124,22 @@ begin
                 sample <= sample_next;
                 sample_bit_counter <= sample_bit_counter_next;
 
+                transfer_state <= transfer_state_next;
                 transfer_ready_sync <= transfer_ready_sync_next;
                 transfer_acknowledge_sync <= transfer_acknowledge_sync_next;
+                transfer_data <= transfer_data_next;
+                transfer_data_valid <= transfer_data_valid_next;
+                cdc_counter <= cdc_counter_next;
             end if;
         end if;
     end process;
 
-    fsm: process (state, audio_driver_start, audio_fifo_empty, decoding_done)
+    fsm: process (state, audio_driver_start, audio_fifo_empty, decoding_done, sending_done)
     begin
         state_next <= state;
 
         decoding_start <= '0';
+        sending_start <= '1';
 
         case state is
             when IDLE =>
@@ -134,9 +159,66 @@ begin
                 end if;
 
             when WAIT_UNTIL_SAMPLE_PLAYED =>
-                -- TODO: Transfer to I2S Master
-                state_next <= DECODE;
+                if sending_done = '1' then
+                    state_next <= DECODE;
+                else
+                    sending_start <= '1';
+                end if;
                 -- assert false report "Audio Driver: WAIT_UNTIL_SAMPLE_PLAYED reached." severity failure;
+        end case;
+    end process;
+
+    transfer_fsm: process (
+        transfer_state, sending_start, transfer_ready_sync, cdc_counter, sample,
+        transfer_acknowledge_sync, transfer_data, transfer_data_valid
+    )
+    begin
+        transfer_state_next <= transfer_state;
+        sending_done <= '0';
+        cdc_counter_next <= to_unsigned(0, cdc_counter'length);
+
+        transfer_data_next <= transfer_data;
+        transfer_data_valid_next <= transfer_data_valid;
+
+        case transfer_state is
+            when IDLE =>
+                -- We could probably get rid of this state.
+                transfer_state_next <= WAIT_UNTIL_READY_ASSERTED;
+
+            when WAIT_UNTIL_READY_ASSERTED =>
+                if transfer_ready_sync(1) = '1' and sending_start = '1' then
+                    transfer_state_next <= WAIT_UNTIL_DATA_ASSERTED;
+                    transfer_data_next <= sample;
+                end if;
+
+            when WAIT_UNTIL_DATA_ASSERTED =>
+                cdc_counter_next <= cdc_counter + 1;
+
+                if cdc_counter = CDC_HOLD_COUNT then
+                    transfer_state_next <= WAIT_UNTIL_DATA_VALID_ASSERTED;
+                    transfer_data_valid_next <= '1';
+                end if;
+
+            when WAIT_UNTIL_DATA_VALID_ASSERTED =>
+                cdc_counter_next <= cdc_counter + 1;
+
+                if cdc_counter = CDC_HOLD_COUNT then
+                    transfer_state_next <= WAIT_UNTIL_ACKNOWLEDGE_ASSERTED;
+                end if;
+
+            when WAIT_UNTIL_ACKNOWLEDGE_ASSERTED =>
+                if transfer_acknowledge_sync(1) = '1' then
+                    transfer_state_next <= WAIT_UNTIL_DATA_VALID_DEASSERTED;
+                    transfer_data_valid_next <= '0';
+                end if;
+
+            when WAIT_UNTIL_DATA_VALID_DEASSERTED =>
+                cdc_counter_next <= cdc_counter + 1;
+
+                if cdc_counter = CDC_HOLD_COUNT then
+                    transfer_state_next <= IDLE;
+                    sending_done <= '1';
+                end if;
         end case;
     end process;
 

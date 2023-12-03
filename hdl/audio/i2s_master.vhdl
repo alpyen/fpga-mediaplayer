@@ -109,7 +109,10 @@ begin
                 i2s_sdata_shiftregister <= (others => '0');
 
                 transfer_state <= IDLE;
+                transfer_ready_int <= '0';
                 transfer_data_valid_sync <= (others => '0');
+                transfer_acknowledge_int <= '0';
+                cdc_counter <= to_unsigned(0, cdc_counter'length);
             else
                 lrck_counter <= lrck_counter_next;
                 left_right_select <= left_right_select_next;
@@ -118,7 +121,10 @@ begin
                 i2s_sdata_shiftregister <= i2s_sdata_shiftregister_next;
 
                 transfer_state <= transfer_state_next;
+                transfer_ready_int <= transfer_ready_int_next;
                 transfer_data_valid_sync <= transfer_data_valid_sync_next;
+                transfer_acknowledge_int <= transfer_acknowledge_int_next;
+                cdc_counter <= cdc_counter_next;
             end if;
         end if;
     end process;
@@ -165,7 +171,7 @@ begin
     -- One word Fifo to exchange data between the Transfer and Decode FSM.
     new_sample_fifo_seq: process (i2s_mclk)
     begin
-        if rising_edge(i2s_mclk) then
+        if falling_edge(i2s_mclk) then
             if reset = '1' then
                 new_sample_fifo_dout <= (others => '0');
                 new_sample_fifo_full <= '0';
@@ -193,38 +199,32 @@ begin
         -- Reading from an empty Fifo will output a zero sample.
         -- Writing to an empty Fifo will overwrite its contents.
         if new_sample_fifo_read_enable = '1' and new_sample_fifo_write_enable = '1' then
-            assert new_sample_fifo_full = '1'
-            report "i2s_master: New Sample Fifo: Read was issued when the Fifo was empty."
-            severity failure;
-
             new_sample_fifo_data_next <= new_sample_fifo_din;
             new_sample_fifo_dout_next <= new_sample_fifo_data;
             new_sample_fifo_dout_valid_next <= '1';
         elsif new_sample_fifo_read_enable = '1' then
-            assert new_sample_fifo_full = '1'
-            report "i2s_master: New Sample Fifo: Read was issued when the Fifo was empty."
-            severity failure;
-
             new_sample_fifo_full_next <= '0';
-            new_sample_fifo_data <= to_signed(0, new_sample_fifo_data'length);
+            new_sample_fifo_data_next <= to_signed(0, new_sample_fifo_data'length);
             new_sample_fifo_dout_next <= new_sample_fifo_data;
             new_sample_fifo_dout_valid_next <= '1';
         elsif new_sample_fifo_write_enable = '1' then
-            assert new_sample_fifo_full = '0'
-            report "i2s_master: New Sample Fifo: Write was issued when the Fifo was full."
-            severity failure;
-
             new_sample_fifo_full_next <= '1';
-            new_sample_fifo_data <= new_sample_fifo_din;
+            new_sample_fifo_data_next <= new_sample_fifo_din;
         end if;
     end process;
 
-    transfer_fsm: process (transfer_state, new_sample_fifo_full, transfer_ready_int, cdc_counter)
+    transfer_fsm: process (
+        transfer_state, new_sample_fifo_full, transfer_ready_int,
+        cdc_counter, transfer_data_valid_sync, transfer_data, transfer_acknowledge_int
+    )
     begin
         transfer_state_next <= transfer_state;
         cdc_counter_next <= to_unsigned(0, cdc_counter'length);
 
         transfer_ready_int_next <= transfer_ready_int;
+        new_sample_fifo_write_enable <= '0';
+        new_sample_fifo_din <= to_signed(0, new_sample_fifo_din'length);
+        transfer_acknowledge_int_next <= transfer_acknowledge_int;
 
         case transfer_state is
             when IDLE =>
