@@ -52,6 +52,12 @@ architecture arch of audio_driver is
     signal sample_bit_counter, sample_bit_counter_next: unsigned(integer(ceil(log2(real(SAMPLE_DEPTH)))) - 1 downto 0);
 
     -- I2S Transfer FSM
+    signal transfer_ready: std_ulogic;
+    signal transfer_ready_sync, transfer_ready_sync_next: std_ulogic_vector(1 downto 0);
+    signal transfer_data, transfer_data_next: signed(sample'range);
+    signal transfer_data_valid, transfer_data_valid_next: std_ulogic;
+    signal transfer_acknowledge: std_ulogic;
+    signal transfer_acknowledge_sync, transfer_acknowledge_sync_next: std_ulogic_vector(1 downto 0);
 begin
     i2s_master_inst: entity work.i2s_master
     generic map (
@@ -63,10 +69,21 @@ begin
     port map (
         reset     => reset,
 
-        i2s_mclk  => i2s_mclk,
-        i2s_lrck  => i2s_lrck,
-        i2s_sdata => i2s_sdata
+        i2s_mclk             => i2s_mclk,
+        i2s_lrck             => i2s_lrck,
+        i2s_sdata            => i2s_sdata,
+
+        transfer_ready       => transfer_ready,
+        transfer_data        => transfer_data,
+        transfer_data_valid  => transfer_data_valid,
+        transfer_acknowledge => transfer_acknowledge
     );
+
+    sync: process (transfer_ready, transfer_ready_sync, transfer_acknowledge, transfer_acknowledge_sync)
+    begin
+        transfer_ready_sync <= transfer_ready_sync(0) & transfer_ready;
+        transfer_acknowledge_sync <= transfer_acknowledge_sync(0) & transfer_acknowledge;
+    end process;
 
     seq: process (clock)
     begin
@@ -77,12 +94,18 @@ begin
                 decode_state <= IDLE;
                 sample <= to_signed(0, sample'length);
                 sample_bit_counter <= to_unsigned(0, sample_bit_counter'length);
+
+                transfer_ready_sync <= (others => '0');
+                transfer_acknowledge_sync <= (others => '0');
             else
                 state <= state_next;
 
                 decode_state <= decode_state_next;
                 sample <= sample_next;
                 sample_bit_counter <= sample_bit_counter_next;
+
+                transfer_ready_sync <= transfer_ready_sync_next;
+                transfer_acknowledge_sync <= transfer_acknowledge_sync_next;
             end if;
         end if;
     end process;

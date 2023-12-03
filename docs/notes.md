@@ -39,3 +39,6 @@ Contains some thoughts over the development time of the project.
   - This is important because the audio and video driver assume the Fifo only to run out **when there is no data left to play**.
 - When playing back the 4 bit sample, we are only adding zeroes at the end.
   - We could make it louder by adding almost a bit on it so it maxes out the amplitude.
+- CDC_HOLD_COUNT_WIDTH could be calculated more precisely.
+  - We are potentially wasting one bit register space.
+- The Audio Driver <-> I2S Master machines should never run out of sync that they need a timeout to resync.
