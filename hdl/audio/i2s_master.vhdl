@@ -54,7 +54,7 @@ architecture arch of i2s_master is
     : std_ulogic;
     signal
         new_sample_fifo_din, new_sample_fifo_dout, new_sample_fifo_dout_next
-    : signed (sample'range);
+    : signed(sample'range);
 
     signal new_sample_fifo_data, new_sample_fifo_data_next: signed(sample'range);
 
@@ -183,7 +183,7 @@ begin
     new_sample_fifo_seq: process (i2s_mclk)
     begin
         if falling_edge(i2s_mclk) then
-            if reset = '1' then
+            if reset_sync(1) = '1' then
                 new_sample_fifo_dout <= (others => '0');
                 new_sample_fifo_full <= '0';
                 new_sample_fifo_data <= to_signed(0, new_sample_fifo_data'length);
