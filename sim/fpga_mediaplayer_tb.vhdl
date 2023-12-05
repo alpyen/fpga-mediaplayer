@@ -24,7 +24,8 @@ architecture tb of fpga_mediaplayer_tb is
     -- I2S interface to I2S2 PMOD
     signal i2s_mclk: std_ulogic;
     signal i2s_lrck: std_ulogic;
-    signal i2s_sdata: std_ulogic;
+    signal i2s_sclk: std_ulogic;
+    signal i2s_sdin: std_ulogic;
 begin
     process
     begin
@@ -92,6 +93,8 @@ begin
         clock100mhz  => clock,
         reset        => reset,
 
+        start_button => start,
+
         -- SPI Interface
         spi_sclk     => spi_sclk,
         spi_cs_n     => spi_cs_n,
@@ -105,8 +108,7 @@ begin
         -- I2S interface to I2S2 PMOD
         i2s_mclk     => i2s_mclk,
         i2s_lrck     => i2s_lrck,
-        i2s_sdata    => i2s_sdata,
-
-        start_button => start
+        i2s_sclk     => i2s_sclk,
+        i2s_sdin     => i2s_sdin
     );
 end architecture;

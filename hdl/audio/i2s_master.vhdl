@@ -20,7 +20,8 @@ entity i2s_master is
 
         i2s_mclk: in std_ulogic;
         i2s_lrck: out std_ulogic;
-        i2s_sdata: out std_ulogic;
+        i2s_sclk: out std_ulogic;
+        i2s_sdin: out std_ulogic;
 
         transfer_ready: out std_ulogic;
         transfer_data: in signed(SAMPLE_DEPTH - 1 downto 0);
@@ -32,11 +33,13 @@ end entity;
 architecture arch of i2s_master is
     signal reset_sync, reset_sync_next: std_ulogic_vector(1 downto 0);
 
-    -- LRCK needs to toggle at 44.1 kHz which is 1/256 of MCLK
-    constant LRCK_TO_MCLK_CLOCKS_COUNT: positive := 256;
+    -- LRCK is equivalent to the sample rate of 44.1 kHz which is 1/256 of the MCLK.
+    -- Since the line will be toggled it has to happen at twice the frequency or it gets halved.
+    constant LRCK_TO_MCLK_CLOCKS_COUNT: positive := 128;
     signal lrck_counter, lrck_counter_next: unsigned(integer(ceil(log2(real(LRCK_TO_MCLK_CLOCKS_COUNT)))) - 1 downto 0);
     signal left_right_select, left_right_select_next: std_ulogic;
 
+    -- Unlike the LRCK the data is being held for this amount of clock cycles, so no halving.
     constant MCLK_TO_SCLK_COUNT: positive := 8;
     signal sclk_counter, sclk_counter_next: unsigned(integer(ceil(log2(real(MCLK_TO_SCLK_COUNT)))) - 1 downto 0);
 
@@ -44,7 +47,7 @@ architecture arch of i2s_master is
     signal sample, sample_next: signed(SAMPLE_DEPTH - 1 downto 0);
 
     -- One i2s_mclk has to be stalled after an edge on lrck according to the CS4344 specification.
-    signal i2s_sdata_shiftregister, i2s_sdata_shiftregister_next: std_ulogic_vector(sample'length downto 0);
+    signal i2s_sdin_shiftregister, i2s_sdin_shiftregister_next: std_ulogic_vector(sample'length downto 0);
 
     -- One word Fifo holds the new sample that arrived from the Audio Driver
     signal
@@ -82,7 +85,8 @@ architecture arch of i2s_master is
     signal transfer_state, transfer_state_next: transfer_state_t;
 begin
     i2s_lrck <= left_right_select;
-    i2s_sdata <= i2s_sdata_shiftregister(i2s_sdata_shiftregister'left);
+    i2s_sclk <= '0'; -- We are using the Internal SCLK mode
+    i2s_sdin <= i2s_sdin_shiftregister(i2s_sdin_shiftregister'left);
 
     transfer_ready <= transfer_ready_int;
     transfer_acknowledge <= transfer_acknowledge_int;
@@ -110,7 +114,7 @@ begin
                 left_right_select <= '0';
 
                 sample <= to_signed(0, sample'length);
-                i2s_sdata_shiftregister <= (others => '0');
+                i2s_sdin_shiftregister <= (others => '0');
 
                 transfer_state <= IDLE;
                 transfer_ready_int <= '0';
@@ -123,7 +127,7 @@ begin
                 left_right_select <= left_right_select_next;
 
                 sample <= sample_next;
-                i2s_sdata_shiftregister <= i2s_sdata_shiftregister_next;
+                i2s_sdin_shiftregister <= i2s_sdin_shiftregister_next;
 
                 transfer_state <= transfer_state_next;
                 transfer_ready_int <= transfer_ready_int_next;
@@ -136,7 +140,7 @@ begin
 
     comb: process (
         sclk_counter, lrck_counter, left_right_select, sample,
-        i2s_sdata_shiftregister,
+        i2s_sdin_shiftregister,
         new_sample_fifo_full, new_sample_fifo_dout, new_sample_fifo_dout_valid
     )
     begin
@@ -145,11 +149,11 @@ begin
         left_right_select_next <= left_right_select;
 
         sample_next <= sample;
-        i2s_sdata_shiftregister_next <= i2s_sdata_shiftregister;
+        i2s_sdin_shiftregister_next <= i2s_sdin_shiftregister;
 
         if sclk_counter = MCLK_TO_SCLK_COUNT - 1 then
             sclk_counter_next <= to_unsigned(0, sclk_counter'length);
-            i2s_sdata_shiftregister_next <= i2s_sdata_shiftregister(i2s_sdata_shiftregister'left - 1 downto 0) & '0';
+            i2s_sdin_shiftregister_next <= i2s_sdin_shiftregister(i2s_sdin_shiftregister'left - 1 downto 0) & '0';
         end if;
 
         new_sample_fifo_read_enable <= '0';
@@ -158,7 +162,7 @@ begin
             left_right_select_next <= not left_right_select;
 
             -- One cycle stalling necessary after an edge on left right.
-            i2s_sdata_shiftregister_next <= '0' & std_ulogic_vector(sample);
+            i2s_sdin_shiftregister_next <= '0' & std_ulogic_vector(sample);
 
             -- We are on the right / last channel and about to go to the left / first
             -- and need to play a new sample if one is available.
@@ -166,10 +170,10 @@ begin
                 -- If there is no sample to play in the Fifo it will output a zero sample.
                 if new_sample_fifo_dout_valid = '0' then
                     sample_next <= to_signed(0, sample'length);
-                    i2s_sdata_shiftregister_next <= '0' & std_ulogic_vector(to_signed(0, sample'length));
+                    i2s_sdin_shiftregister_next <= '0' & std_ulogic_vector(to_signed(0, sample'length));
                 else
                     sample_next <= new_sample_fifo_dout;
-                    i2s_sdata_shiftregister_next <= '0' & std_ulogic_vector(new_sample_fifo_dout);
+                    i2s_sdin_shiftregister_next <= '0' & std_ulogic_vector(new_sample_fifo_dout);
                 end if;
             end if;
 

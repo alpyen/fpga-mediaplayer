@@ -15,6 +15,8 @@ entity fpga_mediaplayer is
         clock100mhz: in std_ulogic;
         reset: in std_ulogic;
 
+        start_button: in std_ulogic;
+
         -- SPI ports
         spi_sclk: inout std_ulogic; -- This is not inout, read comment at process "tb_specifics".
         spi_cs_n: out std_ulogic;
@@ -28,23 +30,13 @@ entity fpga_mediaplayer is
         -- I2S interface to I2S2 PMOD
         i2s_mclk: out std_ulogic;
         i2s_lrck: out std_ulogic;
-        i2s_sdata: out std_ulogic;
-
-        start_button: in std_ulogic
+        i2s_sclk: out std_ulogic;
+        i2s_sdin: out std_ulogic
     );
 end entity;
 
 architecture tle of fpga_mediaplayer is
     signal clock10mhz: std_ulogic;
-
-    -- CS4344 clocking:
-    --  LRCK: 44.1 kHz
-    --      we need 44.1 kHz
-    --  MCLK: 11.2896 MHz
-    --      lowest possible MCLK (could go higher, but waste of power)
-    --  SCLK: 32 * LRCK = 1.4112 MHz
-    --      (auto-detected by: internal SCLK = Fs * 32 with Fs = LRCK)
-    --      (auto-detectable if MCLK/LRCK ratio = 1024, 512, 256, 128 or 64)
     signal clock_i2s_mclk: std_ulogic;
 
     component clocking_wizard
@@ -131,8 +123,6 @@ begin
         USRDONEO  => '1',
         USRDONETS => '0'
     );
-
-    i2s_mclk <= clock_i2s_mclk;
 
     clocking_wizard_inst: clocking_wizard
     port map (
@@ -245,6 +235,8 @@ begin
         audio_fifo_full         => audio_fifo_full
     );
 
+    i2s_mclk <= clock_i2s_mclk;
+
     audio_driver_inst: entity work.audio_driver
     generic map (
         CLOCK_SPEED => 10_000_000,
@@ -265,7 +257,8 @@ begin
         -- I2S Interface
         i2s_mclk               => clock_i2s_mclk,
         i2s_lrck               => i2s_lrck,
-        i2s_sdata              => i2s_sdata
+        i2s_sclk               => i2s_sclk,
+        i2s_sdin               => i2s_sdin
     );
 
 end architecture;

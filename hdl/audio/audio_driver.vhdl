@@ -25,7 +25,8 @@ entity audio_driver is
         -- I2S Interface
         i2s_mclk: in std_ulogic;
         i2s_lrck: out std_ulogic;
-        i2s_sdata: out std_ulogic
+        i2s_sclk: out std_ulogic;
+        i2s_sdin: out std_ulogic
     );
 end entity;
 
@@ -83,11 +84,12 @@ begin
         TRANSFER_PARTNER_CLOCK_SPEED => CLOCK_SPEED
     )
     port map (
-        reset     => reset,
+        reset                => reset,
 
         i2s_mclk             => i2s_mclk,
         i2s_lrck             => i2s_lrck,
-        i2s_sdata            => i2s_sdata,
+        i2s_sclk             => i2s_sclk,
+        i2s_sdin             => i2s_sdin,
 
         transfer_ready       => transfer_ready,
         transfer_data        => transfer_data,
@@ -139,7 +141,7 @@ begin
         state_next <= state;
 
         decoding_start <= '0';
-        sending_start <= '1';
+        sending_start <= '0';
 
         case state is
             when IDLE =>
@@ -164,7 +166,6 @@ begin
                 else
                     sending_start <= '1';
                 end if;
-                -- assert false report "Audio Driver: WAIT_UNTIL_SAMPLE_PLAYED reached." severity failure;
         end case;
     end process;
 

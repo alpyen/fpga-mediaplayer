@@ -6,10 +6,8 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
 - Implement the Audio Driver
-  - I2S Master to output samples to I2S2 PMOD-Board
-    - i2s_lrck is a fabric clock.
-      - Constrain? Test? Does this even work?
-  - Add CDC-XDC
+  - check why playback does not start again after track is done
+  - constrain fabric clocks lrck, mclk?
   - Add reset to debouncer
   - Use Generic for Memory Address width
   - Add Base Address to the TLE so the data is not assumed to be at address zero
