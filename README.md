@@ -7,9 +7,6 @@ Stuff that needs to be done, may be incomplete and not in order.
 ## HDL
 - Implement the Audio Driver
   - I2S Master to output samples to I2S2 PMOD-Board
-    - How to handle the CDC between Audio Driver and I2S Master?
-    - i2s_mclk is 11.28906 MHz instead of the desired 11.2896 MHz.
-      - Test and see if that causes a problem.
     - i2s_lrck is a fabric clock.
       - Constrain? Test? Does this even work?
   - Add CDC-XDC

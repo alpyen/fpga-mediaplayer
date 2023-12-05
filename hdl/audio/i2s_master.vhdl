@@ -34,8 +34,11 @@ architecture arch of i2s_master is
 
     -- LRCK needs to toggle at 44.1 kHz which is 1/256 of MCLK
     constant LRCK_TO_MCLK_CLOCKS_COUNT: positive := 256;
-    signal lrck_counter, lrck_counter_next: unsigned(integer(ceil(log2(real(LRCK_TO_MCLK_CLOCKS_COUNT)))) - 1 downto 0) := to_unsigned(0, 8);
-    signal left_right_select, left_right_select_next: std_ulogic := '0';
+    signal lrck_counter, lrck_counter_next: unsigned(integer(ceil(log2(real(LRCK_TO_MCLK_CLOCKS_COUNT)))) - 1 downto 0);
+    signal left_right_select, left_right_select_next: std_ulogic;
+
+    constant MCLK_TO_SCLK_COUNT: positive := 8;
+    signal sclk_counter, sclk_counter_next: unsigned(integer(ceil(log2(real(MCLK_TO_SCLK_COUNT)))) - 1 downto 0);
 
     -- The current sample that should be played.
     signal sample, sample_next: signed(SAMPLE_DEPTH - 1 downto 0);
@@ -102,6 +105,7 @@ begin
             if reset_sync(1) = '1' then
                 -- reset_sync <= (others => '0');
 
+    	        sclk_counter <= to_unsigned(0, sclk_counter'length);
                 lrck_counter <= to_unsigned(0, lrck_counter'length);
                 left_right_select <= '0';
 
@@ -114,6 +118,7 @@ begin
                 transfer_acknowledge_int <= '0';
                 cdc_counter <= to_unsigned(0, cdc_counter'length);
             else
+                sclk_counter <= sclk_counter_next;
                 lrck_counter <= lrck_counter_next;
                 left_right_select <= left_right_select_next;
 
@@ -130,16 +135,22 @@ begin
     end process;
 
     comb: process (
-        lrck_counter, left_right_select, sample,
+        sclk_counter, lrck_counter, left_right_select, sample,
         i2s_sdata_shiftregister,
         new_sample_fifo_full, new_sample_fifo_dout, new_sample_fifo_dout_valid
     )
     begin
+        sclk_counter_next <= sclk_counter + 1;
         lrck_counter_next <= lrck_counter + 1;
         left_right_select_next <= left_right_select;
 
         sample_next <= sample;
-        i2s_sdata_shiftregister_next <= i2s_sdata_shiftregister(i2s_sdata_shiftregister'left - 1 downto 0) & '0';
+        i2s_sdata_shiftregister_next <= i2s_sdata_shiftregister;
+
+        if sclk_counter = MCLK_TO_SCLK_COUNT - 1 then
+            sclk_counter_next <= to_unsigned(0, sclk_counter'length);
+            i2s_sdata_shiftregister_next <= i2s_sdata_shiftregister(i2s_sdata_shiftregister'left - 1 downto 0) & '0';
+        end if;
 
         new_sample_fifo_read_enable <= '0';
 
