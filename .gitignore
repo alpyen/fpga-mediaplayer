@@ -17,3 +17,6 @@ unisim/**
 
 # Visual Studio Code - do not track workspace settings
 .vscode/**
+
+# Python - do not track virtual environments
+**/.venv

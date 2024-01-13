@@ -5,10 +5,11 @@ Stuff that needs to be done, may be incomplete and not in order.
 ## Project
 
 ## HDL
-- Implement the Audio Driver
-  - check why playback does not start again after track is done
-  - constrain fabric clocks lrck, mclk?
+
+- Control Unit
+  - Implement switching from DONE to INIT so the playback can be restarted
   - Add reset to debouncer
+- Implement the Audio Driver
   - Use Generic for Memory Address width
   - Add Base Address to the TLE so the data is not assumed to be at address zero
   - Remove the SPI clk driving from the spi_memory_driver
@@ -24,6 +25,7 @@ Stuff that needs to be done, may be incomplete and not in order.
 ## Software
 - Codec development
   - Expand the existing script to include video
+  - Using pyffmpeg as AV library to simplify extraction
 
 # How to open with Vivado
 
