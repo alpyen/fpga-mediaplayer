@@ -7,7 +7,7 @@ import wave
 import struct
 
 parser = argparse.ArgumentParser(
-    prog="codec",
+    prog="audiocodec",
     description="Encodes a given WAVE file to the project's media format.\n" +
                 "\n" +
                 "Note that the input file must have 44.1 kHz sample rate\n" +

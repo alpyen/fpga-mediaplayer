@@ -73,7 +73,7 @@ begin
     spi_flash_model_inst: entity work.spi_flash_model
     generic map (
         SIZE       => 8 * 1024,
-        INIT_FILE  => "../../../../../python/ultrashort.enc",
+        INIT_FILE  => "../../../../../python/media/loop_ultrashort.enc",
         INIT_VALUE => x"ff"
     )
     port map (
