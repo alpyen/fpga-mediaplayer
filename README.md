@@ -24,9 +24,9 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## Software
 - Codec development
-  - Finish videocodec script
   - Add documentation on how to set up codec env with libraries and how to encode files
-  - Extract audio/video encoding to reduce code duplication
+  - Wrap around 4 bit during encoding to save even more space
+  - Add python player to playback file with builtin gui framework
 
 - Add ffmpeg parameter to enforce grayscale to save space or force specific format?
 

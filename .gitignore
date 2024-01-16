@@ -20,3 +20,4 @@ unisim/**
 
 # Python - do not track virtual environments
 **/.venv
+**/__pycache__
