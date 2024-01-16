@@ -70,7 +70,7 @@ try:
         "\"" + os.path.join(temp_dir, "%05d.png") + "\""
     )
 
-    if args.dump_video is not None:
+    if args.dump_video:
         video_command += (
             " " +
             "-vf \"scale=32:24,hue=s=0,fps=24\" " +
@@ -420,7 +420,7 @@ if video_available:
     reduced_size += reduced_video_size
     encoded_size += encoded_video_size
 
-if reduced_audio_size > 0:
+if reduced_size > 0:
     print("Uncompressed Size: ".ljust(20) + str(int(uncompressed_size / 1024)) + " K")
     print("Reduced Size: ".ljust(20) + str(int(reduced_size / 1024)) + " K")
     print("Encoded Size: ".ljust(20) + str(int(encoded_size / 1024)) + " K (" + str(round(encoded_size / reduced_size * 100, 2)) + "%)")
