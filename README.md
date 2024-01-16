@@ -24,8 +24,11 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## Software
 - Codec development
-  - Expand the existing script to include video
-  - Using pyffmpeg as AV library to simplify extraction
+  - Finish videocodec script
+  - Add documentation on how to set up codec env with libraries and how to encode files
+  - Extract audio/video encoding to reduce code duplication
+
+- Add ffmpeg parameter to enforce grayscale to save space or force specific format?
 
 # How to open with Vivado
 

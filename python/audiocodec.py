@@ -54,7 +54,7 @@ print("done!")
 print()
 
 # Print Input file statistics
-# Reduced Size is the size that the file after quality loss but before compression.
+# Reduced Size is the size of the file after quality loss but before compression.
 print("Input: ".ljust(20) + args.input)
 print("Bitdepth: ".ljust(20) + str(depth * 8))
 print("Channels: ".ljust(20) + str(channels))
@@ -146,11 +146,10 @@ while len(encoded_samples) % 8 != 0:
     encoded_samples.append(0)
 
 print("done!")
-
 print()
-print("Encoded Size: ".ljust(20) + str(int(len(encoded_samples) / 8 / 1024)) + " K")
 
-print("Encoded To Reduced:".ljust(20) + str(int(round(len(encoded_samples) / 8 / reduced_size * 100, 2))) + " %")
+print("Encoded Size: ".ljust(20) + str(int(len(encoded_samples) / 8 / 1024)) + " K")
+print("Encoded To Reduced: ".ljust(20) + str(int(round(len(encoded_samples) / 8 / reduced_size * 100, 2))) + " %")
 
 if args.output is not None:
     print()
