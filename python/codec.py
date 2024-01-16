@@ -63,7 +63,6 @@ temp_dir = tempfile.mkdtemp(None, "fpga_mediaplayer_tmp_")
 
 ff = pyffmpeg.FFmpeg()
 
-
 try:
     video_command = (
         "-i \"" + input_file + "\" " +
@@ -149,37 +148,39 @@ if audio_available:
     print("done!")
     print()
 
-    print("Reducing to mono and 4 bits...", end="")
-    ts = time.time()
-
     mono_samples = []
-    for i in range(0, length):
-        if time.time() - ts > 0.1:
-            print("\rReducing to mono and 4 bits..." + str(int(i / length * 100)) + "%", end="", flush=True)
-            ts = time.time()
 
-        mono_samples.append(0)
+    if length > 0:
+        print("Reducing to mono and 4 bits...", end="")
+        ts = time.time()
 
-        for j in range(0, channels):
-            # WAVE officially only supports unsigned for 8 bits bitdepth. It's signed above that.
-            mono_samples[-1] += int.from_bytes(frames[i*(depth+channels) + 0:i*(depth+channels) + depth], byteorder="little", signed=depth>1)
+        for i in range(0, length):
+            if time.time() - ts > 0.1:
+                print("\rReducing to mono and 4 bits..." + str(int(i / length * 100)) + "%", end="", flush=True)
+                ts = time.time()
 
-        # Calculate the average of the channels
-        mono_samples[-1] = int(round(mono_samples[-1] / channels))
+            mono_samples.append(0)
 
-        # Convert it to signed incase the input file was unsigned
-        if depth == 1:
-            mono_samples[-1] -= 128
+            for j in range(0, channels):
+                # WAVE officially only supports unsigned for 8 bits bitdepth. It's signed above that.
+                mono_samples[-1] += int.from_bytes(frames[i*(depth+channels) + 0:i*(depth+channels) + depth], byteorder="little", signed=depth>1)
 
-        # Bitcrush down to 4 bits
-        mono_samples[-1] = int(round(mono_samples[-1] / (2 ** (depth * 8 - 4))))
+            # Calculate the average of the channels
+            mono_samples[-1] = int(round(mono_samples[-1] / channels))
 
-        # Since we are rounding and not flooring mono can contain +8 as a sample
-        # which is out of the signed 4 bit range -> clip that to +7.
-        if mono_samples[-1] == 8:
-            mono_samples[-1] = 7
+            # Convert it to signed incase the input file was unsigned
+            if depth == 1:
+                mono_samples[-1] -= 128
 
-    print("\rReducing to mono and 4 bits...done!")
+            # Bitcrush down to 4 bits
+            mono_samples[-1] = int(round(mono_samples[-1] / (2 ** (depth * 8 - 4))))
+
+            # Since we are rounding and not flooring mono can contain +8 as a sample
+            # which is out of the signed 4 bit range -> clip that to +7.
+            if mono_samples[-1] == 8:
+                mono_samples[-1] = 7
+
+        print("\rReducing to mono and 4 bits...done!")
 
     if args.dump_audio:
         print("Dumping reduced audio file...", end="", flush=True)
@@ -240,14 +241,23 @@ if audio_available:
 
     print()
 
-    # Print Input file statistics
-    # Reduced Size is the size of the file after quality loss but before compression.
-    uncompressed_audio_size = length * channels * depth
-    reduced_audio_size = uncompressed_audio_size / channels / depth * (4 / 8)
-    encoded_audio_size = len(encoded_audio_samples) / 8
-    print("Uncompressed Size: ".ljust(20) + str(int(uncompressed_audio_size / 1024)) + " K")
-    print("Reduced Size: ".ljust(20) + str(int(reduced_audio_size / 1024)) + " K")
-    print("Encoded Size: ".ljust(20) + str(int(encoded_audio_size / 1024)) + " K (" + str(round(encoded_audio_size / reduced_audio_size * 100, 2)) + "%)")
+    uncompressed_audio_size = 0
+    reduced_audio_size = 0
+    encoded_audio_size = 0
+
+    if length > 0:
+        # Print Input file statistics
+        # Reduced Size is the size of the file after quality loss but before compression.
+        uncompressed_audio_size = length * channels * depth
+        reduced_audio_size = uncompressed_audio_size / channels / depth * (4 / 8)
+        encoded_audio_size = len(encoded_audio_samples) / 8
+        print("Uncompressed Size: ".ljust(20) + str(int(uncompressed_audio_size / 1024)) + " K")
+        print("Reduced Size: ".ljust(20) + str(int(reduced_audio_size / 1024)) + " K")
+        print("Encoded Size: ".ljust(20) + str(int(encoded_audio_size / 1024)) + " K (" + str(round(encoded_audio_size / reduced_audio_size * 100, 2)) + "%)")
+    else:
+        print("Uncompressed Size: ".ljust(20) + "0 K")
+        print("Reduced Size: ".ljust(20) + "0 K")
+        print("Encoded Size: ".ljust(20) + "0 K (100.0%)")
 
     print("========================================================")
 
@@ -290,51 +300,61 @@ if video_available:
 
     print("\rReducing to 4 bits...done!")
 
-    print("Encoding reduced file...", end="")
-    ts = time.time()
+    if len(videoframes) > 0:
+        print("Encoding reduced file...", end="")
+        ts = time.time()
 
-    # Remember that we encode the pixel differences over time so the
-    # inner loop loops over all frames where the outer one loops over the pixels.
-    # This way we loop through all values of one pixel location, then the next, etc...
-    for j in range(0, len(videoframes[0])):
-        if time.time() - ts > 0.1:
-            print("\rEncoding reduced file..." + str(int(j / len(videoframes[0]) * 100)) + "%", end="", flush=True)
+        # Remember that we encode the pixel differences over time so the
+        # inner loop loops over all frames where the outer one loops over the pixels.
+        # This way we loop through all values of one pixel location, then the next, etc...
+        for j in range(0, len(videoframes[0])):
+            if time.time() - ts > 0.1:
+                print("\rEncoding reduced file..." + str(int(j / len(videoframes[0]) * 100)) + "%", end="", flush=True)
 
-        previous_frame = [0] * len(videoframes[0])
+            previous_frame = [0] * len(videoframes[0])
 
-        for i in range(0, len(videoframes)):
-            current_pixel = videoframes[i][j]
+            for i in range(0, len(videoframes)):
+                current_pixel = videoframes[i][j]
 
-            if current_pixel - previous_frame[j] == 0:
-                encoded_video_samples.extend([0])
+                if current_pixel - previous_frame[j] == 0:
+                    encoded_video_samples.extend([0])
 
-            elif current_pixel - previous_frame[j] == 1:
-                encoded_video_samples.extend([1, 0])
+                elif current_pixel - previous_frame[j] == 1:
+                    encoded_video_samples.extend([1, 0])
 
-            elif current_pixel - previous_frame[j] == -1:
-                encoded_video_samples.extend([1, 1, 0])
+                elif current_pixel - previous_frame[j] == -1:
+                    encoded_video_samples.extend([1, 1, 0])
 
-            else:
-                encoded_video_samples.extend([1, 1, 1])
-                for k in range(0, 4):
-                    encoded_video_samples.append(current_pixel >> (4 - 1 - k) & 0b1)
+                else:
+                    encoded_video_samples.extend([1, 1, 1])
+                    for k in range(0, 4):
+                        encoded_video_samples.append(current_pixel >> (4 - 1 - k) & 0b1)
 
-            previous_frame = videoframes[i]
+                previous_frame = videoframes[i]
 
-    while len(encoded_video_samples) % 8 != 0:
-        encoded_video_samples.append(0)
+        while len(encoded_video_samples) % 8 != 0:
+            encoded_video_samples.append(0)
 
-    print("\rEncoding reduced file...done!")
+        print("\rEncoding reduced file...done!")
 
-    print()
+        print()
 
-    # Uncompressed Size: #frames * resolution * 3 bytes per pixel
-    uncompressed_video_size = len(videoframes) * len(videoframes[0]) * 3
-    reduced_video_size = len(videoframes) * len(videoframes[0]) * (4 / 8)
-    encoded_video_size = len(encoded_video_samples) / 8
-    print("Uncompressed Size: ".ljust(20) + str(int(uncompressed_video_size / 1024)) + " K")
-    print("Reduced Size: ".ljust(20) + str(int(reduced_video_size / 1024)) + " K")
-    print("Encoded Size: ".ljust(20) + str(int(encoded_video_size / 1024)) + " K (" + str(round(encoded_video_size / reduced_video_size * 100, 2)) + "%)")
+    uncompressed_video_size = 0
+    reduced_video_size = 0
+    encoded_video_size = 0
+
+    if len(videoframes) > 0:
+        # Uncompressed Size: #frames * resolution * 3 bytes per pixel
+        uncompressed_video_size = len(videoframes) * len(videoframes[0]) * 3
+        reduced_video_size = len(videoframes) * len(videoframes[0]) * (4 / 8)
+        encoded_video_size = len(encoded_video_samples) / 8
+        print("Uncompressed Size: ".ljust(20) + str(int(uncompressed_video_size / 1024)) + " K")
+        print("Reduced Size: ".ljust(20) + str(int(reduced_video_size / 1024)) + " K")
+        print("Encoded Size: ".ljust(20) + str(int(encoded_video_size / 1024)) + " K (" + str(round(encoded_video_size / reduced_video_size * 100, 2)) + "%)")
+    else:
+        print("Uncompressed Size: ".ljust(20) + "0 K")
+        print("Reduced Size: ".ljust(20) + "0 K")
+        print("Encoded Size: ".ljust(20) + "0 K (100.0%)")
 
     print("========================================================")
 
@@ -350,7 +370,7 @@ if args.output is not None:
 
     file = open(args.output, "wb+")
 
-    #Write File Header
+    # Write File Header
     file.write("A".encode("ascii"))
     file.write(struct.pack("<I", int(len(encoded_audio_samples) / 8)))
     file.write(struct.pack("<I", int(len(encoded_video_samples) / 8)))
@@ -400,14 +420,14 @@ if video_available:
     reduced_size += reduced_video_size
     encoded_size += encoded_video_size
 
-# So no divice by zero exception happens.
-if reduced_size == 0:
-    encoded_size = 1
-    reduced_size = 1
-
-print("Uncompressed Size: ".ljust(20) + str(int(uncompressed_size / 1024)) + " K")
-print("Reduced Size: ".ljust(20) + str(int(reduced_size / 1024)) + " K")
-print("Encoded Size: ".ljust(20) + str(int(encoded_size / 1024)) + " K (" + str(round(encoded_size / reduced_size * 100, 2)) + "%)")
+if reduced_audio_size > 0:
+    print("Uncompressed Size: ".ljust(20) + str(int(uncompressed_size / 1024)) + " K")
+    print("Reduced Size: ".ljust(20) + str(int(reduced_size / 1024)) + " K")
+    print("Encoded Size: ".ljust(20) + str(int(encoded_size / 1024)) + " K (" + str(round(encoded_size / reduced_size * 100, 2)) + "%)")
+else:
+    print("Uncompressed Size: ".ljust(20) + "0 K")
+    print("Reduced Size: ".ljust(20) + "0 K")
+    print("Encoded Size: ".ljust(20) + "0 K (100.0%)")
 
 print("========================================================")
 
