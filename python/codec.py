@@ -64,6 +64,12 @@ temp_dir = tempfile.mkdtemp(None, "fpga_mediaplayer_tmp_")
 ff = pyffmpeg.FFmpeg()
 
 try:
+    audio_command = (
+        "-i \"" + input_file + "\" " +
+        "-ar 44100 -c:a pcm_s16le " +
+        "\"" + os.path.join(temp_dir, "audio.wav") + "\""
+    )
+
     video_command = (
         "-i \"" + input_file + "\" " +
         "-vf \"scale=32:24,hue=s=0,fps=24\" " +
@@ -77,14 +83,8 @@ try:
             "-an \"" + input_file[:input_file.rfind(".")] + "_dump.mp4" + "\""
         )
 
-    audio_command = (
-        "-i \"" + input_file + "\" " +
-        "-ar 44100 -c:a pcm_s16le " +
-        "\"" + os.path.join(temp_dir, "audio.wav") + "\""
-    )
-
-    ff.options(video_command)
     ff.options(audio_command)
+    ff.options(video_command)
 except Exception as error:
     print("error!")
     print()
@@ -129,6 +129,8 @@ else:
 
 print("========================================================")
 
+# Tracks passed time to update status.
+ts = time.time()
 
 if audio_available:
     print()
@@ -152,7 +154,6 @@ if audio_available:
 
     if length > 0:
         print("Reducing to mono and 4 bits...", end="")
-        ts = time.time()
 
         for i in range(0, length):
             if time.time() - ts > 0.1:
@@ -205,7 +206,6 @@ if audio_available:
         print("done!")
 
     print("Encoding reduced file...", end="")
-    ts = time.time()
 
     # We assume in HDL the previous sample to be 0 so we can immediately start encoding.
     previous_sample = 0
@@ -229,7 +229,7 @@ if audio_available:
         else:
             encoded_audio_samples.extend([1, 1, 1])
             for j in range(0, 4):
-                encoded_audio_samples.append(mono_samples[i] >> (4 - 1 - j) & 0b1)
+                encoded_audio_samples.append(current_sample >> (4 - 1 - j) & 0b1)
 
         previous_sample = current_sample
 
@@ -267,7 +267,6 @@ if video_available:
     print("=================== Video Processing ===================")
 
     print("Reading video frames...", end="")
-    ts = time.time()
 
     videoframes = []
 
@@ -284,17 +283,18 @@ if video_available:
     print()
 
     print("Reducing to 4 bits...", end="")
-    ts = time.time()
 
     for i in range(0, len(videoframes)):
         print("\rReducing to 4 bits..." + str(int(i / len(videoframes) * 100)) + "%", end="", flush=True)
+        ts = time.time()
+
         for j in range(0, len(videoframes[0])):
             pixel = videoframes[i][j]
-            pixel = int(round(pixel / 2 ** (8 - 4)))
+            pixel = int(round(pixel / (2 ** (8 - 4))))
 
             # Same issue with the audio samples.
-            if pixel == 8:
-                pixel = 7
+            if pixel == 16:
+                pixel = 15
 
             videoframes[i][j] = pixel
 
@@ -302,35 +302,45 @@ if video_available:
 
     if len(videoframes) > 0:
         print("Encoding reduced file...", end="")
-        ts = time.time()
 
         # Remember that we encode the pixel differences over time so the
         # inner loop loops over all frames where the outer one loops over the pixels.
         # This way we loop through all values of one pixel location, then the next, etc...
         for j in range(0, len(videoframes[0])):
             if time.time() - ts > 0.1:
-                print("\rEncoding reduced file..." + str(int(j / len(videoframes[0]) * 100)) + "%", end="", flush=True)
+                print("\rEncoding reduced file..." + str(int(j / (len(videoframes[0]) + len(videoframes)) * 100)) + "%", end="", flush=True)
+                ts = time.time()
 
-            previous_frame = [0] * len(videoframes[0])
+            previous_sample = 0
 
             for i in range(0, len(videoframes)):
-                current_pixel = videoframes[i][j]
+                current_sample = videoframes[i][j]
 
-                if current_pixel - previous_frame[j] == 0:
-                    encoded_video_samples.extend([0])
+                if current_sample - previous_sample == 0:
+                    videoframes[i][j] = [0]
 
-                elif current_pixel - previous_frame[j] == 1:
-                    encoded_video_samples.extend([1, 0])
+                elif current_sample - previous_sample == 1:
+                    videoframes[i][j] = [1, 0]
 
-                elif current_pixel - previous_frame[j] == -1:
-                    encoded_video_samples.extend([1, 1, 0])
+                elif current_sample - previous_sample == -1:
+                    videoframes[i][j] = [1, 1, 0]
 
                 else:
-                    encoded_video_samples.extend([1, 1, 1])
+                    videoframes[i][j] = [1, 1, 1]
                     for k in range(0, 4):
-                        encoded_video_samples.append(current_pixel >> (4 - 1 - k) & 0b1)
+                        videoframes[i][j].append(current_sample >> (4 - 1 - k) & 0b1)
 
-                previous_frame = videoframes[i]
+                previous_sample = current_sample
+
+        # But we need to write then in the normal order into the file otherwise
+        # we would have to run in a very weird bitwise way through the memory.
+        for i in range(0, len(videoframes)):
+            if time.time() - ts > 0.1:
+                print("\rEncoding reduced file..." + str(int((i + len(videoframes[0])) / (len(videoframes[0]) + len(videoframes)) * 100)) + "%", end="", flush=True)
+                ts = time.time()
+
+            for j in range(0, len(videoframes[0])):
+                encoded_video_samples.extend(videoframes[i][j])
 
         while len(encoded_video_samples) % 8 != 0:
             encoded_video_samples.append(0)
@@ -361,14 +371,13 @@ if video_available:
 print()
 print("======================= Summary ========================")
 
-if args.output is not None:
+if output_file is not None:
     print("Writing output file...", end="")
-    ts = time.time()
 
-    if os.path.exists(args.output):
-        os.remove(args.output)
+    if os.path.exists(output_file):
+        os.remove(output_file)
 
-    file = open(args.output, "wb+")
+    file = open(output_file, "wb+")
 
     # Write File Header
     file.write("A".encode("ascii"))
