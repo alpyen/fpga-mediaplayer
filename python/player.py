@@ -5,12 +5,6 @@ import tkinter
 import time
 import struct
 
-def positive(value: int):
-    int_value = int(value)
-    if int_value <= 0:
-        raise argparse.ArgumentTypeError(str(int_value) + " is not a positive integer.")
-    return int_value
-
 parser = argparse.ArgumentParser(
     prog="player",
     description="Plays a file that was encoded in the project's media format.\n",

@@ -26,9 +26,12 @@ Stuff that needs to be done, may be incomplete and not in order.
 - Codec development
   - Add documentation on how to set up codec env with libraries and how to encode files
   - Wrap around 4 bit during encoding to save even more space
-  - Add python player to playback file with builtin gui framework
 
+- Add output file display in summary of codec
 - Add ffmpeg parameter to enforce grayscale to save space or force specific format?
+
+## Compatibility
+- Check repo for Ubuntu Linux
 
 # How to open with Vivado
 
