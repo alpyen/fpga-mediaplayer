@@ -72,14 +72,14 @@ try:
 
     video_command = (
         "-i \"" + input_file + "\" " +
-        "-vf \"scale=32:24,hue=s=0,fps=24\" " +
+        "-vf \"scale=32:24,format=gray,fps=24\" " +
         "\"" + os.path.join(temp_dir, "%05d.png") + "\""
     )
 
     if args.dump_video:
         video_command += (
             " " +
-            "-vf \"scale=32:24,hue=s=0,fps=24\" " +
+            "-vf \"scale=32:24,format=gray,fps=24\" " +
             "-an \"" + input_file[:input_file.rfind(".")] + "_dump.mp4" + "\""
         )
 

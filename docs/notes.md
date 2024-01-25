@@ -42,3 +42,5 @@ Contains some thoughts over the development time of the project.
 - CDC_HOLD_COUNT_WIDTH could be calculated more precisely.
   - We are potentially wasting one bit register space.
 - The Audio Driver <-> I2S Master machines should never run out of sync that they need a timeout to resync.
+- The codec.py calls ffmpeg with the filter `format=gray` instead of `hue=s=0` now. See if that makes a difference down the line.
+  - Kept it gray for now since the intermediate files are smaller and will process faster.
