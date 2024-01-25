@@ -69,7 +69,8 @@ tk.geometry(
 
 canvas = tkinter.Canvas(tk, width=WIDTH * BLOCK_SIZE, height=HEIGHT * BLOCK_SIZE)
 
-last_frame_time = time.time()
+framecounter = 0
+playback_started_time = time.time()
 pixels = []
 
 for y in range(0, HEIGHT):
@@ -92,15 +93,16 @@ def get_color(sample: int):
     return "#" + alphabet[sample] * 6
 
 def draw_frame():
-    global last_frame_time
+    global playback_started_time
+    global framecounter
     global pixels
     global videoindex
     global last_frame
 
-    if time.time() - last_frame_time >= 1/24:
-        tk.title("fpga-mediaplayer - " + args.input + " - " + str(round(1 / (time.time() - last_frame_time), 1)) + " fps")
-        index = 0
+    now_time = time.time()
 
+    if now_time - playback_started_time >= framecounter * 1/24:
+        index = 0
         state = 0
         while index < WIDTH * HEIGHT:
             # We have to check the exit manually since it is padded to full bytes
@@ -160,7 +162,8 @@ def draw_frame():
                         state = 0
                         videoindex += 5
 
-        last_frame_time = time.time()
+        tk.title("fpga-mediaplayer - " + args.input + " - " + str(round(framecounter / (now_time - playback_started_time), 1)) + " fps")
+        framecounter += 1
 
     tk.after(1, draw_frame)
 
