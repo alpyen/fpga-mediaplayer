@@ -212,7 +212,7 @@ begin
         new_sample_fifo_dout_valid_next <= '0';
 
         -- Reading from an empty Fifo will output a zero sample.
-        -- Writing to an empty Fifo will overwrite its contents.
+        -- Writing to a full Fifo will overwrite its contents.
         if new_sample_fifo_read_enable = '1' and new_sample_fifo_write_enable = '1' then
             new_sample_fifo_data_next <= new_sample_fifo_din;
             new_sample_fifo_dout_next <= new_sample_fifo_data;

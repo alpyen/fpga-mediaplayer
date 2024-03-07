@@ -16,6 +16,7 @@ entity audio_driver is
 
         -- Audio Driver Interface
         audio_driver_start: in std_ulogic;
+        audio_driver_done: out std_ulogic;
 
         -- Audio Fifo
         audio_fifo_read_enable: out std_ulogic;
@@ -143,8 +144,12 @@ begin
         decoding_start <= '0';
         sending_start <= '0';
 
+        audio_driver_done <= '0';
+
         case state is
             when IDLE =>
+                audio_driver_done <= '1';
+
                 if audio_driver_start = '1' then
                     state_next <= DECODE;
                 end if;
@@ -156,7 +161,11 @@ begin
                     if audio_fifo_empty = '0' then
                         decoding_start <= '1';
                     else
-                        state_next <= IDLE;
+                        -- Only jump back to idle when audio_driver_start is not asserted anymore.
+                        -- This notifies us that there will be no data inserted anymore into the Fifo.
+                        if audio_driver_start = '0' then
+                            state_next <= IDLE;
+                        end if;
                     end if;
                 end if;
 

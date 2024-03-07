@@ -7,15 +7,10 @@ Stuff that needs to be done, may be incomplete and not in order.
 ## HDL
 
 - Control Unit
-  - Implement switching from DONE to INIT so the playback can be restarted
-  - Add reset to debouncer
-- Implement the Audio Driver
-  - Use Generic for Memory Address width
+  - Use Generic for Memory Address width that is set in the TLE and passed to the CU and AD
   - Add Base Address to the TLE so the data is not assumed to be at address zero
-  - Remove the SPI clk driving from the spi_memory_driver
-    - TLE is supposed to drive it
+  - Rename audio_driver_start, video_driver_start to _play?
 - Implement the Video Driver
-- Use 7-Segment Display to display the current runtime / total runtime
 
 ## Vivado
 - Change the board store in the project-tcl to be OS-independent
@@ -27,6 +22,9 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Add documentation on how to set up codec env with libraries and how to encode files
   - Wrap around 4 bit during encoding to save even more space
   - Check if the bitcrushing to 4 bits is correct and compresses uniforly
+  - Adjust codec and player to playback various sized files
+    - command-line option to set target resolution
+    - this is so we can use the small and led board by just setting the generics
 
 - Add output file display in summary of codec
 - Add ffmpeg parameter to enforce grayscale to save space or force specific format?

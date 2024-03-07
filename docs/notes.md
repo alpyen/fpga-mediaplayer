@@ -44,3 +44,5 @@ Contains some thoughts over the development time of the project.
 - The Audio Driver <-> I2S Master machines should never run out of sync that they need a timeout to resync.
 - The codec.py calls ffmpeg with the filter `format=gray` instead of `hue=s=0` now. See if that makes a difference down the line.
   - Kept it gray for now since the intermediate files are smaller and will process faster.
+- Control/AudioVideoDriver _done signal
+  - It is combinational now, is this dangerous? The signal can only change when the state changes so it should work fine. No need to register, right?

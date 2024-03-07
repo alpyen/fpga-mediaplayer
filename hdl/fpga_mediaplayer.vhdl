@@ -80,6 +80,7 @@ architecture tle of fpga_mediaplayer is
 
     -- Audio Driver Signals
     signal audio_driver_start: std_ulogic;
+    signal audio_driver_done: std_ulogic;
 
     -- Audio Fifo
     signal audio_fifo_write_enable: std_ulogic;
@@ -228,6 +229,7 @@ begin
 
         -- Audio Driver Interface
         audio_driver_start      => audio_driver_start,
+        audio_driver_done       => audio_driver_done,
 
         -- Audio Fifo
         audio_fifo_write_enable => audio_fifo_write_enable,
@@ -248,6 +250,7 @@ begin
 
         -- Audio Driver Interface
         audio_driver_start     => audio_driver_start,
+        audio_driver_done      => audio_driver_done,
 
         -- Audio Fifo
         audio_fifo_read_enable => audio_fifo_read_enable,
