@@ -43,7 +43,7 @@ architecture arch of video_driver is
 begin
     video_driver_done <= '1';
 
-    video_fifo_read_enable <= '0';
+    -- video_fifo_read_enable <= '0';
 
     board_row_data_in_n <= '1';
     board_shift_row_data_n <= '1';
@@ -51,4 +51,19 @@ begin
     board_row_strobe_in_n <= '1';
     board_shift_row_strobe_n <= '1';
     board_apply_new_row_strobe_n <= '1';
+
+    process (clock)
+    begin
+        if rising_edge(clock) then
+            if reset = '1' then
+                video_fifo_read_enable <= '0';
+            else
+                video_fifo_read_enable <= '0';
+
+                if video_fifo_empty = '0' and video_driver_play = '1' then
+                    video_fifo_read_enable <= '1';
+                end if;
+            end if;
+        end if;
+    end process;
 end architecture;

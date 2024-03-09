@@ -9,6 +9,8 @@ Stuff that needs to be done, may be incomplete and not in order.
 - Implement the Video Driver
   - Add Generic for variable resolution
 - Control Unit
+  - Refactor FSM and see if some signals cannot be removed
+    - it got bloated now with all the extra cases, perhaps it can be thinned
   - Use Generic for Memory Address width that is set in the TLE and passed to the CU and AD
   - Add Base Address to the TLE so the data is not assumed to be at address zero
 - Vendor agnostic

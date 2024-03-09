@@ -60,6 +60,9 @@ architecture arch of control_unit is
     signal read_audio_n_video, read_audio_n_video_next: std_ulogic;
 
     signal start_playback, start_playback_next: std_ulogic;
+
+    signal audio_loaded, audio_loaded_next: std_ulogic;
+    signal video_loaded, video_loaded_next: std_ulogic;
 begin
     seq: process (clock)
     begin
@@ -78,6 +81,9 @@ begin
                 read_audio_n_video <= '1';
 
                 start_playback <= '0';
+
+                audio_loaded <= '0';
+                video_loaded <= '0';
             else
                 state <= state_next;
 
@@ -92,6 +98,9 @@ begin
                 read_audio_n_video <= read_audio_n_video_next;
 
                 start_playback <= start_playback_next;
+
+                audio_loaded <= audio_loaded_next;
+                video_loaded <= video_loaded_next;
             end if;
         end if;
     end process;
@@ -102,7 +111,8 @@ begin
         audio_fifo_full, audio_pointer, audio_end_address,
         video_fifo_full, video_pointer, video_end_address,
         read_audio_n_video, start_playback,
-        audio_driver_done, video_driver_done
+        audio_driver_done, video_driver_done,
+        audio_loaded, video_loaded
     )
         variable u_audio_pointer, u_video_pointer: unsigned(audio_pointer'range);
         variable u_audio_length, u_video_length: unsigned(audio_length'range);
@@ -139,9 +149,12 @@ begin
         audio_driver_play <= '0';
         video_driver_play <= '0';
 
+        audio_loaded_next <= audio_loaded;
+        video_loaded_next <= video_loaded;
+
         case state is
             when IDLE =>
-                if start = '1' and audio_driver_done = '1' and video_driver_done = '1' then
+                if start = '1' then
                     state_next <= READ_HEADER;
 
                     -- We are reading the header first, not the audio but instead of spending
@@ -154,6 +167,11 @@ begin
 
                     -- Advance the audio pointer to the next address.
                     audio_pointer_next <= std_ulogic_vector(to_unsigned(1, audio_pointer_next'length));
+
+                    audio_loaded_next <= '0';
+                    video_loaded_next <= '0';
+
+                    start_playback_next <= '0';
                 end if;
 
             when READ_HEADER =>
@@ -255,6 +273,9 @@ begin
                 if audio_pointer = audio_end_address and video_pointer = video_end_address then
                     state_next <= DONE;
 
+                    audio_loaded_next <= '1';
+                    video_loaded_next <= '1';
+
                     -- We have to start playback if the audio and video data completely fit inside
                     -- the Fifos before hitting WAIT_FOR_EMPTY_SLOT.
                     if start_playback = '0' then
@@ -271,6 +292,13 @@ begin
                         -- Either compare as unsigned or extend to bigger vector.
                         if u_audio_pointer = unsigned(audio_end_address) then
                             read_audio_n_video_next <= '0';
+                            audio_loaded_next <= '1';
+
+                            if video_loaded = '1' then
+                                start_playback_next <= '1';
+                                audio_driver_play <= '1';
+                                video_driver_play <= '1';
+                            end if;
                         else
                             memory_driver_start <= '1';
                             memory_driver_address <= audio_pointer;
@@ -279,6 +307,7 @@ begin
                             state_next <= WAIT_FOR_DATA;
                         end if;
                     else
+                        audio_loaded_next <= '1';
                         read_audio_n_video_next <= '0';
                         if video_fifo_full = '1' then
                             state_next <= WAIT_FOR_EMPTY_SLOT;
@@ -288,6 +317,13 @@ begin
                     if video_fifo_full = '0' then
                         if u_video_pointer = unsigned(video_end_address) then
                             read_audio_n_video_next <= '1';
+                            video_loaded_next <= '1';
+
+                            if audio_loaded = '1' then
+                                start_playback_next <= '1';
+                                audio_driver_play <= '1';
+                                video_driver_play <= '1';
+                            end if;
                         else
                             memory_driver_start <= '1';
                             memory_driver_address <= video_pointer;
@@ -296,6 +332,7 @@ begin
                             state_next <= WAIT_FOR_DATA;
                         end if;
                     else
+                        video_loaded_next <= '1';
                         read_audio_n_video_next <= '1';
                         if audio_fifo_full = '1' then
                             state_next <= WAIT_FOR_EMPTY_SLOT;
@@ -323,10 +360,9 @@ begin
                 end if;
 
             when DONE =>
-                -- We have read all audio and video data that is available in the flash memory.
-                -- We also need to set start_playback to '0' so the modules know there is no data left.
-                start_playback_next <= '0';
-                state_next <= IDLE;
+                if audio_driver_done = '1' and video_driver_done = '1' then
+                    state_next <= IDLE;
+                end if;
         end case;
     end process;
 end architecture;
