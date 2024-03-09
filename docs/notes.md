@@ -46,3 +46,4 @@ Contains some thoughts over the development time of the project.
   - Kept it gray for now since the intermediate files are smaller and will process faster.
 - Control/AudioVideoDriver _done signal
   - It is combinational now, is this dangerous? The signal can only change when the state changes so it should work fine. No need to register, right?
+- Check if the difference from the expected i2s clock and the actual datasheet clock results in the audio being player slower or faster.

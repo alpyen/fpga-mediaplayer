@@ -66,7 +66,7 @@ architecture arch of i2s_master is
     signal transfer_acknowledge_int, transfer_acknowledge_int_next: std_ulogic;
     signal transfer_data_valid_sync, transfer_data_valid_sync_next: std_ulogic_vector(1 downto 0);
 
-    -- Technically we only need to cound to CDC_HOLD_COUNT_WIDTH - 1 so we are wasting potentially one bit on the width calculation.
+    -- Technically we only need to count to CDC_HOLD_COUNT_WIDTH - 1 so we are wasting potentially one bit on the width calculation.
     -- But that messes with the bit width if we only need to count to 2 (-1) since log2(1) = 0.
     constant CDC_HOLD_COUNT_NUM: positive := positive(2 * ((I2S_MCLK_SPEED + TRANSFER_PARTNER_CLOCK_SPEED - 1) / TRANSFER_PARTNER_CLOCK_SPEED));
     constant CDC_HOLD_COUNT_WIDTH: integer := integer(ceil(log2(real(CDC_HOLD_COUNT_NUM))));

@@ -15,7 +15,7 @@ entity audio_driver is
         reset: in std_ulogic;
 
         -- Audio Driver Interface
-        audio_driver_start: in std_ulogic;
+        audio_driver_play: in std_ulogic;
         audio_driver_done: out std_ulogic;
 
         -- Audio Fifo
@@ -34,8 +34,6 @@ end entity;
 architecture arch of audio_driver is
     -- This constant is here to not use magic numbers.
     -- The audio driver is "optimized" to work on four bit samples.
-    -- It might work with higher bits, but you'd need to make sure
-    -- the Fifos don't run dry.
     -- The encoding of 0/+1/-1 doesn't make much sense with higher bit depths
     -- since the jumps are mostly wider than 0/+1/-1.
     constant SAMPLE_DEPTH: positive := 4;
@@ -137,7 +135,7 @@ begin
         end if;
     end process;
 
-    fsm: process (state, audio_driver_start, audio_fifo_empty, decoding_done, sending_done)
+    fsm: process (state, audio_driver_play, audio_fifo_empty, decoding_done, sending_done)
     begin
         state_next <= state;
 
@@ -150,7 +148,7 @@ begin
             when IDLE =>
                 audio_driver_done <= '1';
 
-                if audio_driver_start = '1' then
+                if audio_driver_play = '1' and audio_fifo_empty = '0' then
                     state_next <= DECODE;
                 end if;
 
@@ -161,9 +159,9 @@ begin
                     if audio_fifo_empty = '0' then
                         decoding_start <= '1';
                     else
-                        -- Only jump back to idle when audio_driver_start is not asserted anymore.
+                        -- Only jump back to idle when audio_driver_play is not asserted anymore.
                         -- This notifies us that there will be no data inserted anymore into the Fifo.
-                        if audio_driver_start = '0' then
+                        if audio_driver_play = '0' then
                             state_next <= IDLE;
                         end if;
                     end if;
@@ -247,6 +245,10 @@ begin
                 if decoding_start = '1' then
                     decode_state_next <= BIT_0;
                     audio_fifo_read_enable <= '1';
+
+                    -- We assume that a full encoded sample is available in the Fifo.
+                    -- If there is no sample we stay in IDLE because decoding_start wasn't asserted.
+                    -- But once it is asserted, then one sample is atleast in there (min. 1 bits, max. 7 bits).
                 end if;
 
             when BIT_0 =>

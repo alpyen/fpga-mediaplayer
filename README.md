@@ -6,11 +6,13 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
 
+- Implement the Video Driver
+  - Add Generic for variable resolution
 - Control Unit
   - Use Generic for Memory Address width that is set in the TLE and passed to the CU and AD
   - Add Base Address to the TLE so the data is not assumed to be at address zero
-  - Rename audio_driver_start, video_driver_start to _play?
-- Implement the Video Driver
+- Vendor agnostic
+  - move all vendor specific stuff into entities
 
 ## Vivado
 - Change the board store in the project-tcl to be OS-independent

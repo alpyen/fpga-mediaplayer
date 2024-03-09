@@ -17,13 +17,22 @@ entity control_unit is
         memory_driver_done: in std_ulogic;
 
         -- Audio Driver Interface
-        audio_driver_start: out std_ulogic;
+        audio_driver_play: out std_ulogic;
         audio_driver_done: in std_ulogic;
 
         -- Audio Fifo
         audio_fifo_write_enable: out std_ulogic;
         audio_fifo_data_in: out std_ulogic_vector(7 downto 0);
-        audio_fifo_full: in std_ulogic
+        audio_fifo_full: in std_ulogic;
+
+        -- Video Driver Interface
+        video_driver_play: out std_ulogic;
+        video_driver_done: in std_ulogic;
+
+        -- Video Fifo
+        video_fifo_write_enable: out std_ulogic;
+        video_fifo_data_in: out std_ulogic_vector(7 downto 0);
+        video_fifo_full: in std_ulogic
     );
 end entity;
 
@@ -51,12 +60,6 @@ architecture arch of control_unit is
     signal read_audio_n_video, read_audio_n_video_next: std_ulogic;
 
     signal start_playback, start_playback_next: std_ulogic;
-
-    -- TODO: Remove when Video Fifo is attached
-    signal video_driver_start: std_ulogic;
-    signal video_fifo_write_enable: std_ulogic;
-    signal video_fifo_data_in: std_ulogic_vector(7 downto 0);
-    signal video_fifo_full: std_ulogic := '1';
 begin
     seq: process (clock)
     begin
@@ -98,7 +101,8 @@ begin
         header, memory_driver_done, memory_driver_data,
         audio_fifo_full, audio_pointer, audio_end_address,
         video_fifo_full, video_pointer, video_end_address,
-        read_audio_n_video, start_playback
+        read_audio_n_video, start_playback,
+        audio_driver_done, video_driver_done
     )
         variable u_audio_pointer, u_video_pointer: unsigned(audio_pointer'range);
         variable u_audio_length, u_video_length: unsigned(audio_length'range);
@@ -132,12 +136,12 @@ begin
 
         start_playback_next <= start_playback;
 
-        audio_driver_start <= '0';
-        video_driver_start <= '0';
+        audio_driver_play <= '0';
+        video_driver_play <= '0';
 
         case state is
             when IDLE =>
-                if start = '1' and audio_driver_done = '1' then -- TODO: Add Video Driver Signal
+                if start = '1' and audio_driver_done = '1' and video_driver_done = '1' then
                     state_next <= READ_HEADER;
 
                     -- We are reading the header first, not the audio but instead of spending
@@ -256,10 +260,8 @@ begin
                     if start_playback = '0' then
                         start_playback_next <= '1';
 
-                        -- TODO: One of the two can be empty,
-                        --       therefore we have to make sure not to play them.
-                        audio_driver_start <= '1';
-                        video_driver_start <= '1';
+                        audio_driver_play <= '1';
+                        video_driver_play <= '1';
                     end if;
                 elsif read_audio_n_video = '1' then
                     if audio_fifo_full = '0' then
@@ -308,8 +310,8 @@ begin
                 if start_playback = '0' then
                     start_playback_next <= '1';
 
-                    audio_driver_start <= '1';
-                    video_driver_start <= '1';
+                    audio_driver_play <= '1';
+                    video_driver_play <= '1';
                 end if;
 
                 if audio_fifo_full = '0' then
