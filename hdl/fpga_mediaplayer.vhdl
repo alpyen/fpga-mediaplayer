@@ -333,7 +333,7 @@ begin
     video_driver_inst: entity work.video_driver
     generic map (
         CLOCK_SPEED => 10_000_000,
-        BOARD_CLK_SPEED => 331_776
+        BOARD_CLK_SPEED => 331_776 -- 8x6 LED Board
     )
     port map (
         clock                        => clock10mhz,
