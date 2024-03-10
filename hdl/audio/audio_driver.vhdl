@@ -148,7 +148,7 @@ begin
             when IDLE =>
                 audio_driver_done <= '1';
 
-                if audio_driver_play = '1' and audio_fifo_empty = '0' then
+                if audio_driver_play = '1' and audio_fifo_empty /= '1' then
                     state_next <= DECODE;
                 end if;
 
@@ -156,7 +156,7 @@ begin
                 if decoding_done = '1' then
                     state_next <= WAIT_UNTIL_SAMPLE_PLAYED;
                 else
-                    if audio_fifo_empty = '0' then
+                    if audio_fifo_empty /= '1' then
                         decoding_start <= '1';
                     else
                         -- Only jump back to idle when audio_driver_play is not asserted anymore.

@@ -60,7 +60,7 @@ begin
             else
                 video_fifo_read_enable <= '0';
 
-                if video_fifo_empty = '0' and video_driver_play = '1' then
+                if video_fifo_empty /= '1' and video_driver_play = '1' then
                     video_fifo_read_enable <= '1';
                 end if;
             end if;

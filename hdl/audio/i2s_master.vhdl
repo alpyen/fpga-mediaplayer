@@ -243,7 +243,7 @@ begin
 
         case transfer_state is
             when IDLE =>
-                if new_sample_fifo_full = '0' then
+                if new_sample_fifo_full /= '1' then
                     transfer_state_next <= WAIT_UNTIL_READY_ASSERTED;
                     transfer_ready_int_next <= '1';
                 end if;
