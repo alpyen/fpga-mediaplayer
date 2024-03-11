@@ -8,7 +8,7 @@ use ieee.math_real.ceil;
 entity video_driver is
     generic (
         CLOCK_SPEED: positive;
-        BOARD_CLK_SPEED: positive
+        BOARD_CLOCK_SPEED: positive
     );
     port (
         clock: in std_ulogic;
@@ -26,7 +26,7 @@ entity video_driver is
         -- Board interface to LED Board
         -- Pins are low-active because of the logic-level transistors
         -- pulling the line low when they are pulled high.
-        board_clk: in std_ulogic;
+        board_clock: in std_ulogic;
         board_row_data_in_n: out std_ulogic;
         board_shift_row_data_n: out std_ulogic;
         board_apply_new_row_n: out std_ulogic;

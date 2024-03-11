@@ -6,6 +6,7 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
 
+- Check if we have to use a local clock buffer for the video fabric clock
 - Implement the Video Driver
   - Add Generic for variable resolution
 - Control Unit
