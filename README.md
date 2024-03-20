@@ -6,11 +6,11 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
 
-- Check if we have to use a local clock buffer for the video fabric clock
 - Implement the Video Driver
   - Add Generic for variable resolution
+- Frame Buffer
+  - Check if it's better to restrict the ports as much as possible or two make them less restrictive
 - Control Unit
-    - it got bloated now with all the extra cases, perhaps it can be thinned
   - Use Generic for Memory Address width that is set in the TLE and passed to the CU and AD
   - Add Base Address to the TLE so the data is not assumed to be at address zero
 - Vendor agnostic
