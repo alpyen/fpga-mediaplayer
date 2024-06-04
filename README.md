@@ -6,6 +6,10 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
 
+- Update clockcalculator.py to show best-effort even when not achieving tolerance.
+- Prettify clockcalculator.py output.
+- Write notes about clock calculation
+- Media notes say sampling rate is 22,050 Hz, wasn't this changed to 44,100 Hz?
 - Implement the Video Driver
   - Add Generic for variable resolution
 - Frame Buffer

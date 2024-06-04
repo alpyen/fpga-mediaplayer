@@ -11,7 +11,6 @@ import struct
 import PIL.Image
 import time
 
-
 # Disable logging from pyffmpeg because it's useless for our use-case.
 import logging
 logging.getLogger("pyffmpeg.FFmpeg").setLevel(logging.FATAL)
