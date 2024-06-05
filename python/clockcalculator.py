@@ -80,7 +80,7 @@ parser.add_argument("-i", "--source-clock", action="store", type=int, required=T
 parser.add_argument("-o", "--target-clock", action="store", type=int, required=True, help="Target clock rate in Hz")
 parser.add_argument("-b", "--bitwidth", action="store", type=int, required=True, help="Maximum bitwidth of both counters\nWarning: Values above 6 can take a long time to finish!")
 parser.add_argument("-s", "--max-skew", action="store", type=float, required=True, help="Maximum skew in milliseconds per second")
-parser.add_argument("-j", "--max-jitter", action="store", type=float, required=True, help="Maximum jitter in percent")
+parser.add_argument("-d", "--max-sub-clock-deviation", action="store", type=float, required=True, help="Maximum sub clock from target clock deviation in percent")
 parser.add_argument("-p", "--max-precision", action="store_true", required=False, help="Ignore satisfying solutions if there are more expensive precise ones")
 args = parser.parse_args(args=None if sys.argv[1:] else ["--help"])
 
@@ -100,8 +100,8 @@ if int(args.bitwidth) <= 0:
     print("Counter bitwidth needs to be a positive integer.")
     exit(0)
 
-if int(args.max_jitter) < 0:
-    print("Maximum jitter has to be non-negative integer.")
+if int(args.max_sub_clock_deviation) < 0:
+    print("Maximum deviation has to be non-negative integer.")
     exit(0)
 
 # Calculates the bitwidth necessary to implement a counter that can count to A or B.
@@ -111,7 +111,7 @@ def cost(A: int, B: int) -> int:
 source_clock = int(args.source_clock)
 target_clock = int(args.target_clock)
 max_skew = float(args.max_skew) # 1 / 240 * 30 # 30ms over 4 minutes
-max_jitter = float(args.max_jitter) / 100
+max_sub_clock_deviation = float(args.max_deviation) / 100
 max_precision = True if args.max_precision else False
 bitwidth = int(args.bitwidth)
 
@@ -126,12 +126,12 @@ print(f"All values visually cut off to {decimals} decimals.")
 print()
 
 print("================== Input Parameters ===================")
-print(f"Source Clock:   {source_clock:,} Hz")
-print(f"Target Clock:   {target_clock:,} Hz")
-print(f"Max. Skew:      {max_skew:.{decimals}f} ms/s")
-print(f"Max. Jitter:    {max_jitter:.{decimals}f}%")
-print(f"Max. Precision: {max_precision}")
-print(f"Max. Bitwidth:  {bitwidth} bits")
+print(f"Source Clock:              {source_clock:,} Hz")
+print(f"Target Clock:              {target_clock:,} Hz")
+print(f"Max. Skew:                 {max_skew:.{decimals}f} ms/s")
+print(f"Max. Sub Clock Deviation:  {max_sub_clock_deviation:.{decimals}f}%")
+print(f"Max. Precision:            {max_precision}")
+print(f"Max. Bitwidth:             {bitwidth} bits")
 print()
 print(f"-> Source to Target Ratio: {source_target_ratio:.{decimals}f}")
 print(f"-> Toggle Counter Value:   {source_target_ratio / 2:.{decimals}f}")
@@ -206,7 +206,7 @@ for N in range(1, 2 ** bitwidth + 1):
                 )
 
                 # compare skew in clockcycles because then we don't have to scale and divide it every iteration
-                better_solution_found = (cost_current < cost_min_cost or not solution_found) and (skew_current < max_skew_in_clockcycles) and (jitter_current < max_jitter)
+                better_solution_found = (cost_current < cost_min_cost or not solution_found) and (skew_current < max_skew_in_clockcycles) and (jitter_current < max_sub_clock_deviation)
                 # new_values_are_cheaper = (cost_current < cost_min_cost or not solution_exists) and (skew_current < max_skew)
                 # new_values_are_equal_but_better = (cost_current <= cost_min_cost or not solution_exists) and (skew_current < skew_min_cost) and (skew_current * 1000 < max_skew)
 
@@ -256,7 +256,7 @@ print(f"Toggle: {toggle_min_cost:.{decimals}f}")
 print(f"Skew: {clock_skew_min_cost:.{decimals}f} clocks")
 print(f"Skew/second: {(clock_skew_min_cost / target_clock) * 1000:.{decimals}f} ms")
 print(f"Skew/four minutes: {240 * (clock_skew_min_cost / target_clock) * 1000:.{decimals}f} ms")
-print(f"Jitter: {jitter_min_cost*100:.{decimals}f}%")
+print(f"Sub Clock Deviation: {jitter_min_cost*100:.{decimals}f}%")
 print(f"Counter Bitwidths: Z: {cost(N_min_cost, 0)}, A,B: {cost(A_min_cost, B_min_cost)}")
 print(f"x={x_min_cost}, A={A_min_cost}, B={B_min_cost}, N={N_min_cost}")
 print("=======================================================")
