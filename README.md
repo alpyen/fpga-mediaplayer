@@ -7,6 +7,8 @@ Stuff that needs to be done, may be incomplete and not in order.
 ## HDL
 
 - Update clockcalculator.py to show best-effort even when not achieving tolerance.
+- Update clockcalculator.py to include max jitter
+- Optimize clock calculation and pull out calculations
 - Prettify clockcalculator.py output.
 - Write notes about clock calculation
 - Media notes say sampling rate is 22,050 Hz, wasn't this changed to 44,100 Hz?
