@@ -100,18 +100,14 @@ if int(args.bitwidth) <= 0:
     print("Counter bitwidth needs to be a positive integer.")
     exit(0)
 
-if int(args.max_sub_clock_deviation) < 0:
-    print("Maximum deviation has to be non-negative integer.")
+if float(args.max_sub_clock_deviation) < 0:
+    print("Maximum deviation has to be non-negative float.")
     exit(0)
-
-# Calculates the bitwidth necessary to implement a counter that can count to A or B.
-def cost(A: int, B: int) -> int:
-    return max(ceil(log2(max(1, A))), ceil(log2(max(1, B))))
 
 source_clock = int(args.source_clock)
 target_clock = int(args.target_clock)
 max_skew = float(args.max_skew) # 1 / 240 * 30 # 30ms over 4 minutes
-max_sub_clock_deviation = float(args.max_deviation) / 100
+max_sub_clock_deviation = float(args.max_sub_clock_deviation) / 100
 max_precision = True if args.max_precision else False
 bitwidth = int(args.bitwidth)
 
@@ -139,6 +135,69 @@ print(f"-> Max. Skew (4 minutes):  {240 * max_skew:.{decimals}f} ms")
 print("=======================================================")
 print()
 
+# Calculates the bitwidth necessary to implement a counter that can count to A or B.
+def cost(A: int, B: int) -> int:
+    return max(ceil(log2(max(1, A))), ceil(log2(max(1, B))))
+
+class Solution:
+    def __init__(self, N = 0, x = 0, A = 0, B = 0):
+        if N == 0:
+            self.toggle = 0
+            self.cost = 0
+            self.skew = 0
+            self.skew_abs = 0
+            self.sub_clock_deviation = 0
+            self.sub_clock_deviation_abs = 0
+            self.N = 0
+            self.x = 0
+            self.A = 0
+            self.B = 0
+        else:
+            self.toggle = (x*A + (N-x)*B) / N
+            self.cost = cost(max(A, B), N)
+            clock_current = source_clock / (2 * self.toggle)
+            self.skew = target_clock - clock_current
+            self.skew_abs = abs(self.skew)
+            self.sub_clock_deviation = 1 - (clock_current / target_clock)
+            self.sub_clock_deviation_abs = abs(self.sub_clock_deviation)
+            self.N = N
+            self.x = x
+            self.A = A
+            self.B = B
+
+    def get_achieved_clock_rate(self):
+        return source_clock / (2 * self.toggle)
+
+    def get_toggle_rate(self):
+        return self.toggle
+
+    def get_skew_in_clocks(self):
+        return self.skew
+
+    def get_skew_in_ms_per_second(self):
+        return (self.skew / target_clock) * 1000
+
+    def get_sub_clock_deviation(self):
+        return self.sub_clock_deviation
+
+    def get_cost_of_z_counter(self):
+        return cost(self.N, 0)
+
+    def get_cost_of_ab_counter(self):
+        return cost(self.A, self.B)
+
+    def get_N(self):
+        return self.N
+
+    def get_x(self):
+        return self.x
+
+    def get_A(self):
+        return self.A
+
+    def get_B(self):
+        return self.B
+
 # If we pass all tolerances, the only important optimization goal is the bitwidth which results in more hardware.
 # However, just because we found one solution, this does not mean we should stop searching.
 # We can still search the current bitwidth for other fractions because their bitwidth cost
@@ -152,16 +211,11 @@ print()
 #
 # If we are interested in max. precision and use the whole bitwidth
 # then we update the optimum even if it costs more.
-solution_found = False
+solution_exists = False
 
-toggle_min_cost = 0
-cost_min_cost = 0
-skew_min_cost = 0
-jitter_min_cost = 0
-N_min_cost = 0
-x_min_cost = 0
-A_min_cost = 0
-B_min_cost = 0
+min_cost_solution = Solution()
+min_skew_solution = Solution()
+min_sub_clock_deviation_solution = Solution()
 
 print("Exploring search space...", end="")
 
@@ -188,62 +242,49 @@ for N in range(1, 2 ** bitwidth + 1):
                     continue
 
                 # toggle_current = (x*A + (z-x)*B) / z
+
                 toggle_current = xaz + B-xz*B
                 clock_current = source_clock / (2 * toggle_current)
                 cost_current = cost(max(A, B), N)
                 skew_current = abs(target_clock - clock_current)
-                jitter_current = abs(1 - (clock_current / target_clock))
+                sub_clock_deviation = abs(1 - (clock_current / target_clock))
 
                 # In case there exists no solution, we still want to feed some data back to the user.
                 # Choose this as a cheap intolerant solution if the skew is lower without loss in jitter,
                 # or the jitter is lower without loss in skew.
                 # Note that we do not care for the Pareto front as this is just a heads up for the user
                 # to see how much they missed their target by and to adjust the parameters.
-                cheap_intolerant_solution = (not solution_found) and \
+                cheap_intolerant_solution = (not solution_exists) and \
                 (
-                    (skew_current < skew_min_cost or skew_min_cost == 0) and (jitter_current <= jitter_min_cost or jitter_min_cost == 0) or
-                    (skew_current <= skew_min_cost or skew_min_cost == 0) and (jitter_current < jitter_min_cost or jitter_min_cost == 0)
+                    (skew_current < min_cost_solution.skew_abs or min_cost_solution.skew_abs == 0)and \
+                        (sub_clock_deviation <= min_cost_solution.sub_clock_deviation_abs or min_cost_solution.sub_clock_deviation_abs == 0)
+                    or \
+                    (skew_current <= min_cost_solution.skew_abs or min_cost_solution.skew_abs == 0) and \
+                        (sub_clock_deviation < min_cost_solution.sub_clock_deviation_abs or min_cost_solution.sub_clock_deviation_abs == 0)
                 )
 
                 # compare skew in clockcycles because then we don't have to scale and divide it every iteration
-                better_solution_found = (cost_current < cost_min_cost or not solution_found) and (skew_current < max_skew_in_clockcycles) and (jitter_current < max_sub_clock_deviation)
-                # new_values_are_cheaper = (cost_current < cost_min_cost or not solution_exists) and (skew_current < max_skew)
-                # new_values_are_equal_but_better = (cost_current <= cost_min_cost or not solution_exists) and (skew_current < skew_min_cost) and (skew_current * 1000 < max_skew)
+                better_solution_found = (cost_current < min_cost_solution.cost or not solution_exists) and (skew_current < max_skew_in_clockcycles) and (sub_clock_deviation < max_sub_clock_deviation)
 
                 if better_solution_found:
-                    solution_found = True
-                    toggle_min_cost = toggle_current
-                    cost_min_cost = cost_current
-                    skew_min_cost = skew_current
-                    jitter_min_cost = jitter_current
-                    N_min_cost = N
-                    x_min_cost = x
-                    A_min_cost = A
-                    B_min_cost = B
-                elif cheap_intolerant_solution:
-                    toggle_min_cost = toggle_current
-                    cost_min_cost = cost_current
-                    skew_min_cost = skew_current
-                    jitter_min_cost = jitter_current
-                    N_min_cost = N
-                    x_min_cost = x
-                    A_min_cost = A
-                    B_min_cost = B
+                    solution_exists = True
+
+                if better_solution_found or cheap_intolerant_solution:
+                    min_cost_solution = Solution(
+                        N=N, x=x, A=A, B=B
+                    )
 
     # If we have reached the last possible iteration of the current allowed bitwidth
     # we can exit the search when we have found a solution and are not looking for the
     # most precise solution. Even if we haven't reached bitwidth-bits.
-    if not max_precision and solution_found and log2(N) == int(log2(N)):
+    if not max_precision and solution_exists and log2(N) == int(log2(N)):
         break
 
 
 print("\rExploring search space...done!")
 print()
 
-achieved_clock2 = source_clock / (2 * toggle_min_cost)
-clock_skew_min_cost = target_clock - (source_clock / (2 * toggle_min_cost))
-
-if solution_found:
+if solution_exists:
     print("================= Cheapest Solution ===================")
 else:
     print("ERROR: No solution found that satisfies given constraints.")
@@ -251,12 +292,14 @@ else:
     print()
     print("================== Closest Solution ===================")
 
-print(f"Achieved: {achieved_clock2:.{decimals}f} Hz")
-print(f"Toggle: {toggle_min_cost:.{decimals}f}")
-print(f"Skew: {clock_skew_min_cost:.{decimals}f} clocks")
-print(f"Skew/second: {(clock_skew_min_cost / target_clock) * 1000:.{decimals}f} ms")
-print(f"Skew/four minutes: {240 * (clock_skew_min_cost / target_clock) * 1000:.{decimals}f} ms")
-print(f"Sub Clock Deviation: {jitter_min_cost*100:.{decimals}f}%")
-print(f"Counter Bitwidths: Z: {cost(N_min_cost, 0)}, A,B: {cost(A_min_cost, B_min_cost)}")
-print(f"x={x_min_cost}, A={A_min_cost}, B={B_min_cost}, N={N_min_cost}")
+print(f"Achieved:                  {min_cost_solution.get_achieved_clock_rate():,.{decimals}f} Hz")
+print(f"Skew/second:               {min_cost_solution.get_skew_in_clocks():.{decimals}f} clocks")
+print(f"Skew/second:               {min_cost_solution.get_skew_in_ms_per_second():.{decimals}f} ms")
+print(f"Skew/four minutes:         {4 * 60 * min_cost_solution.get_skew_in_ms_per_second():.{decimals}f} ms")
+print(f"Sub Clock Deviation:       {min_cost_solution.get_sub_clock_deviation()*100:.{decimals}f}%")
+print(f"Toggle:                    {min_cost_solution.get_toggle_rate():.{decimals}f}")
+print(f"Bitwidth Counter Z:        {min_cost_solution.get_cost_of_z_counter()}")
+print(f"Bitwidth Counter A, B:     {min_cost_solution.get_cost_of_ab_counter()}")
+print()
+print(f"Values x={min_cost_solution.get_x()}, A={min_cost_solution.get_A()}, B={min_cost_solution.get_B()}, N={min_cost_solution.get_N()}".center(55))
 print("=======================================================")
