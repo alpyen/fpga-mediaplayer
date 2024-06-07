@@ -104,6 +104,24 @@ begin
         end if;
     end process;
 
+    phase_accumulator_inst: entity work.phase_accumulator
+    generic map (
+        SOURCE_CLOCK   => CLOCK_SPEED,
+        TARGET_CLOCK   => 304_128,
+
+        -- Accuracy is 30 ms over 4 minutes
+        CLOCK_ACCURACY => (1.0 - (((1.0 - (0.030 / 240.0)) * 304_128.0) / 304_128.0)) * 100.0,
+
+        MAX_BITWIDTH => 24,
+        MAX_PRECISION => false
+    )
+    port map (
+        clock     => clock,
+        reset     => reset,
+
+        clock_out => open
+    );
+
     frame_buffer_0: entity work.frame_buffer
     generic map (
         SAMPLE_DEPTH => 4,
