@@ -18,13 +18,16 @@ entity frame_buffer is
         HEIGHT: positive
     );
     port (
-        clock_a: in std_ulogic;
+        clock: in std_ulogic;
+        reset: in std_ulogic;
+
+        -- Port A (R/W)
         address_a: in std_ulogic_vector(integer(ceil(log2(real(WIDTH * HEIGHT)))) - 1 downto 0);
         data_a: inout std_logic_vector(SAMPLE_DEPTH - 1 downto 0);
         write_enable_a: in std_ulogic;
         request_a: in std_ulogic;
 
-        clock_b: in std_ulogic;
+        -- Port B (Ro)
         address_b: in std_ulogic_vector(integer(ceil(log2(real(WIDTH * HEIGHT)))) - 1 downto 0);
         data_b: out std_ulogic_vector(SAMPLE_DEPTH - 1 downto 0);
         request_b: in std_ulogic
@@ -32,32 +35,36 @@ entity frame_buffer is
 end entity;
 
 architecture arch of frame_buffer is
-    type memory_t is array (0 to integer(ceil(log2(real(WIDTH * HEIGHT)))) - 1) of std_ulogic_vector(SAMPLE_DEPTH - 1 downto 0);
-    signal memory: memory_t;
+    type memory_t is array (0 to WIDTH * HEIGHT - 1) of std_ulogic_vector(SAMPLE_DEPTH - 1 downto 0);
+    signal memory, memory_next: memory_t := (others => (others => '0'));
 begin
-    seq_port_a: process (clock_a)
+    process (clock)
     begin
-        if rising_edge(clock_a) then
-            data_a <= (others => 'Z');
-
-            if request_a = '1' then
-                if write_enable_a = '0' then
-                    data_a <= std_logic_vector(memory(to_integer(unsigned(address_a))));
-                else
-                    memory(to_integer(unsigned(address_a))) <= std_ulogic_vector(data_a);
-                end if;
+        if rising_edge(clock) then
+            if reset = '1' then
+                memory <= (others => (others => '0'));
+            else
+                memory <= memory_next;
             end if;
         end if;
     end process;
 
-    seq_port_b: process (clock_b)
+    process (memory, request_a, write_enable_a, address_a, data_a, request_b, address_b) is
     begin
-        if rising_edge(clock_b) then
-            data_b <= (others => '0');
+        data_a <= (others => 'Z');
+        data_b <= (others => '0');
+        memory_next <= memory;
 
-            if request_b = '1' then
-                data_b <= memory(to_integer(unsigned(address_b)));
+        if request_a = '1' then
+            if write_enable_a = '0' then
+                data_a <= std_logic_vector(memory(to_integer(unsigned(address_a))));
+            else
+                memory_next(to_integer(unsigned(address_a))) <= std_ulogic_vector(data_a);
             end if;
+        end if;
+
+        if request_b = '1' then
+            data_b <= memory(to_integer(unsigned(address_b)));
         end if;
     end process;
 end architecture;

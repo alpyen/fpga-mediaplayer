@@ -5,6 +5,7 @@ Stuff that needs to be done, may be incomplete and not in order.
 ## Project
 
 ## HDL
+- Generate testbench media file for video testing. Current one has no source, only the encoded file.
 - Write notes about clock calculation
 - Media notes say sampling rate is 22,050 Hz, wasn't this changed to 44,100 Hz?
 - Implement the Video Driver
