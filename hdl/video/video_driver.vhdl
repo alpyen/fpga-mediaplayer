@@ -37,11 +37,25 @@ end entity;
 architecture arch of video_driver is
     constant SAMPLE_DEPTH: positive := 4;
 
+    type state_t is (IDLE, DECODE, WAIT_UNTIL_PREVIOUS_FRAME_PLAYED);
+    signal state, state_next: state_t;
+    signal decoding_start, decoding_done: std_ulogic;
+
+    type decoder_state_t is (IDLE, BIT_0, BIT_1, BIT_2, NEW_SAMPLE, READ_OLD_PIXEL, WRITE_NEW_PIXEL);
+    signal decoder_state, decoder_state_next: decoder_state_t;
+
+    type pixel_difference_t is (UNCHANGED, UP, DOWN, REPLACE);
+    signal pixel_difference, pixel_difference_next: pixel_difference_t;
+
     -- Signals controlled from video driver
     signal request_0_a, request_1_a: std_ulogic;
     signal write_enable_0_a, write_enable_1_a: std_ulogic;
     signal address_a: std_ulogic_vector(integer(ceil(log2(real(WIDTH * HEIGHT)))) - 1 downto 0);
     signal data_0_a, data_1_a: std_logic_vector(SAMPLE_DEPTH - 1 downto 0);
+
+    signal frame_pixel_counter, frame_pixel_counter_next: unsigned(address_a'range);
+    signal new_pixel_value, new_pixel_value_next: unsigned(data_0_a'range);
+    signal pixel_bit_counter, pixel_bit_counter_next: unsigned(new_pixel_value'range);
 
     -- Signals controlled from board driver
     signal request_0_b, request_1_b: std_ulogic;
@@ -53,40 +67,203 @@ architecture arch of video_driver is
     signal selected_buffer, selected_buffer_next: std_ulogic;
 
     signal board_driver_request: std_ulogic;
-    signal board_driver_address: std_ulogic_vector(address_a'range);
-    signal board_driver_data: std_ulogic_vector(data_0_a'range);
-    signal board_driver_processed: std_ulogic;
+    signal board_driver_address: std_ulogic_vector(address_b'range);
+    signal board_driver_data: std_ulogic_vector(data_0_b'range);
 
     signal board_driver_frame_available: std_ulogic;
     signal board_driver_frame_processed: std_ulogic;
 begin
-    video_driver_done <= '1';
-
-    address_a <= (others => '0');
-    write_enable_0_a <= '0';
-    request_0_a <= '0';
-    write_enable_1_a <= '0';
-    request_1_a <= '0';
-
-    selected_buffer <= '0';
-    selected_buffer_next <= '0';
-
-    board_driver_frame_available <= '0';
-
-    process (clock)
+    seq: process (clock)
     begin
         if rising_edge(clock) then
             if reset = '1' then
-                video_fifo_read_enable <= '0';
-            else
-                video_fifo_read_enable <= '0';
+                state <= IDLE;
+                decoder_state <= IDLE;
 
-                if video_fifo_empty /= '1' and video_driver_play = '1' then
-                    video_fifo_read_enable <= '1';
-                end if;
+                frame_pixel_counter <= to_unsigned(0, frame_pixel_counter'length);
+                pixel_difference <= UNCHANGED;
+                new_pixel_value <= to_unsigned(0, new_pixel_value'length);
+                pixel_bit_counter <= to_unsigned(0, pixel_bit_counter'length);
+
+                selected_buffer <= '1';
+            else
+                state <= state_next;
+                decoder_state <= decoder_state_next;
+
+                frame_pixel_counter <= frame_pixel_counter_next;
+                pixel_difference <= pixel_difference_next;
+                new_pixel_value <= new_pixel_value_next;
+                pixel_bit_counter <= pixel_bit_counter_next;
+
+                selected_buffer <= selected_buffer_next;
             end if;
         end if;
     end process;
+
+    comb: process (
+        state, selected_buffer, decoding_done, board_driver_frame_processed,
+        video_driver_play, video_fifo_empty
+    )
+    begin
+        state_next <= state;
+        selected_buffer_next <= selected_buffer;
+
+        decoding_start <= '0';
+        video_driver_done <= '0';
+
+        case (state) is
+            when IDLE =>
+                video_driver_done <= '1';
+
+                if video_driver_play = '1' and video_fifo_empty /= '1' then
+                    state_next <= DECODE;
+                end if;
+
+            when DECODE =>
+                if decoding_done = '1' then
+                    state_next <= WAIT_UNTIL_PREVIOUS_FRAME_PLAYED;
+                else
+                    if video_fifo_empty /= '1' then
+                        decoding_start <= '1';
+                    else
+                        if video_driver_play = '0' then
+                            state_next <= IDLE;
+                        end if;
+                    end if;
+                end if;
+
+            when WAIT_UNTIL_PREVIOUS_FRAME_PLAYED =>
+                if board_driver_frame_processed = '1' then
+                    state_next <= DECODE;
+                end if;
+        end case;
+    end process;
+
+    decoder_fsm: process (
+        decoder_state, decoding_start, video_fifo_data_out, video_fifo_empty,
+        frame_pixel_counter, pixel_difference, new_pixel_value, pixel_bit_counter,
+        data_0_a, data_1_a
+    )
+    begin
+        decoder_state_next <= decoder_state;
+        decoding_done <= '0';
+
+        video_fifo_read_enable <= '0';
+        board_driver_frame_available <= '0';
+
+        frame_pixel_counter_next <= frame_pixel_counter;
+        pixel_difference_next <= pixel_difference;
+        new_pixel_value_next <= to_unsigned(0, new_pixel_value_next'length);
+        pixel_bit_counter_next <= to_unsigned(0, pixel_bit_counter_next'length);
+
+        request_0_a <= '0';
+        write_enable_0_a <= '0';
+        data_0_a <= (others => 'Z');
+
+        request_1_a <= '0';
+        write_enable_1_a <= '0';
+        data_1_a <= (others => 'Z');
+
+        address_a <= (others => '0');
+
+        -- Make sure that we check for vfempty /= 1.
+        -- Maybe it's slow enough that this is not necessary?
+        case decoder_state is
+            when IDLE =>
+                if decoding_start = '1' then
+                    decoder_state_next <= BIT_0;
+                    video_fifo_read_enable <= '1';
+                    frame_pixel_counter_next <= to_unsigned(0, frame_pixel_counter'length);
+                end if;
+
+            when BIT_0 =>
+                if video_fifo_data_out(0) = '0' then
+                    decoder_state_next <= READ_OLD_PIXEL;
+                    pixel_difference_next <= UNCHANGED;
+                else
+                    decoder_state_next <= BIT_1;
+                    video_fifo_read_enable <= '1';
+                end if;
+
+            when BIT_1 =>
+                if video_fifo_data_out(0) = '0' then
+                    decoder_state_next <= READ_OLD_PIXEL;
+                    pixel_difference_next <= UP;
+                else
+                    decoder_state_next <= BIT_2;
+                    video_fifo_read_enable <= '1';
+                end if;
+
+            when BIT_2 =>
+                if video_fifo_data_out(0) = '0' then
+                    decoder_state_next <= READ_OLD_PIXEL;
+                    pixel_difference_next <= DOWN;
+                else
+                    decoder_state_next <= NEW_SAMPLE;
+                    video_fifo_read_enable <= '1';
+                end if;
+
+            when NEW_SAMPLE =>
+                new_pixel_value_next <= new_pixel_value(new_pixel_value'left - 1 downto 0) & video_fifo_data_out(0);
+                pixel_bit_counter_next <= pixel_bit_counter + 1;
+
+                if pixel_bit_counter = SAMPLE_DEPTH - 1 then
+                    decoder_state_next <= WRITE_NEW_PIXEL;
+                    pixel_difference_next <= REPLACE;
+                else
+                    video_fifo_read_enable <= '1';
+                end if;
+
+            when READ_OLD_PIXEL =>
+                decoder_state_next <= WRITE_NEW_PIXEL;
+                address_a <= std_ulogic_vector(frame_pixel_counter);
+
+                if selected_buffer = '0' then
+                    request_0_a <= '1';
+                else
+                    request_1_a <= '1';
+                end if;
+
+            when WRITE_NEW_PIXEL =>
+                frame_pixel_counter_next <= frame_pixel_counter + 1;
+                address_a <= std_ulogic_vector(frame_pixel_counter);
+
+                if selected_buffer = '0' then
+                    request_1_a <= '1';
+                    write_enable_1_a <= '1';
+
+                    case pixel_difference is
+                        when UNCHANGED => data_1_a <= data_0_a;
+                        when UP => data_1_a <= std_logic_vector(unsigned(data_0_a) + 1);
+                        when DOWN => data_1_a <= std_logic_vector(unsigned(data_0_a) - 1);
+                        when REPLACE => data_1_a <= std_logic_vector(new_pixel_value);
+                    end case;
+                else
+                    request_0_a <= '1';
+                    write_enable_0_a <= '1';
+
+                    case pixel_difference is
+                        when UNCHANGED => data_0_a <= data_1_a;
+                        when UP => data_0_a <= std_logic_vector(unsigned(data_1_a) + 1);
+                        when DOWN => data_0_a <= std_logic_vector(unsigned(data_1_a) - 1);
+                        when REPLACE => data_0_a <= std_logic_vector(new_pixel_value);
+                    end case;
+                end if;
+
+                if frame_pixel_counter = WIDTH * HEIGHT - 1 then
+                    decoder_state_next <= IDLE;
+                    decoding_done <= '1';
+                else
+                    decoder_state_next <= BIT_0;
+                    video_fifo_read_enable <= '1';
+                end if;
+        end case;
+    end process;
+
+    request_0_b <= board_driver_request when selected_buffer = '0' else '0';
+    request_1_b <= board_driver_request when selected_buffer = '1' else '0';
+    address_b <= board_driver_address;
+    board_driver_data <= data_0_b or data_1_b;
 
     board_driver_inst: entity work.board_driver
     generic map (
@@ -113,11 +290,6 @@ begin
         board_shift_row_strobe_n     => board_shift_row_strobe_n,
         board_apply_new_row_strobe_n => board_apply_new_row_strobe_n
     );
-
-    request_0_b <= board_driver_request when selected_buffer = '0' else '0';
-    request_1_b <= board_driver_request when selected_buffer = '1' else '0';
-    address_b <= board_driver_address;
-    board_driver_data <= data_0_b or data_1_b;
 
     frame_buffer_0: entity work.frame_buffer
     generic map (
