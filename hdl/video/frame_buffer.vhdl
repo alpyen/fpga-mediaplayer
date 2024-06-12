@@ -38,7 +38,7 @@ architecture arch of frame_buffer is
     type memory_t is array (0 to WIDTH * HEIGHT - 1) of std_ulogic_vector(SAMPLE_DEPTH - 1 downto 0);
     signal memory, memory_next: memory_t := (others => (others => '0'));
 begin
-    process (clock)
+    seq: process (clock)
     begin
         if rising_edge(clock) then
             if reset = '1' then
@@ -49,7 +49,7 @@ begin
         end if;
     end process;
 
-    process (memory, request_a, write_enable_a, address_a, data_a, request_b, address_b) is
+    comb: process (memory, request_a, write_enable_a, address_a, data_a, request_b, address_b) is
     begin
         data_a <= (others => 'Z');
         data_b <= (others => '0');

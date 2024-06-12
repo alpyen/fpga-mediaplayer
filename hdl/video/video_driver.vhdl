@@ -38,15 +38,15 @@ architecture arch of video_driver is
     constant SAMPLE_DEPTH: positive := 4;
 
     -- Signals controlled from video driver
-    signal address_a: std_ulogic_vector(integer(ceil(log2(real(WIDTH * HEIGHT)))) - 1 downto 0);
-    signal data_a: std_logic_vector(SAMPLE_DEPTH - 1 downto 0);
-    signal write_enable_0_a, write_enable_1_a: std_ulogic;
     signal request_0_a, request_1_a: std_ulogic;
+    signal write_enable_0_a, write_enable_1_a: std_ulogic;
+    signal address_a: std_ulogic_vector(integer(ceil(log2(real(WIDTH * HEIGHT)))) - 1 downto 0);
+    signal data_0_a, data_1_a: std_logic_vector(SAMPLE_DEPTH - 1 downto 0);
 
     -- Signals controlled from board driver
-    signal address_b: std_ulogic_vector(address_a'range);
-    signal data_0_b, data_1_b: std_ulogic_vector(data_a'range);
     signal request_0_b, request_1_b: std_ulogic;
+    signal address_b: std_ulogic_vector(address_a'range);
+    signal data_0_b, data_1_b: std_ulogic_vector(data_0_a'range);
 
     -- Determines which buffer the video driver is currently filling/filled.
     -- The board driver is operating meanwhile on the other buffer.
@@ -54,7 +54,7 @@ architecture arch of video_driver is
 
     signal board_driver_request: std_ulogic;
     signal board_driver_address: std_ulogic_vector(address_a'range);
-    signal board_driver_data: std_ulogic_vector(data_a'range);
+    signal board_driver_data: std_ulogic_vector(data_0_a'range);
     signal board_driver_processed: std_ulogic;
 
     signal board_driver_frame_available: std_ulogic;
@@ -72,10 +72,6 @@ begin
     selected_buffer_next <= '0';
 
     board_driver_frame_available <= '0';
-
-    -- TODO: Pre-Decode first frame and fill frame buffer
-    --       Otherwise we will skew initially up to a full frame
-    --       which is 41.6ms already and inacceptable.
 
     process (clock)
     begin
@@ -134,7 +130,7 @@ begin
         reset          => reset,
 
         address_a      => address_a,
-        data_a         => data_a,
+        data_a         => data_0_a,
         write_enable_a => write_enable_0_a,
         request_a      => request_0_a,
 
@@ -154,7 +150,7 @@ begin
         reset          => reset,
 
         address_a      => address_a,
-        data_a         => data_a,
+        data_a         => data_1_a,
         write_enable_a => write_enable_1_a,
         request_a      => request_1_a,
 

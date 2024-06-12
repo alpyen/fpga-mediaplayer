@@ -38,15 +38,12 @@ end entity;
 
 architecture arch of board_driver is
     constant FRAMES_PER_SECOND: positive := 24;
-    -- TODO: Board strobes frame 2^SAMPLE_DEPTH times. Perhaps strobe multiple times more often if the wire can handle the clock?
-
     -- The board is being driven by multiplexing. The clock rate is composed by:
     --  1. Shifting in WIDTH-bits to feed in the line toggling srclk WIDTH times.
     --  2. Applying the current line by toggling rclk once.
     --  3. Shifting in new lines and applying them HEIGHT-times.
     --  4. We need to strobe the picture for at least 2^SAMPLE_DEPTH times to implement the grayscale bitdepth.
     --  5. Repeat 1-4. for FRAMES_PER_SECOND times.
-    -- TODO: Check if the available/processed checks need to be added onto this number.
     -- Note: The row strobe / line selection is hidden because we can shift it further when shifting in data.
     --       And we can apply it when we are applying the current line because it should be impercetible.
     constant BOARD_CLOCK_RATE: positive := (WIDTH + 1) * HEIGHT * (2 ** SAMPLE_DEPTH) * FRAMES_PER_SECOND;
@@ -61,7 +58,6 @@ architecture arch of board_driver is
     -- and are clocking it into the board's shift registers on the rising edge.
     -- This half cycle should be enough time (maybe for some clocks it's not) to ignore any routing issues
     -- because we didn't constrain the outgoing signals to have equal skew.
-    -- TODO: The outgoing pins are inverted, therefore we should shift out on the rising_edge and clock them on the falling_edge.
     signal board_clock: std_ulogic;
     signal board_clock_last_states: std_ulogic_vector(1 downto 0);
     signal board_rising_edge, board_falling_edge: std_ulogic;
@@ -87,10 +83,14 @@ begin
     board_rising_edge <= '1' when board_clock_last_states = "01" else '0';
     board_falling_edge <= '1' when board_clock_last_states = "10" else '0';
 
-    process (clock) is
+    seq: process (clock) is
     begin
         if rising_edge(clock) then
-            board_clock_last_states <= board_clock_last_states(0) & board_clock;
+            if reset = '1' then
+                board_clock_last_states <= (others => '0');
+            else
+                board_clock_last_states <= board_clock_last_states(0) & board_clock;
+            end if;
         end if;
     end process;
 
