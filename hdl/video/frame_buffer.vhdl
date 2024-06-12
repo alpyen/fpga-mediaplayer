@@ -37,34 +37,44 @@ end entity;
 architecture arch of frame_buffer is
     type memory_t is array (0 to WIDTH * HEIGHT - 1) of std_ulogic_vector(SAMPLE_DEPTH - 1 downto 0);
     signal memory, memory_next: memory_t := (others => (others => '0'));
+
+    signal data_a_next: std_logic_vector(data_a'range);
+    signal data_b_next: std_ulogic_vector(data_b'range);
 begin
     seq: process (clock)
     begin
         if rising_edge(clock) then
             if reset = '1' then
                 memory <= (others => (others => '0'));
+
+                data_a <= (others => 'Z');
+                data_b <= (others => '0');
             else
                 memory <= memory_next;
+
+                data_a <= data_a_next;
+                data_b <= data_b_next;
             end if;
         end if;
     end process;
 
     comb: process (memory, request_a, write_enable_a, address_a, data_a, request_b, address_b) is
     begin
-        data_a <= (others => 'Z');
-        data_b <= (others => '0');
         memory_next <= memory;
+
+        data_a_next <= (others => 'Z');
+        data_b_next <= (others => '0');
 
         if request_a = '1' then
             if write_enable_a = '0' then
-                data_a <= std_logic_vector(memory(to_integer(unsigned(address_a))));
+                data_a_next <= std_logic_vector(memory(to_integer(unsigned(address_a))));
             else
                 memory_next(to_integer(unsigned(address_a))) <= std_ulogic_vector(data_a);
             end if;
         end if;
 
         if request_b = '1' then
-            data_b <= memory(to_integer(unsigned(address_b)));
+            data_b_next <= memory(to_integer(unsigned(address_b)));
         end if;
     end process;
 end architecture;
