@@ -70,7 +70,7 @@ architecture arch of video_driver is
     signal board_driver_address: std_ulogic_vector(address_b'range);
     signal board_driver_data: std_ulogic_vector(data_0_b'range);
 
-    signal board_driver_frame_available: std_ulogic;
+    signal board_driver_frame_available, board_driver_frame_available_next: std_ulogic;
     signal board_driver_frame_processed: std_ulogic;
 begin
     seq: process (clock)
@@ -86,6 +86,7 @@ begin
                 pixel_bit_counter <= to_unsigned(0, pixel_bit_counter'length);
 
                 selected_buffer <= '1';
+                board_driver_frame_available <= '0';
             else
                 state <= state_next;
                 decoder_state <= decoder_state_next;
@@ -96,6 +97,7 @@ begin
                 pixel_bit_counter <= pixel_bit_counter_next;
 
                 selected_buffer <= selected_buffer_next;
+                board_driver_frame_available <= board_driver_frame_available_next;
             end if;
         end if;
     end process;
@@ -135,6 +137,7 @@ begin
             when WAIT_UNTIL_PREVIOUS_FRAME_PLAYED =>
                 if board_driver_frame_processed = '1' then
                     state_next <= DECODE;
+                    selected_buffer_next <= not selected_buffer;
                 end if;
         end case;
     end process;
@@ -142,18 +145,18 @@ begin
     decoder_fsm: process (
         decoder_state, decoding_start, video_fifo_data_out, video_fifo_empty,
         frame_pixel_counter, pixel_difference, new_pixel_value, pixel_bit_counter,
-        data_0_a, data_1_a
+        data_0_a, data_1_a, board_driver_frame_available
     )
     begin
         decoder_state_next <= decoder_state;
         decoding_done <= '0';
 
         video_fifo_read_enable <= '0';
-        board_driver_frame_available <= '0';
+        board_driver_frame_available_next <= board_driver_frame_available;
 
         frame_pixel_counter_next <= frame_pixel_counter;
         pixel_difference_next <= pixel_difference;
-        new_pixel_value_next <= to_unsigned(0, new_pixel_value_next'length);
+        new_pixel_value_next <= new_pixel_value;
         pixel_bit_counter_next <= to_unsigned(0, pixel_bit_counter_next'length);
 
         request_0_a <= '0';
@@ -174,6 +177,7 @@ begin
                     decoder_state_next <= BIT_0;
                     video_fifo_read_enable <= '1';
                     frame_pixel_counter_next <= to_unsigned(0, frame_pixel_counter'length);
+                    board_driver_frame_available_next <= '0';
                 end if;
 
             when BIT_0 =>
@@ -253,6 +257,7 @@ begin
                 if frame_pixel_counter = WIDTH * HEIGHT - 1 then
                     decoder_state_next <= IDLE;
                     decoding_done <= '1';
+                    board_driver_frame_available_next <= '1';
                 else
                     decoder_state_next <= BIT_0;
                     video_fifo_read_enable <= '1';

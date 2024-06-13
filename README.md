@@ -5,7 +5,8 @@ Stuff that needs to be done, may be incomplete and not in order.
 ## Project
 
 ## HDL
-- Implement the Video Driver
+- Implement the Video Driver and Board Driver
+  - Figure out the logic for the frame available/processed, this has to be reset in the fsm, not the decode fsm
   - Frame Buffer needs to be cleared/ignored when decoding initial frame
   - Video Fifo can contain bits after the last frame has been decoded due to the full byte padding
     - They need to be flushed out before marking playback as done.
@@ -13,7 +14,6 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Calculate how long the frame decode takes after starting playback
     - if the duration is short enough, we don't need to pre-decode the first frame when the video fifo is filling up (which would in turn cause problems detecting the end of the file)
   - Check how much cumulative skew the fsms generate (if any)
-  - Strobe one frame x-times
 - Write notes about clock calculation
 - Media notes say sampling rate is 22,050 Hz, wasn't this changed to 44,100 Hz?
 - Frame Buffer
