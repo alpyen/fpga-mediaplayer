@@ -51,16 +51,17 @@ architecture arch of video_driver is
     signal request_0_a, request_1_a: std_ulogic;
     signal write_enable_0_a, write_enable_1_a: std_ulogic;
     signal address_a: std_ulogic_vector(integer(ceil(log2(real(WIDTH * HEIGHT)))) - 1 downto 0);
-    signal data_0_a, data_1_a: std_logic_vector(SAMPLE_DEPTH - 1 downto 0);
+    signal data_0_a_in, data_1_a_in: std_ulogic_vector(SAMPLE_DEPTH - 1 downto 0);
+    signal data_0_a_out, data_1_a_out: std_ulogic_vector(data_0_a_in'range);
 
     signal frame_pixel_counter, frame_pixel_counter_next: unsigned(address_a'range);
-    signal new_pixel_value, new_pixel_value_next: unsigned(data_0_a'range);
+    signal new_pixel_value, new_pixel_value_next: unsigned(data_0_a_in'range);
     signal pixel_bit_counter, pixel_bit_counter_next: unsigned(new_pixel_value'range);
 
     -- Signals controlled from board driver
     signal request_0_b, request_1_b: std_ulogic;
     signal address_b: std_ulogic_vector(address_a'range);
-    signal data_0_b, data_1_b: std_ulogic_vector(data_0_a'range);
+    signal data_0_b_out, data_1_b_out: std_ulogic_vector(data_0_a_in'range);
 
     -- Determines which buffer the video driver is currently filling/filled.
     -- The board driver is operating meanwhile on the other buffer.
@@ -68,7 +69,7 @@ architecture arch of video_driver is
 
     signal board_driver_request: std_ulogic;
     signal board_driver_address: std_ulogic_vector(address_b'range);
-    signal board_driver_data: std_ulogic_vector(data_0_b'range);
+    signal board_driver_data: std_ulogic_vector(data_0_b_out'range);
 
     signal board_driver_frame_available, board_driver_frame_available_next: std_ulogic;
     signal board_driver_frame_processed: std_ulogic;
@@ -145,7 +146,7 @@ begin
     decoder_fsm: process (
         decoder_state, decoding_start, video_fifo_data_out, video_fifo_empty,
         frame_pixel_counter, pixel_difference, new_pixel_value, pixel_bit_counter,
-        data_0_a, data_1_a, board_driver_frame_available
+        data_0_a_out, data_1_a_out, board_driver_frame_available, selected_buffer
     )
     begin
         decoder_state_next <= decoder_state;
@@ -161,11 +162,11 @@ begin
 
         request_0_a <= '0';
         write_enable_0_a <= '0';
-        data_0_a <= (others => 'Z');
+        data_0_a_in <= (others => '0');
 
         request_1_a <= '0';
         write_enable_1_a <= '0';
-        data_1_a <= (others => 'Z');
+        data_1_a_in <= (others => '0');
 
         address_a <= (others => '0');
 
@@ -237,20 +238,20 @@ begin
                     write_enable_1_a <= '1';
 
                     case pixel_difference is
-                        when UNCHANGED => data_1_a <= data_0_a;
-                        when UP => data_1_a <= std_logic_vector(unsigned(data_0_a) + 1);
-                        when DOWN => data_1_a <= std_logic_vector(unsigned(data_0_a) - 1);
-                        when REPLACE => data_1_a <= std_logic_vector(new_pixel_value);
+                        when UNCHANGED => data_1_a_in <= data_0_a_out;
+                        when UP => data_1_a_in <= std_ulogic_vector(unsigned(data_0_a_out) + 1);
+                        when DOWN => data_1_a_in <= std_ulogic_vector(unsigned(data_0_a_out) - 1);
+                        when REPLACE => data_1_a_in <= std_ulogic_vector(new_pixel_value);
                     end case;
                 else
                     request_0_a <= '1';
                     write_enable_0_a <= '1';
 
                     case pixel_difference is
-                        when UNCHANGED => data_0_a <= data_1_a;
-                        when UP => data_0_a <= std_logic_vector(unsigned(data_1_a) + 1);
-                        when DOWN => data_0_a <= std_logic_vector(unsigned(data_1_a) - 1);
-                        when REPLACE => data_0_a <= std_logic_vector(new_pixel_value);
+                        when UNCHANGED => data_0_a_in <= data_1_a_out;
+                        when UP => data_0_a_in <= std_ulogic_vector(unsigned(data_1_a_out) + 1);
+                        when DOWN => data_0_a_in <= std_ulogic_vector(unsigned(data_1_a_out) - 1);
+                        when REPLACE => data_0_a_in <= std_ulogic_vector(new_pixel_value);
                     end case;
                 end if;
 
@@ -268,7 +269,7 @@ begin
     request_0_b <= board_driver_request when selected_buffer = '0' else '0';
     request_1_b <= board_driver_request when selected_buffer = '1' else '0';
     address_b <= board_driver_address;
-    board_driver_data <= data_0_b or data_1_b;
+    board_driver_data <= data_0_b_out or data_1_b_out;
 
     board_driver_inst: entity work.board_driver
     generic map (
@@ -307,12 +308,13 @@ begin
         reset          => reset,
 
         address_a      => address_a,
-        data_a         => data_0_a,
+        data_a_in      => data_0_a_in,
+        data_a_out     => data_0_a_out,
         write_enable_a => write_enable_0_a,
         request_a      => request_0_a,
 
         address_b      => address_b,
-        data_b         => data_0_b,
+        data_b_out     => data_0_b_out,
         request_b      => request_0_b
     );
 
@@ -327,12 +329,13 @@ begin
         reset          => reset,
 
         address_a      => address_a,
-        data_a         => data_1_a,
+        data_a_in      => data_0_a_in,
+        data_a_out     => data_1_a_out,
         write_enable_a => write_enable_1_a,
         request_a      => request_1_a,
 
         address_b      => address_b,
-        data_b         => data_1_b,
+        data_b_out     => data_1_b_out,
         request_b      => request_1_b
     );
 end architecture;

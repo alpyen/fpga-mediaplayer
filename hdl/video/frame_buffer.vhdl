@@ -2,7 +2,9 @@
 -- One port can read/write (video_driver)
 -- One port can only read (board_driver)
 
--- This is also the reason why data_a is std_logic and not std_ulogic
+-- Port data_a is split into two separate ports because
+-- using it as inout with std_logic will cause combinational loops
+-- which will not implement safely (even though they may be fine).
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -23,13 +25,14 @@ entity frame_buffer is
 
         -- Port A (R/W)
         address_a: in std_ulogic_vector(integer(ceil(log2(real(WIDTH * HEIGHT)))) - 1 downto 0);
-        data_a: inout std_logic_vector(SAMPLE_DEPTH - 1 downto 0);
+        data_a_in: in std_ulogic_vector(SAMPLE_DEPTH - 1 downto 0);
+        data_a_out: out std_ulogic_vector(SAMPLE_DEPTH - 1 downto 0);
         write_enable_a: in std_ulogic;
         request_a: in std_ulogic;
 
         -- Port B (Ro)
         address_b: in std_ulogic_vector(integer(ceil(log2(real(WIDTH * HEIGHT)))) - 1 downto 0);
-        data_b: out std_ulogic_vector(SAMPLE_DEPTH - 1 downto 0);
+        data_b_out: out std_ulogic_vector(SAMPLE_DEPTH - 1 downto 0);
         request_b: in std_ulogic
     );
 end entity;
@@ -38,8 +41,8 @@ architecture arch of frame_buffer is
     type memory_t is array (0 to WIDTH * HEIGHT - 1) of std_ulogic_vector(SAMPLE_DEPTH - 1 downto 0);
     signal memory, memory_next: memory_t := (others => (others => '0'));
 
-    signal data_a_next: std_logic_vector(data_a'range);
-    signal data_b_next: std_ulogic_vector(data_b'range);
+    signal data_a_out_next: std_ulogic_vector(data_a_out'range);
+    signal data_b_out_next: std_ulogic_vector(data_b_out'range);
 begin
     seq: process (clock)
     begin
@@ -47,34 +50,34 @@ begin
             if reset = '1' then
                 memory <= (others => (others => '0'));
 
-                data_a <= (others => 'Z');
-                data_b <= (others => '0');
+                data_a_out <= (others => '0');
+                data_b_out <= (others => '0');
             else
                 memory <= memory_next;
 
-                data_a <= data_a_next;
-                data_b <= data_b_next;
+                data_a_out <= data_a_out_next;
+                data_b_out <= data_b_out_next;
             end if;
         end if;
     end process;
 
-    comb: process (memory, request_a, write_enable_a, address_a, data_a, request_b, address_b) is
+    comb: process (memory, request_a, write_enable_a, address_a, data_a_in, request_b, address_b) is
     begin
         memory_next <= memory;
 
-        data_a_next <= (others => 'Z');
-        data_b_next <= (others => '0');
+        data_a_out_next <= (others => '0');
+        data_b_out_next <= (others => '0');
 
         if request_a = '1' then
             if write_enable_a = '0' then
-                data_a_next <= std_logic_vector(memory(to_integer(unsigned(address_a))));
+                data_a_out_next <= memory(to_integer(unsigned(address_a)));
             else
-                memory_next(to_integer(unsigned(address_a))) <= std_ulogic_vector(data_a);
+                memory_next(to_integer(unsigned(address_a))) <= data_a_in;
             end if;
         end if;
 
         if request_b = '1' then
-            data_b_next <= memory(to_integer(unsigned(address_b)));
+            data_b_out_next <= memory(to_integer(unsigned(address_b)));
         end if;
     end process;
 end architecture;
