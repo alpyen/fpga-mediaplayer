@@ -329,7 +329,7 @@ begin
         reset          => reset,
 
         address_a      => address_a,
-        data_a_in      => data_0_a_in,
+        data_a_in      => data_1_a_in,
         data_a_out     => data_1_a_out,
         write_enable_a => write_enable_1_a,
         request_a      => request_1_a,
