@@ -44,6 +44,8 @@ architecture arch of video_driver is
     type decoder_state_t is (IDLE, BIT_0, BIT_1, BIT_2, NEW_SAMPLE, READ_OLD_PIXEL, WRITE_NEW_PIXEL);
     signal decoder_state, decoder_state_next: decoder_state_t;
 
+    signal first_frame, first_frame_next: std_ulogic;
+
     type pixel_difference_t is (UNCHANGED, UP, DOWN, REPLACE);
     signal pixel_difference, pixel_difference_next: pixel_difference_t;
 
@@ -54,6 +56,10 @@ architecture arch of video_driver is
     signal data_0_a_in, data_1_a_in: std_ulogic_vector(SAMPLE_DEPTH - 1 downto 0);
     signal data_0_a_out, data_1_a_out: std_ulogic_vector(data_0_a_in'range);
 
+    -- Necessary for tracking where we are.
+    --  frame_pixel_counter tracks which pixel of the current frame is being processed [0, WIDTH * HEIGHT - 1]
+    --  new_pixel_value holds the actual new pixel value if the old pixel is to be replaced [0, 2 ^ SAMPLE_DEPTH - 1]
+    --  pixel_bit_counter tracks the current bit position that is being read in for new_pixel_value [0, SAMPLE_DEPTH - 1]
     signal frame_pixel_counter, frame_pixel_counter_next: unsigned(address_a'range);
     signal new_pixel_value, new_pixel_value_next: unsigned(data_0_a_in'range);
     signal pixel_bit_counter, pixel_bit_counter_next: unsigned(new_pixel_value'range);
@@ -81,16 +87,20 @@ begin
                 state <= IDLE;
                 decoder_state <= IDLE;
 
+                first_frame <= '1';
+
                 frame_pixel_counter <= to_unsigned(0, frame_pixel_counter'length);
                 pixel_difference <= UNCHANGED;
                 new_pixel_value <= to_unsigned(0, new_pixel_value'length);
                 pixel_bit_counter <= to_unsigned(0, pixel_bit_counter'length);
 
-                selected_buffer <= '1';
+                selected_buffer <= '0';
                 board_driver_frame_available <= '0';
             else
                 state <= state_next;
                 decoder_state <= decoder_state_next;
+
+                first_frame <= first_frame_next;
 
                 frame_pixel_counter <= frame_pixel_counter_next;
                 pixel_difference <= pixel_difference_next;
@@ -105,7 +115,7 @@ begin
 
     comb: process (
         state, selected_buffer, decoding_done, board_driver_frame_processed,
-        video_driver_play, video_fifo_empty
+        video_driver_play, video_fifo_empty, first_frame
     )
     begin
         state_next <= state;
@@ -114,9 +124,12 @@ begin
         decoding_start <= '0';
         video_driver_done <= '0';
 
+        first_frame_next <= first_frame;
+
         case (state) is
             when IDLE =>
                 video_driver_done <= '1';
+                first_frame_next <= '1';
 
                 if video_driver_play = '1' and video_fifo_empty /= '1' then
                     state_next <= DECODE;
@@ -124,7 +137,12 @@ begin
 
             when DECODE =>
                 if decoding_done = '1' then
-                    state_next <= WAIT_UNTIL_PREVIOUS_FRAME_PLAYED;
+                    if first_frame = '0' then
+                        state_next <= WAIT_UNTIL_PREVIOUS_FRAME_PLAYED;
+                    else
+                        first_frame_next <= '0';
+                        decoding_start <= '1';
+                    end if;
                 else
                     if video_fifo_empty /= '1' then
                         decoding_start <= '1';
@@ -146,7 +164,8 @@ begin
     decoder_fsm: process (
         decoder_state, decoding_start, video_fifo_data_out, video_fifo_empty,
         frame_pixel_counter, pixel_difference, new_pixel_value, pixel_bit_counter,
-        data_0_a_out, data_1_a_out, board_driver_frame_available, selected_buffer
+        data_0_a_out, data_1_a_out, board_driver_frame_available, selected_buffer,
+        first_frame
     )
     begin
         decoder_state_next <= decoder_state;
@@ -158,7 +177,7 @@ begin
         frame_pixel_counter_next <= frame_pixel_counter;
         pixel_difference_next <= pixel_difference;
         new_pixel_value_next <= new_pixel_value;
-        pixel_bit_counter_next <= to_unsigned(0, pixel_bit_counter_next'length);
+        pixel_bit_counter_next <= to_unsigned(0, pixel_bit_counter'length);
 
         request_0_a <= '0';
         write_enable_0_a <= '0';
@@ -170,8 +189,16 @@ begin
 
         address_a <= (others => '0');
 
-        -- Make sure that we check for vfempty /= 1.
-        -- Maybe it's slow enough that this is not necessary?
+        -- The video fifo is being fed fast enough and has enough of a buffer
+        -- to never read it empty when a full frame is available.
+        -- However, since we are padding the video bits to full bytes it can happen
+        -- that there are remaining bits in the fifo that need to be flushed.
+        -- The way we have to do it is by jumping back to IDLE when there
+        -- is no data to be read from the fifo. Even though the fifos are being
+        -- fed fast enough (they have to, otherwise we cannot hit the target framerate)
+        -- we should still check if video_driver_play is asserted to see
+        -- if there is actually any data to be pushed into the fifo from the control driver's side.
+
         case decoder_state is
             when IDLE =>
                 if decoding_start = '1' then
@@ -223,36 +250,68 @@ begin
                 decoder_state_next <= WRITE_NEW_PIXEL;
                 address_a <= std_ulogic_vector(frame_pixel_counter);
 
-                if selected_buffer = '0' then
-                    request_0_a <= '1';
+                if first_frame = '1' then
+                    if selected_buffer = '0' then
+                        request_1_a <= '1';
+                    else
+                        request_0_a <= '1';
+                    end if;
                 else
-                    request_1_a <= '1';
+                    if selected_buffer = '0' then
+                        request_0_a <= '1';
+                    else
+                        request_1_a <= '1';
+                    end if;
                 end if;
 
             when WRITE_NEW_PIXEL =>
                 frame_pixel_counter_next <= frame_pixel_counter + 1;
                 address_a <= std_ulogic_vector(frame_pixel_counter);
 
-                if selected_buffer = '0' then
-                    request_1_a <= '1';
-                    write_enable_1_a <= '1';
+                if first_frame = '1' then
+                    if selected_buffer = '0' then
+                        request_0_a <= '1';
+                        write_enable_0_a <= '1';
 
-                    case pixel_difference is
-                        when UNCHANGED => data_1_a_in <= data_0_a_out;
-                        when UP => data_1_a_in <= std_ulogic_vector(unsigned(data_0_a_out) + 1);
-                        when DOWN => data_1_a_in <= std_ulogic_vector(unsigned(data_0_a_out) - 1);
-                        when REPLACE => data_1_a_in <= std_ulogic_vector(new_pixel_value);
-                    end case;
+                        case pixel_difference is
+                            when UNCHANGED => data_0_a_in <= data_1_a_out;
+                            when UP => data_0_a_in <= std_ulogic_vector(unsigned(data_1_a_out) + 1);
+                            when DOWN => data_0_a_in <= std_ulogic_vector(unsigned(data_1_a_out) - 1);
+                            when REPLACE => data_0_a_in <= std_ulogic_vector(new_pixel_value);
+                        end case;
+                    else
+                        request_1_a <= '1';
+                        write_enable_1_a <= '1';
+
+                        case pixel_difference is
+                            when UNCHANGED => data_1_a_in <= data_0_a_out;
+                            when UP => data_1_a_in <= std_ulogic_vector(unsigned(data_0_a_out) + 1);
+                            when DOWN => data_1_a_in <= std_ulogic_vector(unsigned(data_0_a_out) - 1);
+                            when REPLACE => data_1_a_in <= std_ulogic_vector(new_pixel_value);
+                        end case;
+                    end if;
                 else
-                    request_0_a <= '1';
-                    write_enable_0_a <= '1';
+                    if selected_buffer = '0' then
+                        request_1_a <= '1';
+                        write_enable_1_a <= '1';
 
-                    case pixel_difference is
-                        when UNCHANGED => data_0_a_in <= data_1_a_out;
-                        when UP => data_0_a_in <= std_ulogic_vector(unsigned(data_1_a_out) + 1);
-                        when DOWN => data_0_a_in <= std_ulogic_vector(unsigned(data_1_a_out) - 1);
-                        when REPLACE => data_0_a_in <= std_ulogic_vector(new_pixel_value);
-                    end case;
+                        case pixel_difference is
+                            when UNCHANGED => data_1_a_in <= data_0_a_out;
+                            when UP => data_1_a_in <= std_ulogic_vector(unsigned(data_0_a_out) + 1);
+                            when DOWN => data_1_a_in <= std_ulogic_vector(unsigned(data_0_a_out) - 1);
+                            when REPLACE => data_1_a_in <= std_ulogic_vector(new_pixel_value);
+                        end case;
+                    else
+                        request_0_a <= '1';
+                        write_enable_0_a <= '1';
+
+                        case pixel_difference is
+                            when UNCHANGED => data_0_a_in <= data_1_a_out;
+                            when UP => data_0_a_in <= std_ulogic_vector(unsigned(data_1_a_out) + 1);
+                            when DOWN => data_0_a_in <= std_ulogic_vector(unsigned(data_1_a_out) - 1);
+                            when REPLACE => data_0_a_in <= std_ulogic_vector(new_pixel_value);
+                        end case;
+                    end if;
                 end if;
 
                 if frame_pixel_counter = WIDTH * HEIGHT - 1 then
