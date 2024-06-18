@@ -38,18 +38,27 @@ end entity;
 
 architecture arch of board_driver is
     constant FRAMES_PER_SECOND: positive := 24;
+    constant STROBES_PER_FRAME: positive := 1;
+
     -- The board is being driven by multiplexing. The clock rate is composed by:
     --  1. Shifting in WIDTH-bits to feed in the line toggling srclk WIDTH times.
     --  2. Applying the current line by toggling rclk once.
-    --  3. Shifting in new lines and applying them HEIGHT-times.
-    --  4. We need to strobe the picture for at least 2^SAMPLE_DEPTH times to implement the grayscale bitdepth.
-    --  5. Repeat 1-4. for FRAMES_PER_SECOND times.
-    -- Note: The row strobe / line selection is hidden because we can shift it further when shifting in data.
-    --       And we can apply it when we are applying the current line because it should be impercetible.
-    constant BOARD_CLOCK_RATE: positive := (WIDTH + 1) * HEIGHT * (2 ** SAMPLE_DEPTH) * FRAMES_PER_SECOND;
+    --  3. Repeat 1-2. for HEIGHT times.
+    --  4. Repeat 1-3. for 2^SAMPLE_DEPTH - 1 times to implement grayscale bitdepth.
+    --     A pixel value of zero does not need additional bits to be represented, that's why we count one less.
+    --  5. Repeat 1-4. for STROBES_PER_FRAME times.
+    --  6. Repeat 1-5 for FRAMES_PER_SECOND times.
+    --  Note: We could technically do the last row data in with the row selection data in together
+    --        but that will mess up the fsm quite a bit, so we simply add two more states.
+    --        This means that we need to account for them in the calculation so it doesn't cumulate skew.
+    --        These two additional cycles will be impercetible to the human eye though.
+    constant BOARD_CLOCK_RATE: positive := ((WIDTH + 1 + 1) * HEIGHT * (2 ** SAMPLE_DEPTH) + 1) * STROBES_PER_FRAME * FRAMES_PER_SECOND;
 
     -- Defining an accuracy to achieve of 30 ms of cumulative skew over 4 minutes expressed in %.
     constant BOARD_CLOCK_ACCURACY: real := (0.030 / 240.0) * 100.0;
+
+    type state_t is (IDLE, FEED_ROW_DATA, FEED_ROW_SELECTION, APPLY_BOTH, CHECK_FOR_FRAME_DONE);
+    signal state, state_next: state_t;
 
     -- We will set the board's signals based on the FPGA clock, but will
     -- calculate the target clock with a phase accumulator and set the pins when that target clock clocks.
@@ -59,39 +68,197 @@ architecture arch of board_driver is
     -- This half cycle should be enough time (maybe for some clocks it's not) to ignore any routing issues
     -- because we didn't constrain the outgoing signals to have equal skew.
     signal board_clock: std_ulogic;
-    signal board_clock_last_states: std_ulogic_vector(1 downto 0);
-    signal board_rising_edge, board_falling_edge: std_ulogic;
+
+    -- Contains the last few clock levels based upon the FPGA clock.
+    -- This will be necessary to set the board signals based on its clock transitions.
+    -- Our logic here will all work with the FPGA clock, but only switch on the board clock.
+    signal board_clock_history: std_ulogic_vector(2 downto 0);
+
+    signal board_row_data_in_n_int, board_row_data_in_n_int_next: std_ulogic;
+    signal board_shift_row_data_n_int, board_shift_row_data_n_int_next: std_ulogic;
+    signal board_apply_new_row_n_int, board_apply_new_row_n_int_next: std_ulogic;
+    signal board_row_strobe_in_n_int, board_row_strobe_in_n_int_next: std_ulogic;
+    signal board_shift_row_strobe_n_int, board_shift_row_strobe_n_int_next: std_ulogic;
+    signal board_apply_new_row_strobe_n_int, board_apply_new_row_strobe_n_int_next: std_ulogic;
+
+    signal frame_pixel_counter, frame_pixel_counter_next: unsigned(frame_buffer_address'range);
+    signal pixel_x_counter, pixel_x_counter_next: unsigned(integer(ceil(log2(real(WIDTH)))) - 1 downto 0);
+    signal pixel_y_counter, pixel_y_counter_next: unsigned(integer(ceil(log2(real(HEIGHT)))) - 1 downto 0);
+    signal brightness_counter, brightness_counter_next: unsigned(SAMPLE_DEPTH - 1 downto 0);
+    signal strobe_counter, strobe_counter_next: unsigned(integer(ceil(log2(real(STROBES_PER_FRAME + 1)))) - 1 downto 0);
 begin
     assert BOARD_CLOCK_RATE <= CLOCK_SPEED / 2
     report "board_driver: Calculated board clock rate of " & integer'image(BOARD_CLOCK_RATE) & " Hz is not achievable."
     severity failure;
 
-    frame_buffer_request <= '0';
-    frame_buffer_address <= (others => '0');
-    -- frame_buffer_data;
-
-    -- frame_available
-    frame_processed <= '0';
-
-    board_row_data_in_n <= '1';
-    board_shift_row_data_n <= '1';
-    board_apply_new_row_n <= '1';
-    board_row_strobe_in_n <= '1';
-    board_shift_row_strobe_n <= '1';
-    board_apply_new_row_strobe_n <= '1';
-
-    board_rising_edge <= '1' when board_clock_last_states = "01" else '0';
-    board_falling_edge <= '1' when board_clock_last_states = "10" else '0';
+    board_row_data_in_n <= board_row_data_in_n_int;
+    board_shift_row_data_n <= board_shift_row_data_n_int;
+    board_apply_new_row_n <= board_apply_new_row_n_int;
+    board_row_strobe_in_n <= board_row_strobe_in_n_int;
+    board_shift_row_strobe_n <= board_shift_row_strobe_n_int;
+    board_apply_new_row_strobe_n <= board_apply_new_row_strobe_n_int;
 
     seq: process (clock) is
     begin
         if rising_edge(clock) then
             if reset = '1' then
-                board_clock_last_states <= (others => '0');
+                state <= IDLE;
+                board_clock_history <= (others => '0');
+
+                board_row_data_in_n_int <= '1';
+                board_shift_row_data_n_int <= '1';
+                board_apply_new_row_n_int <= '1';
+                board_row_strobe_in_n_int <= '1';
+                board_shift_row_strobe_n_int <= '1';
+                board_apply_new_row_strobe_n_int <= '1';
+
+                frame_pixel_counter <= to_unsigned(0, frame_pixel_counter'length);
+                pixel_x_counter <= to_unsigned(0, pixel_x_counter'length);
+                pixel_y_counter <= to_unsigned(0, pixel_y_counter'length);
+                brightness_counter <= to_unsigned(0, brightness_counter'length);
+                strobe_counter <= to_unsigned(0, strobe_counter'length);
             else
-                board_clock_last_states <= board_clock_last_states(0) & board_clock;
+                state <= state_next;
+                board_clock_history <= board_clock_history(board_clock_history'left - 1 downto 0) & board_clock;
+
+                board_row_data_in_n_int <= board_row_data_in_n_int_next;
+                board_shift_row_data_n_int <= board_shift_row_data_n_int_next;
+                board_apply_new_row_n_int <= board_apply_new_row_n_int_next;
+                board_row_strobe_in_n_int <= board_row_strobe_in_n_int_next;
+                board_shift_row_strobe_n_int <= board_shift_row_strobe_n_int_next;
+                board_apply_new_row_strobe_n_int <= board_apply_new_row_strobe_n_int_next;
+
+                frame_pixel_counter <= frame_pixel_counter_next;
+                pixel_x_counter <= pixel_x_counter_next;
+                pixel_y_counter <= pixel_y_counter_next;
+                brightness_counter <= brightness_counter_next;
+                strobe_counter <= strobe_counter_next;
             end if;
         end if;
+    end process;
+
+    comb: process (
+        state, board_clock_history,
+        frame_buffer_data, frame_available, frame_pixel_counter,
+        pixel_x_counter, pixel_y_counter, brightness_counter, strobe_counter,
+        board_row_data_in_n_int, board_shift_row_data_n_int, board_apply_new_row_n_int,
+        board_row_strobe_in_n_int, board_shift_row_strobe_n_int, board_apply_new_row_strobe_n_int
+    ) is
+    begin
+        state_next <= state;
+
+        frame_pixel_counter_next <= frame_pixel_counter;
+        pixel_x_counter_next <= pixel_x_counter;
+        pixel_y_counter_next <= pixel_y_counter;
+        brightness_counter_next <= brightness_counter;
+        strobe_counter_next <= strobe_counter;
+
+        board_row_data_in_n_int_next <= board_row_data_in_n_int;
+        board_shift_row_data_n_int_next <= board_shift_row_data_n_int;
+        board_apply_new_row_n_int_next <= board_apply_new_row_n_int;
+        board_row_strobe_in_n_int_next <= board_row_strobe_in_n_int;
+        board_shift_row_strobe_n_int_next <= board_shift_row_strobe_n_int;
+        board_apply_new_row_strobe_n_int_next <= board_apply_new_row_strobe_n_int;
+
+        frame_buffer_request <= '0';
+        frame_buffer_address <= (others => '0');
+        frame_processed <= '0';
+
+        case state is
+            when IDLE =>
+                if frame_available = '1' and board_clock_history = "111" then
+                    state_next <= FEED_ROW_DATA;
+
+                    frame_pixel_counter_next <= to_unsigned(0, frame_pixel_counter'length);
+                    pixel_x_counter_next <= to_unsigned(0, pixel_x_counter'length);
+                    pixel_y_counter_next <= to_unsigned(0, pixel_y_counter'length);
+                    brightness_counter_next <= to_unsigned(0, brightness_counter'length);
+                    strobe_counter_next <= to_unsigned(0, strobe_counter'length);
+                end if;
+
+            when FEED_ROW_DATA =>
+                case board_clock_history is
+                    when "110" =>
+                        frame_buffer_request <= '1';
+                        frame_buffer_address <= std_ulogic_vector(frame_pixel_counter);
+
+                        board_shift_row_data_n_int_next <= '1';
+
+                    when "100" =>
+                        frame_pixel_counter_next <= frame_pixel_counter + 1;
+
+                        if unsigned(frame_buffer_data) > brightness_counter then
+                            board_row_data_in_n_int_next <= '0';
+                        else
+                            board_row_data_in_n_int_next <= '1';
+                        end if;
+
+                    when "001" =>
+                        board_shift_row_data_n_int_next <= '0';
+                        pixel_x_counter_next <= pixel_x_counter + 1;
+
+                        if pixel_x_counter = WIDTH - 1 then
+                            state_next <= FEED_ROW_SELECTION;
+                        end if;
+
+                    when others => null;
+                end case;
+
+            when FEED_ROW_SELECTION =>
+                case board_clock_history is
+                    when "110" =>
+                        if pixel_y_counter = 0 then
+                            board_row_strobe_in_n_int_next <= '1';
+                        else
+                            board_row_strobe_in_n_int_next <= '0';
+                        end if;
+
+                        -- Row Selection shift registers have to output a zero
+                        -- to select a line because they are driving P-channel MOSFETS!
+                        -- That's why the logic is inverted compared to the row data.
+                        board_shift_row_strobe_n_int_next <= '1';
+
+                    when "001" =>
+                        state_next <= APPLY_BOTH;
+                        board_shift_row_strobe_n_int_next <= '0';
+
+                        board_apply_new_row_n_int_next <= '1';
+                        board_apply_new_row_strobe_n_int_next <= '1';
+
+                    when others => null;
+                end case;
+
+            when APPLY_BOTH =>
+                if board_clock_history = "001" then
+                    state_next <= FEED_ROW_DATA;
+                    board_apply_new_row_n_int_next <= '0';
+                    board_apply_new_row_strobe_n_int_next <= '0';
+                    pixel_y_counter_next <= pixel_y_counter + 1;
+
+                    if pixel_y_counter = HEIGHT - 1 then
+                        state_next <= CHECK_FOR_FRAME_DONE;
+                    end if;
+                end if;
+
+            when CHECK_FOR_FRAME_DONE =>
+                if board_clock_history = "111" then
+                    state_next <= FEED_ROW_DATA;
+                    frame_pixel_counter_next <= to_unsigned(0, frame_pixel_counter'length);
+                    pixel_x_counter_next <= to_unsigned(0, pixel_x_counter'length);
+                    pixel_y_counter_next <= to_unsigned(0, pixel_y_counter'length);
+                    brightness_counter_next <= brightness_counter + 1;
+
+                    if brightness_counter = 2 ** SAMPLE_DEPTH - 1 then
+                        brightness_counter_next <= to_unsigned(0, brightness_counter'length);
+                        strobe_counter_next <= strobe_counter + 1;
+
+                        if strobe_counter = STROBES_PER_FRAME - 1 then
+                            state_next <= IDLE;
+                            frame_processed <= '1';
+                        end if;
+                    end if;
+                end if;
+        end case;
     end process;
 
     phase_accumulator_inst: entity work.phase_accumulator
@@ -99,7 +266,6 @@ begin
         SOURCE_CLOCK   => CLOCK_SPEED,
         TARGET_CLOCK   => BOARD_CLOCK_RATE,
 
-        -- Accuracy is 30 ms cumulative skew over 4 minutes
         CLOCK_ACCURACY => BOARD_CLOCK_ACCURACY,
 
         MAX_BITWIDTH => 32,
