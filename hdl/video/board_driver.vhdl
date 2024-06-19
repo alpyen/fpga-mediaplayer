@@ -41,18 +41,10 @@ architecture arch of board_driver is
     constant STROBES_PER_FRAME: positive := 2;
 
     -- The board is being driven by multiplexing. The clock rate is composed by:
-    --  1. Shifting in WIDTH-bits to feed in the line toggling srclk WIDTH times.
-    --  2. Applying the current line by toggling rclk once.
-    --  3. Repeat 1-2. for HEIGHT times.
-    --  4. Repeat 1-3. for 2^SAMPLE_DEPTH - 1 times to implement grayscale bitdepth.
-    --     A pixel value of zero does not need additional bits to be represented, that's why we count one less.
-    --  5. Repeat 1-4. for STROBES_PER_FRAME times.
-    --  6. Repeat 1-5 for FRAMES_PER_SECOND times.
-    --  Note: We could technically do the last row data in with the row selection data in together
-    --        but that will mess up the fsm quite a bit, so we simply add two more states.
-    --        This means that we need to account for them in the calculation so it doesn't cumulate skew.
-    --        These two additional cycles will be impercetible to the human eye though.
-    constant BOARD_CLOCK_RATE: positive := ((WIDTH + 1 + 1) * HEIGHT * (2 ** SAMPLE_DEPTH) + 1) * STROBES_PER_FRAME * FRAMES_PER_SECOND;
+    --   WIDTH * HEIGHT * BRIGHTNESS LEVELS * STROBES PER FRAME * FRAMES PER SECOND
+    -- The actual clock rate is somewhat different due to the FSM transitions.
+    -- Note: The clock rate can be reduced by merging some FSM states and transitions
+    constant BOARD_CLOCK_RATE: positive := ((((WIDTH + 2) * HEIGHT + 1) * (2 ** SAMPLE_DEPTH) + 1) * STROBES_PER_FRAME - 1) * FRAMES_PER_SECOND;
 
     -- Defining an accuracy to achieve of 30 ms of cumulative skew over 4 minutes expressed in %.
     constant BOARD_CLOCK_ACCURACY: real := (0.030 / 240.0) * 100.0;
@@ -233,6 +225,7 @@ begin
                     state_next <= FEED_ROW_DATA;
                     board_apply_new_row_n_int_next <= '0';
                     board_apply_new_row_strobe_n_int_next <= '0';
+                    pixel_x_counter_next <= to_unsigned(0, pixel_x_counter'length);
                     pixel_y_counter_next <= pixel_y_counter + 1;
 
                     if pixel_y_counter = HEIGHT - 1 then
