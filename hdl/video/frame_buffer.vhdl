@@ -1,4 +1,4 @@
--- Frame Buffer to be synthesized as on-chip RAM.
+-- Frame Buffer to be synthesized as on-chip BRAM.
 -- One port can read/write (video_driver)
 -- One port can only read (board_driver)
 
@@ -39,45 +39,41 @@ end entity;
 
 architecture arch of frame_buffer is
     type memory_t is array (0 to WIDTH * HEIGHT - 1) of std_ulogic_vector(SAMPLE_DEPTH - 1 downto 0);
-    signal memory, memory_next: memory_t := (others => (others => '0'));
+    shared variable memory: memory_t := (others => (others => '0'));
 
-    signal data_a_out_next: std_ulogic_vector(data_a_out'range);
-    signal data_b_out_next: std_ulogic_vector(data_b_out'range);
+    -- The memory type we are targeting here is BRAM, we could explicitly set the ram_style attribute,
+    -- but instead of doing that, we can just design our buffer so that it will map to it naturally.
+    -- This also means that we cannot reset the memory contents, but that is not necessary anyway.
+    -- Also we need to stick to the coding guidelines in order for the tool to automatically infer memory blocks.
+    -- This way we don't need to instantiate vendor-specific macros and most synthesis tools can understand it.
 begin
-    seq: process (clock)
+    seq_a: process (clock)
     begin
         if rising_edge(clock) then
-            if reset = '1' then
-                memory <= (others => (others => '0'));
+            data_a_out <= (others => '0');
 
-                data_a_out <= (others => '0');
-                data_b_out <= (others => '0');
-            else
-                memory <= memory_next;
-
-                data_a_out <= data_a_out_next;
-                data_b_out <= data_b_out_next;
+            if reset /= '1' then
+                if request_a = '1' then
+                    if write_enable_a = '0' then
+                        data_a_out <= memory(to_integer(unsigned(address_a)));
+                    else
+                        memory(to_integer(unsigned(address_a))) := data_a_in;
+                    end if;
+                end if;
             end if;
         end if;
     end process;
 
-    comb: process (memory, request_a, write_enable_a, address_a, data_a_in, request_b, address_b) is
+    seq_b: process (clock)
     begin
-        memory_next <= memory;
+        if rising_edge(clock) then
+            data_b_out <= (others => '0');
 
-        data_a_out_next <= (others => '0');
-        data_b_out_next <= (others => '0');
-
-        if request_a = '1' then
-            if write_enable_a = '0' then
-                data_a_out_next <= memory(to_integer(unsigned(address_a)));
-            else
-                memory_next(to_integer(unsigned(address_a))) <= data_a_in;
+            if reset /= '1' then
+                if request_b = '1' then
+                    data_b_out <= memory(to_integer(unsigned(address_b)));
+                end if;
             end if;
-        end if;
-
-        if request_b = '1' then
-            data_b_out_next <= memory(to_integer(unsigned(address_b)));
         end if;
     end process;
 end architecture;
