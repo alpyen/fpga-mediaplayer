@@ -5,28 +5,20 @@ Stuff that needs to be done, may be incomplete and not in order.
 ## Project
 
 ## HDL
-- Modify board schematic so that we achieve higher clock rate (lowering gate resistance?)
-  - Check out FPGA banks to see how much each is allowed to draw
-- Implement the Video Driver and Board Driver
-  - Video Fifo can contain bits after the last frame has been decoded due to the full byte padding
+- Video Driver
+  - Fifo can contain bits after the last frame has been decoded due to the full byte padding
     - They need to be flushed out before marking playback as done.
       - We need to make sure video_play is low and we encounter an empty video fifo during decoding.
-  - Calculate how long the frame decode takes after starting playback
-    - if the duration is short enough, we don't need to pre-decode the first frame when the video fifo is filling up (which would in turn cause problems detecting the end of the file)
-  - Check how much cumulative skew the fsms generate (if any)
-    - Board clock rate has been recalculated, this should be negligible now.
-- Write notes about clock calculation
-- Media notes say sampling rate is 22,050 Hz, wasn't this changed to 44,100 Hz?
-- Frame Buffer
-  - Check if it's better to restrict the ports as much as possible or two make them less restrictive
+  - Test FSM and generated clock skew over four minutes
 - Control Unit
-  - Use Generic for Memory Address width that is set in the TLE and passed to the CU and AD
-  - Add Base Address to the TLE so the data is not assumed to be at address zero
-- Media format
-  - encode resolution into header?
-- Vendor agnostic
-  - move all vendor specific stuff into entities
-- Restructure Control Unit to use less FFs?
+  - Add Generic for the Base Address of the media file
+    - This will be useful if we store a media file next to the bitstream or when we want to playback two files
+  - Restructure to use less FFs
+  - Add check for resolution and don't playback when it's incorrect
+
+## Hardware
+- Modify board schematic so that we achieve higher clock rate (lowering gate resistance?)
+  - Check out FPGA banks to see how much each is allowed to draw
 
 ## Vivado
 - Change the board store in the project-tcl to be OS-independent
@@ -38,12 +30,7 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Add documentation on how to set up codec env with libraries and how to encode files
   - Wrap around 4 bit during encoding to save even more space
   - Check if the bitcrushing to 4 bits is correct and compresses uniforly
-  - Adjust codec and player to playback various sized files
-    - command-line option to set target resolution
-    - this is so we can use the small and led board by just setting the generics
-
-- Add output file display in summary of codec
-- Add ffmpeg parameter to enforce grayscale to save space or force specific format?
+  - Add resolution to media file
 
 ## Compatibility
 - Check repo for Ubuntu Linux

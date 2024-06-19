@@ -36,7 +36,7 @@ Lastly there is the specification of the media format.
   - Grayscales: 16 shades (4 bits)
 - Audio:
   - Length: about 4 minutes
-  - Sample Rate: 22,050 Hz
+  - Sample Rate: 44,100 Hz
   - Channels: Mono
   - Depth: 16 amplitudes (4 bits)
 
@@ -45,14 +45,15 @@ Calculated file size for uncompressed media:
   - 4 mins * 60 * 32 * 24 pixels * 24 fps * 4 bits
   - 17,694,720 bits
 - Audio:
-  - 4 mins * 60 * 22,050 Hz * 1 * 4 bits
-  - 21,168,000 bits
+  - 4 mins * 60 * 44,100 Hz * 1 * 4 bits
+  - 42,336,000 bits
 - Total:
-  - 38,862,720 bits
+  - 60,030,720 bits
 
-Around 207 seconds (3:27) are available without any compression at all if the configuration is not present on the flash. For the full four minutes, the compression ratio has to be around 14% which is easily achievable.
 
-With the configuration, the compression ratio has to be 46% to fit the entire four minutes alongside the configuration on the flash.
+Around 134 seconds (2:14) are available without any compression at all if the configuration is not present on the flash.
+
+For the full four minutes, the target file has to be compressed down to 56% of the original file size which will be tough, but achievable.  With the configuration the target file size has to be 26% which is basically impossible for a simple and straight forward codec.
 
 ## Specification
 

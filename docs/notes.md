@@ -48,3 +48,6 @@ Contains some thoughts over the development time of the project.
   - It is combinational now, is this dangerous? The signal can only change when the state changes so it should work fine. No need to register, right?
 - Check if the difference from the expected i2s clock and the actual datasheet clock results in the audio being player slower or faster.
 - Do we need to check for reset /= '1' in the frame_buffer?
+- The video driver will skew initially by almost up to a full millisecond for the big board, but that is okay, because this skew will not add up over time. The skew increases with resolution but since we don't intend to go higher we can ignore it.
+  - However it would be nice to pre-decode the first frame so this skew does not exist.
+- Would be nice to structure the project in a way that it's mostly vendor agnostic.
