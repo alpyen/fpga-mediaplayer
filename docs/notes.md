@@ -47,3 +47,4 @@ Contains some thoughts over the development time of the project.
 - Control/AudioVideoDriver _done signal
   - It is combinational now, is this dangerous? The signal can only change when the state changes so it should work fine. No need to register, right?
 - Check if the difference from the expected i2s clock and the actual datasheet clock results in the audio being player slower or faster.
+- Do we need to check for reset /= '1' in the frame_buffer?

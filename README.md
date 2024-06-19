@@ -5,15 +5,16 @@ Stuff that needs to be done, may be incomplete and not in order.
 ## Project
 
 ## HDL
+- Modify board schematic so that we achieve higher clock rate (lowering gate resistance?)
+  - Check out FPGA banks to see how much each is allowed to draw
 - Implement the Video Driver and Board Driver
-  - Figure out the logic for the frame available/processed, this has to be reset in the fsm, not the decode fsm
-  - Frame Buffer needs to be cleared/ignored when decoding initial frame
   - Video Fifo can contain bits after the last frame has been decoded due to the full byte padding
     - They need to be flushed out before marking playback as done.
       - We need to make sure video_play is low and we encounter an empty video fifo during decoding.
   - Calculate how long the frame decode takes after starting playback
     - if the duration is short enough, we don't need to pre-decode the first frame when the video fifo is filling up (which would in turn cause problems detecting the end of the file)
   - Check how much cumulative skew the fsms generate (if any)
+    - Board clock rate has been recalculated, this should be negligible now.
 - Write notes about clock calculation
 - Media notes say sampling rate is 22,050 Hz, wasn't this changed to 44,100 Hz?
 - Frame Buffer
@@ -21,8 +22,11 @@ Stuff that needs to be done, may be incomplete and not in order.
 - Control Unit
   - Use Generic for Memory Address width that is set in the TLE and passed to the CU and AD
   - Add Base Address to the TLE so the data is not assumed to be at address zero
+- Media format
+  - encode resolution into header?
 - Vendor agnostic
   - move all vendor specific stuff into entities
+- Restructure Control Unit to use less FFs?
 
 ## Vivado
 - Change the board store in the project-tcl to be OS-independent
