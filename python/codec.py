@@ -24,12 +24,13 @@ parser = argparse.ArgumentParser(
                 "audio and video formats supported by ffmpeg are usable.\n"
                 "\n" +
                 "Output quality will be fixed:\n" +
-                "  Video: 32x24 pixels at 24 fps\n" +
+                "  Video: 32:24 (default) at 24 fps\n" +
                 "  Audio: 1 channel with 4 bit per Sample at 44.100 Hz",
     formatter_class=argparse.RawTextHelpFormatter
 )
 parser.add_argument("-i", "--input", type=str, required=True, help="Input media file\nIf a WAVE file is passed (.wav) then the video will be left out.")
 parser.add_argument("-o", "--output", type=str, required=False, help="Output encoded file")
+parser.add_argument("-r", "--resolution", type=str, required=False, default="32:24", help="Target resolution in w:h. Default: 32:24.")
 parser.add_argument("-dv", "--dump-video", action="store_true", help="Dumps a video-only mp4 file with the target quality.")
 parser.add_argument("-da", "--dump-audio", action="store_true", help="Dumps an unsigned 8 bit WAVE file with the target quality.")
 
@@ -39,6 +40,13 @@ if not os.path.exists(args.input):
     print("Input file not found.")
     exit(0)
 
+resolution = args.resolution.split(":")
+if len(resolution) != 2 or any([not x.isnumeric() or int(x) <= 0 for x in resolution]):
+    print("Resolution format is incorrect. Example: -r 32:24.")
+
+# Remove any preceeding zeroes.
+resolution = [str(int(x)) for x in resolution]
+
 input_file = str(args.input)
 output_file = str(args.output) if args.output is not None else None
 
@@ -47,6 +55,7 @@ print("=================== File Information ===================")
 print("Input: ".ljust(20) + str(args.input))
 print("Size: ".ljust(20) + str(int(os.stat(args.input).st_size / 1024)) + " K")
 print("Output: ".ljust(20) + str(args.output))
+print("Resolution: ".ljust(20) + resolution[0] + ":" + resolution[1])
 print("Dump Audio? ".ljust(20) + (("Yes (" + input_file[:input_file.rfind(".")] + "_dump.wav)") if args.dump_audio else "No"))
 print("Dump Video? ".ljust(20) + (("Yes (" + input_file[:input_file.rfind(".")] + "_dump.mp4)") if args.dump_video else "No"))
 
@@ -71,14 +80,14 @@ try:
 
     video_command = (
         "-i \"" + input_file + "\" " +
-        "-vf \"scale=32:24,format=gray,fps=24\" " +
+        "-vf \"scale=" + args.resolution + ",format=gray,fps=24\" " +
         "\"" + os.path.join(temp_dir, "%05d.png") + "\""
     )
 
     if args.dump_video:
         video_command += (
             " " +
-            "-vf \"scale=32:24,format=gray,fps=24\" " +
+            "-vf \"scale=" + args.resolution + ",format=gray,fps=24\" " +
             "-an \"" + input_file[:input_file.rfind(".")] + "_dump.mp4" + "\""
         )
 
