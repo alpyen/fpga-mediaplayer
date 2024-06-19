@@ -248,15 +248,14 @@ begin
 
             when READ_OLD_PIXEL =>
                 decoder_state_next <= WRITE_NEW_PIXEL;
-                address_a <= std_ulogic_vector(frame_pixel_counter);
 
-                if first_frame = '1' then
-                    if selected_buffer = '0' then
-                        request_1_a <= '1';
-                    else
-                        request_0_a <= '1';
-                    end if;
-                else
+                -- We don't want to read the previous frame's buffer for the first frame
+                -- because it will corrupt the whole playback when it's not full of zeroes.
+                -- This will happen if we playback two videos end the first one
+                -- does not end with a completely dark frame.
+                if first_frame /= '1' then
+                    address_a <= std_ulogic_vector(frame_pixel_counter);
+
                     if selected_buffer = '0' then
                         request_0_a <= '1';
                     else
@@ -274,9 +273,9 @@ begin
                         write_enable_0_a <= '1';
 
                         case pixel_difference is
-                            when UNCHANGED => data_0_a_in <= data_1_a_out;
-                            when UP => data_0_a_in <= std_ulogic_vector(unsigned(data_1_a_out) + 1);
-                            when DOWN => data_0_a_in <= std_ulogic_vector(unsigned(data_1_a_out) - 1);
+                            when UNCHANGED => data_0_a_in <= std_ulogic_vector(to_unsigned(0, data_0_a_in'length));
+                            when UP => data_0_a_in <= std_ulogic_vector(to_unsigned(0, data_0_a_in'length) + 1);
+                            when DOWN => data_0_a_in <= std_ulogic_vector(to_unsigned(0, data_0_a_in'length) - 1);
                             when REPLACE => data_0_a_in <= std_ulogic_vector(new_pixel_value);
                         end case;
                     else
@@ -284,9 +283,9 @@ begin
                         write_enable_1_a <= '1';
 
                         case pixel_difference is
-                            when UNCHANGED => data_1_a_in <= data_0_a_out;
-                            when UP => data_1_a_in <= std_ulogic_vector(unsigned(data_0_a_out) + 1);
-                            when DOWN => data_1_a_in <= std_ulogic_vector(unsigned(data_0_a_out) - 1);
+                            when UNCHANGED => data_1_a_in <= std_ulogic_vector(to_unsigned(0, data_1_a_in'length));
+                            when UP => data_1_a_in <= std_ulogic_vector(to_unsigned(0, data_1_a_in'length) + 1);
+                            when DOWN => data_1_a_in <= std_ulogic_vector(to_unsigned(0, data_1_a_in'length) - 1);
                             when REPLACE => data_1_a_in <= std_ulogic_vector(new_pixel_value);
                         end case;
                     end if;

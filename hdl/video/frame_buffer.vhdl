@@ -38,15 +38,16 @@ entity frame_buffer is
 end entity;
 
 architecture arch of frame_buffer is
-    type memory_t is array (0 to WIDTH * HEIGHT - 1) of std_ulogic_vector(SAMPLE_DEPTH - 1 downto 0);
-    shared variable memory: memory_t := (others => (others => '0'));
-
     -- The memory type we are targeting here is BRAM, we could explicitly set the ram_style attribute,
     -- but instead of doing that, we can just design our buffer so that it will map to it naturally.
     -- This also means that we cannot reset the memory contents, but that is not necessary anyway.
     -- Also we need to stick to the coding guidelines in order for the tool to automatically infer memory blocks.
     -- This way we don't need to instantiate vendor-specific macros and most synthesis tools can understand it.
+    type memory_t is array (0 to WIDTH * HEIGHT - 1) of std_ulogic_vector(SAMPLE_DEPTH - 1 downto 0);
+    shared variable memory: memory_t := (others => (others => '0'));
 begin
+
+    -- Separate both ports into different processes so the synthesis tool can infer dual port memory.
     seq_a: process (clock)
     begin
         if rising_edge(clock) then

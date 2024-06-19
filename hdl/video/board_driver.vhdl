@@ -38,7 +38,7 @@ end entity;
 
 architecture arch of board_driver is
     constant FRAMES_PER_SECOND: positive := 24;
-    constant STROBES_PER_FRAME: positive := 1;
+    constant STROBES_PER_FRAME: positive := 2;
 
     -- The board is being driven by multiplexing. The clock rate is composed by:
     --  1. Shifting in WIDTH-bits to feed in the line toggling srclk WIDTH times.
