@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument("-i", "--input", type=str, required=True, help="Input media file")
 parser.add_argument("-b", "--blocksize", action="store", default=32, type=int, required=False, help="Scales a pixel by this amount for a bigger preview window.\n(default: 32)")
-parser.add_argument("-r", "--resolution", type=str, required=False, default="32:24", help="Resolution in w:h. Default: 32:24.")
+parser.add_argument("-r", "--resolution", type=str, required=False, default="32:24", help="Resolution in w:h.\n(default: 32:24)")
 
 args = parser.parse_args(args=None if sys.argv[1:] else ["--help"])
 

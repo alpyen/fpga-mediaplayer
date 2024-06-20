@@ -24,10 +24,10 @@ Stuff that needs to be done, may be incomplete and not in order.
 - Change the board store in the project-tcl to be OS-independent
 - Add custom command to write project tcl
   - add two scripts for loading and storing that just need to be sourced?
+- Make sure assertions trigger on synthesis and implementation aswell
 
 ## Software
 - Codec development
-  - Add documentation on how to set up codec env with libraries and how to encode files
   - Wrap around 4 bit during encoding to save even more space
   - Check if the bitcrushing to 4 bits is correct and compresses uniforly
   - Add resolution to media file

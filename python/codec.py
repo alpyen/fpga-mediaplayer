@@ -30,7 +30,7 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument("-i", "--input", type=str, required=True, help="Input media file\nIf a WAVE file is passed (.wav) then the video will be left out.")
 parser.add_argument("-o", "--output", type=str, required=False, help="Output encoded file")
-parser.add_argument("-r", "--resolution", type=str, required=False, default="32:24", help="Target resolution in w:h. Default: 32:24.")
+parser.add_argument("-r", "--resolution", type=str, required=False, default="32:24", help="Target resolution in w:h.\n(default: 32:24)")
 parser.add_argument("-dv", "--dump-video", action="store_true", help="Dumps a video-only mp4 file with the target quality.")
 parser.add_argument("-da", "--dump-audio", action="store_true", help="Dumps an unsigned 8 bit WAVE file with the target quality.")
 
