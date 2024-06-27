@@ -17,8 +17,11 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Add check for resolution and don't playback when it's incorrect
 
 ## Hardware
-- Modify board schematic so that we achieve higher clock rate (lowering gate resistance?)
-  - Check out FPGA banks to see how much each is allowed to draw
+- Small LED Board v2
+  - 74HCT595 instead of 74HC595 to get rid of the level shifters
+  - No input resistors for shift registers as PMOD JB already has 200 Ohms
+  - Pick new low-side and high-side MOSFETs
+    - pay attention to gate-charge/capacitance for faster switching
 
 ## Vivado
 - Change the board store in the project-tcl to be OS-independent
@@ -31,6 +34,9 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Wrap around 4 bit during encoding to save even more space
   - Check if the bitcrushing to 4 bits is correct and compresses uniforly
   - Add resolution to media file
+
+## Documentation
+- Write README on how to encode and load up the media file into the board's flash and play it back.
 
 ## Compatibility
 - Check repo for Ubuntu Linux

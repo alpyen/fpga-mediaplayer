@@ -1,11 +1,12 @@
 # Python Scripts - Codec and Player
 
+This readme will guide you through the steps of how to get the scripts up and running to encode and playback files.
+
 ### Requirements
 - Python >= 3.8
 - Pillow >= 10.2.0
 - pyFFmpeg >= 2.4.2.18.1
 
-> Note: The project was developed in Python 3.11 but should work just fine with 3.8 or above.
 
 ## Setting up the virtual environment
 
