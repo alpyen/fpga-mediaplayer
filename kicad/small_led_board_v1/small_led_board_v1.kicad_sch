@@ -5,8 +5,7 @@
 	(uuid "0d1b92bb-ac1b-472e-b9cb-7237bd3f95ec")
 	(paper "A4")
 	(title_block
-		(title "Small LED Board")
-		(rev "1.0")
+		(title "Small LED Board v1")
 	)
 	(lib_symbols
 		(symbol "74xx:74HC595"
