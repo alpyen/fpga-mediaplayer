@@ -18,10 +18,11 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## Hardware
 - Small LED Board v2
+  - TPIC6A595 Open Drain Power Shift Register for low-side switching
+  - 74HCT367 Hex-Buffer for level shifting and buffering
   - 74HCT595 instead of 74HC595 to get rid of the level shifters
   - No input resistors for shift registers as PMOD JB already has 200 Ohms
-  - Pick new low-side and high-side MOSFETs
-    - pay attention to gate-charge/capacitance for faster switching
+  - Pick new high-side MOSFET with low capacitance
 
 ## Vivado
 - Change the board store in the project-tcl to be OS-independent
