@@ -21,6 +21,7 @@ Stuff that needs to be done, may be incomplete and not in order.
   - TPIC6A595 Open Drain Power Shift Register for low-side switching
   - 74HCT367 Hex-Buffer for level shifting and buffering
   - 74HCT595 instead of 74HC595 to get rid of the level shifters
+  - Need to use one wire to disconnect shift register outputs to not overload on unknown power up state
   - No input resistors for shift registers as PMOD JB already has 200 Ohms
   - Pick new high-side MOSFET with low capacitance
 
