@@ -18,6 +18,7 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## Hardware
 - Small LED Board v2
+  - Determine LED resistors
   - TPIC6A595 Open Drain Power Shift Register for low-side switching
   - 74HCT367 Hex-Buffer for level shifting and buffering
   - 74HCT595 instead of 74HC595 to get rid of the level shifters
