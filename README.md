@@ -18,6 +18,8 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## Hardware
 - Small LED Board v2
+  - There is a missing pull up on 74HCT541's Output Enable Input
+    - This is also missing on the ordered PCB, a 10k/10M resistor needs to be soldered to VCC/A5.
   - Determine LED resistors
   - TPIC6A595 Open Drain Power Shift Register for low-side switching
   - 74HCT367 Hex-Buffer for level shifting and buffering
