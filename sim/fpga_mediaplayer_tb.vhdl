@@ -28,12 +28,12 @@ architecture tb of fpga_mediaplayer_tb is
     signal i2s_sdin: std_ulogic;
 
     -- Board interface to LED Board
-    signal board_row_data_in_n: std_ulogic;
-    signal board_shift_row_data_n: std_ulogic;
-    signal board_apply_new_row_n: std_ulogic;
-    signal board_row_strobe_in_n: std_ulogic;
-    signal board_shift_row_strobe_n: std_ulogic;
-    signal board_apply_new_row_strobe_n: std_ulogic;
+    signal board_row_data: std_ulogic;
+    signal board_shift_row_data: std_ulogic;
+    signal board_apply_row_and_strobe: std_ulogic;
+    signal board_row_strobe: std_ulogic;
+    signal board_shift_row_strobe: std_ulogic;
+    signal board_output_enable_n: std_ulogic;
 begin
     process
     begin
@@ -85,25 +85,25 @@ begin
         INIT_VALUE => x"ff"
     )
     port map (
-        sclk      => spi_sclk,
-        cs_n      => spi_cs_n,
-        sdi       => spi_sdi,
-        sdo       => spi_sdo,
-        wp_n      => spi_wp_n,
-        hold_n    => spi_hold_n
+        sclk   => spi_sclk,
+        cs_n   => spi_cs_n,
+        sdi    => spi_sdi,
+        sdo    => spi_sdo,
+        wp_n   => spi_wp_n,
+        hold_n => spi_hold_n
     );
 
     small_led_board_inst: entity work.small_led_board
     port map (
-        row_data_in_n           => board_row_data_in_n,
-        shift_row_data_n        => board_shift_row_data_n,
-        apply_new_row_n         => board_apply_new_row_n,
-        row_strobe_in_n         => board_row_strobe_in_n,
-        shift_row_strobe_n      => board_shift_row_strobe_n,
-        apply_new_row_strobe_n  => board_apply_new_row_strobe_n,
+        row_data             => board_row_data,
+        shift_row_data       => board_shift_row_data,
+        apply_row_and_strobe => board_apply_row_and_strobe,
+        row_strobe           => board_row_strobe,
+        shift_row_strobe     => board_shift_row_strobe,
+        output_enable_n      => board_output_enable_n,
 
-        tb_row_values           => open,
-        tb_row_selection_values => open
+        tb_row_data          => open,
+        tb_row_strobe        => open
     );
 
     fpga_mediaplayer_inst: entity work.fpga_mediaplayer
@@ -111,33 +111,33 @@ begin
         SIMULATION => true
     )
     port map (
-        clock100mhz                  => clock,
-        reset                        => reset,
+        clock100mhz                => clock,
+        reset                      => reset,
 
-        start_button                 => start,
+        start_button               => start,
 
         -- SPI Interface
-        spi_sclk                     => spi_sclk,
-        spi_cs_n                     => spi_cs_n,
+        spi_sclk                   => spi_sclk,
+        spi_cs_n                   => spi_cs_n,
 
-        spi_sdi                      => spi_sdi,
-        spi_sdo                      => spi_sdo,
+        spi_sdi                    => spi_sdi,
+        spi_sdo                    => spi_sdo,
 
-        spi_wp_n                     => spi_wp_n,
-        spi_hold_n                   => spi_hold_n,
+        spi_wp_n                   => spi_wp_n,
+        spi_hold_n                 => spi_hold_n,
 
         -- I2S interface to I2S2 PMOD
-        i2s_mclk                     => i2s_mclk,
-        i2s_lrck                     => i2s_lrck,
-        i2s_sclk                     => i2s_sclk,
-        i2s_sdin                     => i2s_sdin,
+        i2s_mclk                   => i2s_mclk,
+        i2s_lrck                   => i2s_lrck,
+        i2s_sclk                   => i2s_sclk,
+        i2s_sdin                   => i2s_sdin,
 
         -- Board interface to LED Board
-        board_row_data_in_n          => board_row_data_in_n,
-        board_shift_row_data_n       => board_shift_row_data_n,
-        board_apply_new_row_n        => board_apply_new_row_n,
-        board_row_strobe_in_n        => board_row_strobe_in_n,
-        board_shift_row_strobe_n     => board_shift_row_strobe_n,
-        board_apply_new_row_strobe_n => board_apply_new_row_strobe_n
+        board_row_data             => board_row_data,
+        board_shift_row_data       => board_shift_row_data,
+        board_apply_row_and_strobe => board_apply_row_and_strobe,
+        board_row_strobe           => board_row_strobe,
+        board_shift_row_strobe     => board_shift_row_strobe,
+        board_output_enable_n      => board_output_enable_n
     );
 end architecture;

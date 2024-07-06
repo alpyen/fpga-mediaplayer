@@ -27,12 +27,12 @@ entity board_driver is
         -- Board interface to LED Board
         -- Pins are low-active because of the logic-level transistors
         -- pulling the line low when they are pulled high.
-        board_row_data_in_n: out std_ulogic;
-        board_shift_row_data_n: out std_ulogic;
-        board_apply_new_row_n: out std_ulogic;
-        board_row_strobe_in_n: out std_ulogic;
-        board_shift_row_strobe_n: out std_ulogic;
-        board_apply_new_row_strobe_n: out std_ulogic
+        board_row_data: out std_ulogic;
+        board_shift_row_data: out std_ulogic;
+        board_apply_row_and_strobe: out std_ulogic;
+        board_row_strobe: out std_ulogic;
+        board_shift_row_strobe: out std_ulogic;
+        board_output_enable_n: out std_ulogic
     );
 end entity;
 
@@ -49,7 +49,7 @@ architecture arch of board_driver is
     -- Defining an accuracy to achieve of 30 ms of cumulative skew over 4 minutes expressed in %.
     constant BOARD_CLOCK_ACCURACY: real := (0.030 / 240.0) * 100.0;
 
-    type state_t is (IDLE, FEED_ROW_DATA, FEED_ROW_SELECTION, APPLY_BOTH, CHECK_FOR_FRAME_DONE);
+    type state_t is (ENTER_PREPARE, PREPARE, LEAVE_PREPARE, IDLE, FEED_ROW_DATA, FEED_ROW_SELECTION, APPLY_BOTH, CHECK_FOR_FRAME_DONE);
     signal state, state_next: state_t;
 
     -- We will set the board's signals based on the FPGA clock, but will
@@ -66,12 +66,12 @@ architecture arch of board_driver is
     -- Our logic here will all work with the FPGA clock, but only switch on the board clock.
     signal board_clock_history: std_ulogic_vector(2 downto 0);
 
-    signal board_row_data_in_n_int, board_row_data_in_n_int_next: std_ulogic;
-    signal board_shift_row_data_n_int, board_shift_row_data_n_int_next: std_ulogic;
-    signal board_apply_new_row_n_int, board_apply_new_row_n_int_next: std_ulogic;
-    signal board_row_strobe_in_n_int, board_row_strobe_in_n_int_next: std_ulogic;
-    signal board_shift_row_strobe_n_int, board_shift_row_strobe_n_int_next: std_ulogic;
-    signal board_apply_new_row_strobe_n_int, board_apply_new_row_strobe_n_int_next: std_ulogic;
+    signal board_row_data_int, board_row_data_int_next: std_ulogic;
+    signal board_shift_row_data_int, board_shift_row_data_int_next: std_ulogic;
+    signal board_apply_row_and_strobe_int, board_apply_row_and_strobe_int_next: std_ulogic;
+    signal board_row_strobe_int, board_row_strobe_int_next: std_ulogic;
+    signal board_shift_row_strobe_int, board_shift_row_strobe_int_next: std_ulogic;
+    signal board_output_enable_n_int, board_output_enable_n_int_next: std_ulogic;
 
     signal frame_pixel_counter, frame_pixel_counter_next: unsigned(frame_buffer_address'range);
     signal pixel_x_counter, pixel_x_counter_next: unsigned(integer(ceil(log2(real(WIDTH)))) - 1 downto 0);
@@ -83,26 +83,26 @@ begin
     report "board_driver: Calculated board clock rate of " & integer'image(BOARD_CLOCK_RATE) & " Hz is not achievable."
     severity failure;
 
-    board_row_data_in_n <= board_row_data_in_n_int;
-    board_shift_row_data_n <= board_shift_row_data_n_int;
-    board_apply_new_row_n <= board_apply_new_row_n_int;
-    board_row_strobe_in_n <= board_row_strobe_in_n_int;
-    board_shift_row_strobe_n <= board_shift_row_strobe_n_int;
-    board_apply_new_row_strobe_n <= board_apply_new_row_strobe_n_int;
+    board_row_data <= board_row_data_int;
+    board_shift_row_data <= board_shift_row_data_int;
+    board_apply_row_and_strobe <= board_apply_row_and_strobe_int;
+    board_row_strobe <= board_row_strobe_int;
+    board_shift_row_strobe <= board_shift_row_strobe_int;
+    board_output_enable_n <= board_output_enable_n_int;
 
     seq: process (clock) is
     begin
         if rising_edge(clock) then
             if reset = '1' then
-                state <= IDLE;
+                state <= ENTER_PREPARE;
                 board_clock_history <= (others => '0');
 
-                board_row_data_in_n_int <= '1';
-                board_shift_row_data_n_int <= '1';
-                board_apply_new_row_n_int <= '1';
-                board_row_strobe_in_n_int <= '1';
-                board_shift_row_strobe_n_int <= '1';
-                board_apply_new_row_strobe_n_int <= '1';
+                board_row_data_int <= '0';
+                board_shift_row_data_int <= '0';
+                board_apply_row_and_strobe_int <= '0';
+                board_row_strobe_int <= '0';
+                board_shift_row_strobe_int <= '0';
+                board_output_enable_n_int <= '1';
 
                 frame_pixel_counter <= to_unsigned(0, frame_pixel_counter'length);
                 pixel_x_counter <= to_unsigned(0, pixel_x_counter'length);
@@ -113,12 +113,12 @@ begin
                 state <= state_next;
                 board_clock_history <= board_clock_history(board_clock_history'left - 1 downto 0) & board_clock;
 
-                board_row_data_in_n_int <= board_row_data_in_n_int_next;
-                board_shift_row_data_n_int <= board_shift_row_data_n_int_next;
-                board_apply_new_row_n_int <= board_apply_new_row_n_int_next;
-                board_row_strobe_in_n_int <= board_row_strobe_in_n_int_next;
-                board_shift_row_strobe_n_int <= board_shift_row_strobe_n_int_next;
-                board_apply_new_row_strobe_n_int <= board_apply_new_row_strobe_n_int_next;
+                board_row_data_int <= board_row_data_int_next;
+                board_shift_row_data_int <= board_shift_row_data_int_next;
+                board_apply_row_and_strobe_int <= board_apply_row_and_strobe_int_next;
+                board_row_strobe_int <= board_row_strobe_int_next;
+                board_shift_row_strobe_int <= board_shift_row_strobe_int_next;
+                board_output_enable_n_int <= board_output_enable_n_int_next;
 
                 frame_pixel_counter <= frame_pixel_counter_next;
                 pixel_x_counter <= pixel_x_counter_next;
@@ -133,8 +133,8 @@ begin
         state, board_clock_history,
         frame_buffer_data, frame_available, frame_pixel_counter,
         pixel_x_counter, pixel_y_counter, brightness_counter, strobe_counter,
-        board_row_data_in_n_int, board_shift_row_data_n_int, board_apply_new_row_n_int,
-        board_row_strobe_in_n_int, board_shift_row_strobe_n_int, board_apply_new_row_strobe_n_int
+        board_row_data_int, board_shift_row_data_int, board_apply_row_and_strobe_int,
+        board_row_strobe_int, board_shift_row_strobe_int, board_output_enable_n_int
     ) is
     begin
         state_next <= state;
@@ -145,18 +145,52 @@ begin
         brightness_counter_next <= brightness_counter;
         strobe_counter_next <= strobe_counter;
 
-        board_row_data_in_n_int_next <= board_row_data_in_n_int;
-        board_shift_row_data_n_int_next <= board_shift_row_data_n_int;
-        board_apply_new_row_n_int_next <= board_apply_new_row_n_int;
-        board_row_strobe_in_n_int_next <= board_row_strobe_in_n_int;
-        board_shift_row_strobe_n_int_next <= board_shift_row_strobe_n_int;
-        board_apply_new_row_strobe_n_int_next <= board_apply_new_row_strobe_n_int;
+        board_row_data_int_next <= board_row_data_int;
+        board_shift_row_data_int_next <= board_shift_row_data_int;
+        board_apply_row_and_strobe_int_next <= board_apply_row_and_strobe_int;
+        board_row_strobe_int_next <= board_row_strobe_int;
+        board_shift_row_strobe_int_next <= board_shift_row_strobe_int;
+        board_output_enable_n_int_next <= board_output_enable_n_int;
 
         frame_buffer_request <= '0';
         frame_buffer_address <= (others => '0');
         frame_processed <= '0';
 
         case state is
+            when ENTER_PREPARE =>
+                if board_clock_history = "111" then
+                    state_next <= PREPARE;
+                end if;
+
+            -- Since the board powers up in a random state we need to make sure,
+            -- it doesn't light up randomly before the FPGA is connected.
+            -- So we pulled up the high-side switches to put them normally off
+            -- but we need to clear the shift registers before enabling their output
+            -- because we secured that also with a pull up on the Output Enable line.
+            when PREPARE =>
+                case board_clock_history is
+                    when "110" =>
+                        board_row_strobe_int_next <= '1';
+                        board_shift_row_strobe_int_next <= '0';
+
+                    when "001" =>
+                        board_shift_row_strobe_int_next <= '1';
+                        pixel_y_counter_next <= pixel_y_counter + 1;
+
+                        if pixel_y_counter = HEIGHT - 1 then
+                            state_next <= LEAVE_PREPARE;
+                        end if;
+
+                    when others => null;
+                end case;
+
+            when LEAVE_PREPARE =>
+                if board_clock_history = "001" then
+                    state_next <= IDLE;
+                    board_apply_row_and_strobe_int_next <= '1';
+                    board_output_enable_n_int_next <= '0';
+                end if;
+
             when IDLE =>
                 if frame_available = '1' and board_clock_history = "111" then
                     state_next <= FEED_ROW_DATA;
@@ -174,19 +208,19 @@ begin
                         frame_buffer_request <= '1';
                         frame_buffer_address <= std_ulogic_vector(frame_pixel_counter);
 
-                        board_shift_row_data_n_int_next <= '1';
+                        board_shift_row_data_int_next <= '0';
 
                     when "100" =>
                         frame_pixel_counter_next <= frame_pixel_counter + 1;
 
                         if unsigned(frame_buffer_data) > brightness_counter then
-                            board_row_data_in_n_int_next <= '0';
+                            board_row_data_int_next <= '1';
                         else
-                            board_row_data_in_n_int_next <= '1';
+                            board_row_data_int_next <= '0';
                         end if;
 
                     when "001" =>
-                        board_shift_row_data_n_int_next <= '0';
+                        board_shift_row_data_int_next <= '1';
                         pixel_x_counter_next <= pixel_x_counter + 1;
 
                         if pixel_x_counter = WIDTH - 1 then
@@ -200,22 +234,21 @@ begin
                 case board_clock_history is
                     when "110" =>
                         if pixel_y_counter = 0 then
-                            board_row_strobe_in_n_int_next <= '1';
+                            board_row_strobe_int_next <= '0';
                         else
-                            board_row_strobe_in_n_int_next <= '0';
+                            board_row_strobe_int_next <= '1';
                         end if;
 
                         -- Row Selection shift registers have to output a zero
                         -- to select a line because they are driving P-channel MOSFETS!
                         -- That's why the logic is inverted compared to the row data.
-                        board_shift_row_strobe_n_int_next <= '1';
+                        board_shift_row_strobe_int_next <= '1';
 
                     when "001" =>
                         state_next <= APPLY_BOTH;
-                        board_shift_row_strobe_n_int_next <= '0';
+                        board_shift_row_strobe_int_next <= '0';
 
-                        board_apply_new_row_n_int_next <= '1';
-                        board_apply_new_row_strobe_n_int_next <= '1';
+                        board_apply_row_and_strobe_int_next <= '0';
 
                     when others => null;
                 end case;
@@ -223,8 +256,7 @@ begin
             when APPLY_BOTH =>
                 if board_clock_history = "001" then
                     state_next <= FEED_ROW_DATA;
-                    board_apply_new_row_n_int_next <= '0';
-                    board_apply_new_row_strobe_n_int_next <= '0';
+                    board_apply_row_and_strobe_int_next <= '1';
                     pixel_x_counter_next <= to_unsigned(0, pixel_x_counter'length);
                     pixel_y_counter_next <= pixel_y_counter + 1;
 

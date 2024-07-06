@@ -6,7 +6,6 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
 - Video Driver
-  - Adjust HDL and pin constraints to match new board interface
   - Fifo can contain bits after the last frame has been decoded due to the full byte padding
     - They need to be flushed out before marking playback as done.
       - We need to make sure video_play is low and we encounter an empty video fifo during decoding.
@@ -19,12 +18,13 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## Hardware
   - Determine LED resistors
-  - TPIC6A595 Open Drain Power Shift Register for low-side switching
+  - TPIC6B595 Open Drain Power Shift Register for low-side switching
   - 74HCT367 Hex-Buffer for level shifting and buffering
   - 74HCT595 instead of 74HC595 to get rid of the level shifters
-  - Need to use one wire to disconnect shift register outputs to not overload on unknown power up state
+  - SQ2351CES for high-side switching
+  - Output Enable to normally-close the high-side switches to not overload the TPIC on unknown powerup
+    - Is there a better way to do this?
   - No input resistors for shift registers as PMOD JB already has 200 Ohms
-  - Pick new high-side MOSFET with low capacitance
 
 ## Vivado
 - Change the board store in the project-tcl to be OS-independent

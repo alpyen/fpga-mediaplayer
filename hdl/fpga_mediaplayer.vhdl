@@ -34,12 +34,12 @@ entity fpga_mediaplayer is
         i2s_sdin: out std_ulogic;
 
         -- Board interface to LED Board
-        board_row_data_in_n: out std_ulogic;
-        board_shift_row_data_n: out std_ulogic;
-        board_apply_new_row_n: out std_ulogic;
-        board_row_strobe_in_n: out std_ulogic;
-        board_shift_row_strobe_n: out std_ulogic;
-        board_apply_new_row_strobe_n: out std_ulogic
+        board_row_data: out std_ulogic;
+        board_shift_row_data: out std_ulogic;
+        board_apply_row_and_strobe: out std_ulogic;
+        board_row_strobe: out std_ulogic;
+        board_shift_row_strobe: out std_ulogic;
+        board_output_enable_n: out std_ulogic
     );
 end entity;
 
@@ -331,24 +331,24 @@ begin
         HEIGHT => 6
     )
     port map (
-        clock                        => clock10mhz,
-        reset                        => reset,
+        clock                      => clock10mhz,
+        reset                      => reset,
 
         -- Video Driver Interface
-        video_driver_play            => video_driver_play,
-        video_driver_done            => video_driver_done,
+        video_driver_play          => video_driver_play,
+        video_driver_done          => video_driver_done,
 
         -- Video Fifo
-        video_fifo_read_enable       => video_fifo_read_enable,
-        video_fifo_data_out          => video_fifo_data_out,
-        video_fifo_empty             => video_fifo_empty,
+        video_fifo_read_enable     => video_fifo_read_enable,
+        video_fifo_data_out        => video_fifo_data_out,
+        video_fifo_empty           => video_fifo_empty,
 
         -- Board interface to LED Board
-        board_row_data_in_n          => board_row_data_in_n,
-        board_shift_row_data_n       => board_shift_row_data_n,
-        board_apply_new_row_n        => board_apply_new_row_n,
-        board_row_strobe_in_n        => board_row_strobe_in_n,
-        board_shift_row_strobe_n     => board_shift_row_strobe_n,
-        board_apply_new_row_strobe_n => board_apply_new_row_strobe_n
+        board_row_data             => board_row_data,
+        board_shift_row_data       => board_shift_row_data,
+        board_apply_row_and_strobe => board_apply_row_and_strobe,
+        board_row_strobe           => board_row_strobe,
+        board_shift_row_strobe     => board_shift_row_strobe,
+        board_output_enable_n      => board_output_enable_n
     );
 end architecture;

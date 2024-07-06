@@ -6,71 +6,52 @@ use ieee.std_logic_1164.all;
 
 entity small_led_board is
 port (
-    row_data_in_n: in std_ulogic;
-    shift_row_data_n: in std_ulogic;
-    apply_new_row_n: in std_ulogic;
+    row_data: in std_ulogic;
+    shift_row_data: in std_ulogic;
+    apply_row_and_strobe: in std_ulogic;
 
-    row_strobe_in_n: in std_ulogic;
-    shift_row_strobe_n: in std_ulogic;
-    apply_new_row_strobe_n: in std_ulogic;
+    row_strobe: in std_ulogic;
+    shift_row_strobe: in std_ulogic;
+    output_enable_n: in std_ulogic;
 
-    tb_row_values: out std_ulogic_vector(7 downto 0);
-    tb_row_selection_values: out std_ulogic_vector(15 downto 0)
+    tb_row_data: out std_ulogic_vector(7 downto 0);
+    tb_row_strobe: out std_ulogic_vector(7 downto 0)
 );
 end entity;
 
 architecture functional of small_led_board is
-    signal row_data_in, shift_row_data, apply_new_row: std_ulogic;
-    signal row_data: std_ulogic_vector(7 downto 0);
-
-    signal row_strobe_in, shift_row_strobe, apply_new_row_strobe: std_ulogic;
-    signal row_selection_data: std_ulogic_vector(15 downto 0);
+    signal row_data_int: std_ulogic_vector(7 downto 0);
+    signal row_strobe_int: std_ulogic_vector(7 downto 0);
 begin
     -- Route these out for the testbench to assert.
-    tb_row_values <= row_data;
-    tb_row_selection_values <= row_selection_data;
+    tb_row_data <= row_data_int;
+    tb_row_strobe <= row_strobe_int;
 
-    -- The board actually uses pullups and the negated signals
-    -- come from the logic shifters which can only pull the line down.
-    -- For ease of simulation we'll simply assume it can drive both.
-    row_data_in <= not row_data_in_n;
-    shift_row_data <= not shift_row_data_n;
-    apply_new_row <= not apply_new_row_n;
-
-    row_strobe_in <= not row_strobe_in_n;
-    shift_row_strobe <= not shift_row_strobe_n;
-    apply_new_row_strobe <= not apply_new_row_strobe_n;
-
+    -- Technically the board components have changed from v1
+    -- but the difference in functionality is minuscule.
+    -- Instead of the 595 for the row data we use a TPIC6B595N
+    -- which is a open-drain power shift register so the row_data_int
+    -- would be pulled to 'Z' and not '0'.
     sr_row_data: entity work.u74hc595a
     port map (
         srclk   => shift_row_data,
-        rclk    => apply_new_row,
-        oe_n    => '0',
+        rclk    => apply_row_and_strobe,
+        oe_n    => output_enable_n,
         srclr_n => '1',
-        ser     => row_data_in,
-        q       => row_data,
+        ser     => row_data,
+        q       => row_data_int,
         qh_buf  => open
     );
 
-    sr_row_selection_0: entity work.u74hc595a
+    -- Board uses 74HCT595 but functionally it is equivalent
+    sr_row_strobe: entity work.u74hc595a
     port map (
         srclk   => shift_row_strobe,
-        rclk    => apply_new_row_strobe,
-        oe_n    => '0',
+        rclk    => apply_row_and_strobe,
+        oe_n    => output_enable_n,
         srclr_n => '1',
-        ser     => row_strobe_in,
-        q       => row_selection_data(7 downto 0),
-        qh_buf  => open
-    );
-
-    sr_row_selection_1: entity work.u74hc595a
-    port map (
-        srclk   => shift_row_strobe,
-        rclk    => apply_new_row_strobe,
-        oe_n    => '0',
-        srclr_n => '1',
-        ser     => row_selection_data(2),
-        q       => row_selection_data(15 downto 8),
+        ser     => row_strobe,
+        q       => row_strobe_int,
         qh_buf  => open
     );
 end architecture;

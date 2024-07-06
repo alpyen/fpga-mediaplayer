@@ -25,12 +25,12 @@ entity video_driver is
         video_fifo_empty: in std_ulogic;
 
         -- Board interface to LED Board
-        board_row_data_in_n: out std_ulogic;
-        board_shift_row_data_n: out std_ulogic;
-        board_apply_new_row_n: out std_ulogic;
-        board_row_strobe_in_n: out std_ulogic;
-        board_shift_row_strobe_n: out std_ulogic;
-        board_apply_new_row_strobe_n: out std_ulogic
+        board_row_data: out std_ulogic;
+        board_shift_row_data: out std_ulogic;
+        board_apply_row_and_strobe: out std_ulogic;
+        board_row_strobe: out std_ulogic;
+        board_shift_row_strobe: out std_ulogic;
+        board_output_enable_n: out std_ulogic
     );
 end entity;
 
@@ -337,22 +337,22 @@ begin
         HEIGHT       => HEIGHT
     )
     port map (
-        clock                        => clock,
-        reset                        => reset,
+        clock                      => clock,
+        reset                      => reset,
 
-        frame_buffer_request         => board_driver_request,
-        frame_buffer_address         => board_driver_address,
-        frame_buffer_data            => board_driver_data,
+        frame_buffer_request       => board_driver_request,
+        frame_buffer_address       => board_driver_address,
+        frame_buffer_data          => board_driver_data,
 
-        frame_available              => board_driver_frame_available,
-        frame_processed              => board_driver_frame_processed,
+        frame_available            => board_driver_frame_available,
+        frame_processed            => board_driver_frame_processed,
 
-        board_row_data_in_n          => board_row_data_in_n,
-        board_shift_row_data_n       => board_shift_row_data_n,
-        board_apply_new_row_n        => board_apply_new_row_n,
-        board_row_strobe_in_n        => board_row_strobe_in_n,
-        board_shift_row_strobe_n     => board_shift_row_strobe_n,
-        board_apply_new_row_strobe_n => board_apply_new_row_strobe_n
+        board_row_data             => board_row_data,
+        board_shift_row_data       => board_shift_row_data,
+        board_apply_row_and_strobe => board_apply_row_and_strobe,
+        board_row_strobe           => board_row_strobe,
+        board_shift_row_strobe     => board_shift_row_strobe,
+        board_output_enable_n      => board_output_enable_n
     );
 
     frame_buffer_0: entity work.frame_buffer
