@@ -17,14 +17,7 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Add check for resolution and don't playback when it's incorrect
 
 ## Hardware
-  - Determine LED resistors
-  - TPIC6B595 Open Drain Power Shift Register for low-side switching
-  - 74HCT367 Hex-Buffer for level shifting and buffering
-  - 74HCT595 instead of 74HC595 to get rid of the level shifters
-  - SQ2351CES for high-side switching
-  - Output Enable to normally-close the high-side switches to not overload the TPIC on unknown powerup
-    - Is there a better way to do this?
-  - No input resistors for shift registers as PMOD JB already has 200 Ohms
+- Develop the full size LED Board
 
 ## Vivado
 - Change the board store in the project-tcl to be OS-independent

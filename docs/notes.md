@@ -51,3 +51,8 @@ Contains some thoughts over the development time of the project.
 - The video driver will skew initially by almost up to a full millisecond for the big board, but that is okay, because this skew will not add up over time. The skew increases with resolution but since we don't intend to go higher we can ignore it.
   - However it would be nice to pre-decode the first frame so this skew does not exist.
 - Would be nice to structure the project in a way that it's mostly vendor agnostic.
+- A future extension of this project could be to port this to a PYNQ board like the PYNQ Z2 for example and to stream the encoded data from the PS to the PL via the DDR.
+  - This way the files could be just playbacked from the file system.
+- The v2 of the small board performs very well on the ordered pcb. It can drive the board at 2.3 MHz meaning the full board will work fine with so much strobing there will be no flickering left.
+  - However the pullups seem very weak, I was able to turn on the high-side switches (=pulling gate low) with my body without being connected to anything while the row selection shift register was floating.
+  - Note: The pullups for the board's buffer inputs were not included when the manufacturing files were dispatched to JLCPCB and were added afterwards. They were installed hacky but it still works fine.
