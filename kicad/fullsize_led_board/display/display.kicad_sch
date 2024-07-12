@@ -2629,6 +2629,88 @@
 				)
 			)
 		)
+		(symbol "Mechanical:MountingHole"
+			(pin_names
+				(offset 1.016)
+			)
+			(exclude_from_sim yes)
+			(in_bom no)
+			(on_board yes)
+			(property "Reference" "H"
+				(at 0 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "MountingHole"
+				(at 0 3.175 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Mounting Hole without connection"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "mounting hole"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "MountingHole*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "MountingHole_0_1"
+				(circle
+					(center 0 0)
+					(radius 1.27)
+					(stroke
+						(width 1.27)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+		)
 	)
 	(junction
 		(at 116.84 134.62)
@@ -37462,6 +37544,25 @@
 		)
 		(uuid "ffd896fe-aca9-431a-a0bc-9ef183b7197a")
 	)
+	(text_box "Mounting Holes"
+		(exclude_from_sim no)
+		(at 43.18 256.54 0)
+		(size 20.32 20.32)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(fill
+			(type none)
+		)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left top)
+		)
+		(uuid "fafaf8a9-e907-4297-b392-c7533f366bf9")
+	)
 	(label "Cathodes28"
 		(at 320.04 233.68 90)
 		(fields_autoplaced yes)
@@ -44309,6 +44410,67 @@
 			(project "display"
 				(path "/10207c10-cfd2-4751-8bf7-ff037f2764a3"
 					(reference "D13")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Mechanical:MountingHole")
+		(at 58.42 271.78 0)
+		(unit 1)
+		(exclude_from_sim yes)
+		(in_bom no)
+		(on_board yes)
+		(dnp no)
+		(uuid "1c291db6-0844-424d-befa-286b5c89d729")
+		(property "Reference" "H4"
+			(at 55.88 269.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "~"
+			(at 58.42 268.605 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "MountingHole:MountingHole_3mm"
+			(at 58.42 271.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 58.42 271.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Mounting Hole without connection"
+			(at 58.42 271.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "display"
+				(path "/10207c10-cfd2-4751-8bf7-ff037f2764a3"
+					(reference "H4")
 					(unit 1)
 				)
 			)
@@ -51585,6 +51747,67 @@
 			(project "display"
 				(path "/10207c10-cfd2-4751-8bf7-ff037f2764a3"
 					(reference "D247")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Mechanical:MountingHole")
+		(at 48.26 271.78 0)
+		(unit 1)
+		(exclude_from_sim yes)
+		(in_bom no)
+		(on_board yes)
+		(dnp no)
+		(uuid "3d94e34c-7dc1-4940-8269-657616d6838a")
+		(property "Reference" "H3"
+			(at 45.72 269.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "~"
+			(at 48.26 268.605 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "MountingHole:MountingHole_3mm"
+			(at 48.26 271.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 48.26 271.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Mounting Hole without connection"
+			(at 48.26 271.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "display"
+				(path "/10207c10-cfd2-4751-8bf7-ff037f2764a3"
+					(reference "H3")
 					(unit 1)
 				)
 			)
@@ -59419,7 +59642,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "63977c7f-1e99-4744-873c-47c15efe18f0")
-		(property "Reference" "J3"
+		(property "Reference" "J2"
 			(at 154.94 280.67 0)
 			(effects
 				(font
@@ -59562,7 +59785,7 @@
 		(instances
 			(project ""
 				(path "/10207c10-cfd2-4751-8bf7-ff037f2764a3"
-					(reference "J3")
+					(reference "J2")
 					(unit 1)
 				)
 			)
@@ -63454,7 +63677,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "7769902a-1d92-4a21-ad5c-ba001fffa0fe")
-		(property "Reference" "J2"
+		(property "Reference" "J3"
 			(at 154.94 15.24 0)
 			(effects
 				(font
@@ -63597,7 +63820,7 @@
 		(instances
 			(project "display"
 				(path "/10207c10-cfd2-4751-8bf7-ff037f2764a3"
-					(reference "J2")
+					(reference "J3")
 					(unit 1)
 				)
 			)
@@ -77881,6 +78104,67 @@
 		)
 	)
 	(symbol
+		(lib_id "Mechanical:MountingHole")
+		(at 48.26 264.16 0)
+		(unit 1)
+		(exclude_from_sim yes)
+		(in_bom no)
+		(on_board yes)
+		(dnp no)
+		(uuid "bc8cd815-f1c1-4710-a9bd-d74a384a87b1")
+		(property "Reference" "H1"
+			(at 45.72 261.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "~"
+			(at 48.26 260.985 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "MountingHole:MountingHole_3mm"
+			(at 48.26 264.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 48.26 264.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Mounting Hole without connection"
+			(at 48.26 264.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "display"
+				(path "/10207c10-cfd2-4751-8bf7-ff037f2764a3"
+					(reference "H1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:LED")
 		(at 303.53 43.18 0)
 		(unit 1)
@@ -88687,6 +88971,67 @@
 			(project "display"
 				(path "/10207c10-cfd2-4751-8bf7-ff037f2764a3"
 					(reference "D617")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Mechanical:MountingHole")
+		(at 58.42 264.16 0)
+		(unit 1)
+		(exclude_from_sim yes)
+		(in_bom no)
+		(on_board yes)
+		(dnp no)
+		(uuid "f23c33ef-941e-4ea6-9c98-b22b27e4e5f8")
+		(property "Reference" "H2"
+			(at 55.88 261.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "~"
+			(at 58.42 260.985 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "MountingHole:MountingHole_3mm"
+			(at 58.42 264.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 58.42 264.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Mounting Hole without connection"
+			(at 58.42 264.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "display"
+				(path "/10207c10-cfd2-4751-8bf7-ff037f2764a3"
+					(reference "H2")
 					(unit 1)
 				)
 			)
