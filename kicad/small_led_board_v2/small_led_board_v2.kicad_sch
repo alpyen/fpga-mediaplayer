@@ -3568,12 +3568,6 @@
 		(uuid "b3362162-d32e-4013-87f6-4a9d93a5a4f0")
 	)
 	(junction
-		(at 132.08 187.96)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "b78882db-00f8-4986-b68d-a557ad17052c")
-	)
-	(junction
 		(at 132.08 109.22)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -3670,7 +3664,7 @@
 		(uuid "d593ccf4-d967-47a7-b02b-927ee2559ded")
 	)
 	(junction
-		(at 40.64 175.26)
+		(at 43.18 175.26)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "da5151ce-fdbf-45c7-87cb-83146b2c9d81")
@@ -4811,7 +4805,7 @@
 	)
 	(wire
 		(pts
-			(xy 40.64 172.72) (xy 40.64 175.26)
+			(xy 43.18 172.72) (xy 43.18 175.26)
 		)
 		(stroke
 			(width 0)
@@ -4941,7 +4935,7 @@
 	)
 	(wire
 		(pts
-			(xy 40.64 175.26) (xy 50.8 175.26)
+			(xy 43.18 175.26) (xy 50.8 175.26)
 		)
 		(stroke
 			(width 0)
@@ -6311,16 +6305,6 @@
 	)
 	(wire
 		(pts
-			(xy 132.08 187.96) (xy 139.7 187.96)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "bd9efd64-e0dd-4b6e-ad65-1509306a75e6")
-	)
-	(wire
-		(pts
 			(xy 180.34 142.24) (xy 187.96 142.24)
 		)
 		(stroke
@@ -7209,9 +7193,10 @@
 		)
 		(uuid "ffefa74b-140b-4819-885c-64b9c54ec089")
 	)
-	(rectangle
-		(start 256.54 86.36)
-		(end 281.94 132.08)
+	(text_box "FPGA to Board Interconnect"
+		(exclude_from_sim no)
+		(at 223.52 134.62 0)
+		(size 58.42 27.94)
 		(stroke
 			(width 0)
 			(type default)
@@ -7219,43 +7204,35 @@
 		(fill
 			(type none)
 		)
-		(uuid 37d2d8c2-320c-45c4-93b7-0eb7d236817c)
-	)
-	(rectangle
-		(start 223.52 134.62)
-		(end 281.94 162.56)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(fill
-			(type none)
-		)
-		(uuid a60e6975-0126-4108-b483-e0af71e0e036)
-	)
-	(text "PINOUT SUBJECT TO CHANGE"
-		(exclude_from_sim no)
-		(at 262.89 161.798 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-				(bold yes)
-			)
-		)
-		(uuid "17c0c910-8578-47d2-ad94-5127347f5587")
-	)
-	(text "Power Input"
-		(exclude_from_sim no)
-		(at 257.81 88.9 0)
 		(effects
 			(font
 				(size 1.27 1.27)
 				(thickness 0.254)
 				(bold yes)
 			)
-			(justify left)
+			(justify left top)
 		)
-		(uuid "85866035-de2a-42a6-80d1-12d75b466e9a")
+		(uuid "83704cc7-56d4-41cb-bb1f-293a2e6d2fdf")
+	)
+	(text_box "Power Input"
+		(exclude_from_sim no)
+		(at 256.54 86.36 0)
+		(size 25.4 45.72)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(fill
+			(type none)
+		)
+		(effects
+			(font
+				(size 1.27 1.27)
+				(bold yes)
+			)
+			(justify left top)
+		)
+		(uuid "e538add7-4100-4064-b448-9981407c1be7")
 	)
 	(text "Barrel Jack breaks\nPin Header's GND\nso both can't be\nused simultaneously."
 		(exclude_from_sim no)
@@ -7266,19 +7243,6 @@
 			)
 		)
 		(uuid "9071e1a8-61c0-461a-93ff-6748f6a43965")
-	)
-	(text "FPGA to Board Interconnect"
-		(exclude_from_sim no)
-		(at 224.79 137.16 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-				(thickness 0.254)
-				(bold yes)
-			)
-			(justify left)
-		)
-		(uuid "cdd87f8b-4d0e-44a4-af96-6b9f4ce48b9c")
 	)
 	(text "Pin GND refers to FPGA GND."
 		(exclude_from_sim no)
@@ -11991,7 +11955,7 @@
 	)
 	(symbol
 		(lib_id "Device:C")
-		(at 40.64 179.07 0)
+		(at 43.18 179.07 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -12000,7 +11964,7 @@
 		(fields_autoplaced yes)
 		(uuid "9115fd68-c36c-4ede-95b2-ee2aa3ce3352")
 		(property "Reference" "C3"
-			(at 41.275 176.53 0)
+			(at 43.815 176.53 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12009,7 +11973,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 41.275 181.61 0)
+			(at 43.815 181.61 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12018,7 +11982,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_THT:C_Disc_D4.7mm_W2.5mm_P5.00mm"
-			(at 41.6052 182.88 0)
+			(at 44.1452 182.88 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12027,7 +11991,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 40.64 179.07 0)
+			(at 43.18 179.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12036,7 +12000,7 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 40.64 179.07 0)
+			(at 43.18 179.07 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13487,7 +13451,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 40.64 182.88 0)
+		(at 43.18 182.88 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -13496,7 +13460,7 @@
 		(fields_autoplaced yes)
 		(uuid "c8204466-6097-4d75-be21-496366b1721c")
 		(property "Reference" "#PWR0115"
-			(at 40.64 189.23 0)
+			(at 43.18 189.23 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13505,7 +13469,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 40.64 186.69 0)
+			(at 43.18 186.69 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13513,7 +13477,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 40.64 182.88 0)
+			(at 43.18 182.88 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13522,7 +13486,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 40.64 182.88 0)
+			(at 43.18 182.88 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13531,7 +13495,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 40.64 182.88 0)
+			(at 43.18 182.88 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14374,7 +14338,7 @@
 	)
 	(symbol
 		(lib_id "power:+5V")
-		(at 40.64 172.72 0)
+		(at 43.18 172.72 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -14383,7 +14347,7 @@
 		(fields_autoplaced yes)
 		(uuid "e12fc61e-c003-4491-8fe6-1972d3e2b766")
 		(property "Reference" "#PWR0114"
-			(at 40.64 176.53 0)
+			(at 43.18 176.53 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14392,7 +14356,7 @@
 			)
 		)
 		(property "Value" "+5V"
-			(at 40.64 168.91 0)
+			(at 43.18 168.91 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14400,7 +14364,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 40.64 172.72 0)
+			(at 43.18 172.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14409,7 +14373,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 40.64 172.72 0)
+			(at 43.18 172.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14418,7 +14382,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+5V\""
-			(at 40.64 172.72 0)
+			(at 43.18 172.72 0)
 			(effects
 				(font
 					(size 1.27 1.27)
