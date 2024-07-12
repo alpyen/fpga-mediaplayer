@@ -33,6 +33,7 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## Documentation
 - Write README on how to encode and load up the media file into the board's flash and play it back.
+- Write README for kicad/
 
 ## Compatibility
 - Check repo for Ubuntu Linux
