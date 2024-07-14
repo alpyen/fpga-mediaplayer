@@ -17,7 +17,6 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Add check for resolution and don't playback when it's incorrect
 
 ## Hardware
-- Fix Kicad Textboxes in small led board v2
 - Develop the full size LED Board
 
 ## Vivado
