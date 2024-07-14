@@ -55,6 +55,7 @@ Contains some thoughts over the development time of the project.
   - This way the files could be just playbacked from the file system.
 - The v2 of the small board performs very well on the ordered pcb. It can drive the board at 2.3 MHz meaning the full board will work fine with so much strobing there will be no flickering left.
   - However the pullups seem very weak, I was able to turn on the high-side switches (=pulling gate low) with my body without being connected to anything while the row selection shift register was floating.
+    - This was confirmed, 10k seems to be better without sacrificing switching speeds because the row selection shift registers shift around 1/32 as fast as the row data shift registers.
   - Note: The pullups for the board's buffer inputs were not included when the manufacturing files were dispatched to JLCPCB and were added afterwards. They were installed hacky but it still works fine.
 - The fullsize board will be split into two PCBs
   - Otherwise the display PCB will be way too big and have the ICs on the side making it look ugly
