@@ -6,6 +6,8 @@
 	(paper "A3")
 	(title_block
 		(title "Fullsize LED Board (Driver)")
+		(date "16.07.2024")
+		(rev "v1.0")
 	)
 	(lib_symbols
 		(symbol "74xx:74AHCT541"

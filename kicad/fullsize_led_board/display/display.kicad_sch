@@ -6,6 +6,8 @@
 	(paper "A3")
 	(title_block
 		(title "Fullsize LED Board (Display)")
+		(date "16.07.2024")
+		(rev "v1.0")
 	)
 	(lib_symbols
 		(symbol "Connector:Conn_01x24_Pin"
