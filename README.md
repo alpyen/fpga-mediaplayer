@@ -16,24 +16,19 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Restructure to use less FFs
   - Add check for resolution and don't playback when it's incorrect
 
-## Hardware
-- Develop the full size LED Board
-
 ## Vivado
-- Change the board store in the project-tcl to be OS-independent
-- Add custom command to write project tcl
-  - add two scripts for loading and storing that just need to be sourced?
 - Make sure assertions trigger on synthesis and implementation aswell
 
 ## Software
 - Codec development
-  - Wrap around 4 bit during encoding to save even more space
-  - Check if the bitcrushing to 4 bits is correct and compresses uniforly
   - Add resolution to media file
 
 ## Documentation
 - Write README on how to encode and load up the media file into the board's flash and play it back.
 - Write README for kicad/
+- Clean up main README and docs/ READMEs and restructure
+  - One folder with docs containing all READMEs with an index README
+  - or one README for subfolders like kicad/ python/
 
 ## Compatibility
 - Check repo for Ubuntu Linux

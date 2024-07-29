@@ -225,6 +225,10 @@ if audio_available:
 
         current_sample = mono_samples[i]
 
+        # Since the hardware register will wrap around from +7 to -8 we could implement it here aswell
+        # to save space when the audio waveform changes from +7 to -8 or -8 to +7 but that
+        # is almost never the case, so just ignore it, so we can encode faster.
+
         if current_sample - previous_sample == 0:
             encoded_audio_samples.extend([0])
 

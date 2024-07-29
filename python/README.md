@@ -12,6 +12,7 @@ This readme will guide you through the steps of how to get the scripts up and ru
 
 Using pip and venv is recommended for setting up an environment where these scripts can run.
 You could install the packages globally, but that will clutter your system.
+
 Follow these steps to create the environment:
 
 1. Open a terminal and switch into the `python`-folder
