@@ -27,7 +27,9 @@ Lastly there is the specification of the media format.
 
 ## Goals to achieve
 - Implementation musn't be linked to loaded media
-  - Design should be able to handle all kinds of media configurationswith greater memory capacity can be used easily
+  - Design should be able to handle all kinds of media configurations
+    - pad the video if it's smaller, do not play if it's bigger
+  - Flash size should be solved as a generic and not hard wired
 - preferrably load from detachable storage (SD-Card, USB-Stick)
 - Video:
   - Length: about 4 minutes
