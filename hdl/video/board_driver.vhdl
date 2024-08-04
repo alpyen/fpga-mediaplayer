@@ -25,8 +25,6 @@ entity board_driver is
         frame_processed: out std_ulogic;
 
         -- Board interface to LED Board
-        -- Pins are low-active because of the logic-level transistors
-        -- pulling the line low when they are pulled high.
         board_row_data: out std_ulogic;
         board_shift_row_data: out std_ulogic;
         board_apply_row_and_strobe: out std_ulogic;
@@ -207,12 +205,11 @@ begin
                     when "110" =>
                         frame_buffer_request <= '1';
                         frame_buffer_address <= std_ulogic_vector(frame_pixel_counter);
+                        frame_pixel_counter_next <= frame_pixel_counter + 1;
 
                         board_shift_row_data_int_next <= '0';
 
                     when "100" =>
-                        frame_pixel_counter_next <= frame_pixel_counter + 1;
-
                         if unsigned(frame_buffer_data) > brightness_counter then
                             board_row_data_int_next <= '1';
                         else
@@ -233,20 +230,22 @@ begin
             when FEED_ROW_SELECTION =>
                 case board_clock_history is
                     when "110" =>
+                        -- Row Selection shift registers have to output a zero
+                        -- to select a line because they are driving P-channel MOSFETS!
+                        -- That's why the logic is inverted compared to the row data
+                        -- and we only strobe one '0' through there because we only
+                        -- want one line selected to time-multiplex the display.
                         if pixel_y_counter = 0 then
                             board_row_strobe_int_next <= '0';
                         else
                             board_row_strobe_int_next <= '1';
                         end if;
 
-                        -- Row Selection shift registers have to output a zero
-                        -- to select a line because they are driving P-channel MOSFETS!
-                        -- That's why the logic is inverted compared to the row data.
-                        board_shift_row_strobe_int_next <= '1';
+                        board_shift_row_strobe_int_next <= '0';
 
                     when "001" =>
                         state_next <= APPLY_BOTH;
-                        board_shift_row_strobe_int_next <= '0';
+                        board_shift_row_strobe_int_next <= '1';
 
                         board_apply_row_and_strobe_int_next <= '0';
 
