@@ -15,9 +15,14 @@ Stuff that needs to be done, may be incomplete and not in order.
     - This will be useful if we store a media file next to the bitstream or when we want to playback two files
   - Restructure to use less FFs
   - Add check for resolution and don't playback when it's incorrect
+- Board Driver
+  - Adjust brightness comparison because one cycle is wasted completely
 
 ## Vivado
 - Make sure assertions trigger on synthesis and implementation aswell
+
+## Hardware
+- Fix driver board's backwards wiring of the shift registers
 
 ## Software
 - Codec development

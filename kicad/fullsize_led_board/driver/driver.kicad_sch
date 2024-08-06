@@ -12294,6 +12294,19 @@
 		)
 		(uuid "2740102d-1036-43f3-9551-6b4ffca9e7cf")
 	)
+	(text "IMPORTANT NOTE:\n\nDue to the way the row data shift registers are wired to the connector\nthe DRAIN ports are not in the right order, they are partially in REVERSE.\n\nThe row data shift registers still hold the eight values that they are supposed\nto hold, but the codec needs to save the pixels in reverse for every eight pixels.\n\nThe previous designs are wired in the \"correct\" way."
+		(exclude_from_sim no)
+		(at 71.12 264.16 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+				(bold yes)
+				(color 255 0 0 1)
+			)
+		)
+		(uuid "4abae1f5-61a5-4a24-a81d-1a3622cc5433")
+	)
 	(text "Pin GND refers to FPGA GND."
 		(exclude_from_sim no)
 		(at 347.98 246.38 0)
