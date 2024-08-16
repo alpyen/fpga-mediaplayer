@@ -351,13 +351,8 @@ if video_available:
                 print("\rEncoding reduced file..." + str(int((i + len(videoframes[0])) / (len(videoframes[0]) + len(videoframes)) * 100)) + "%", end="", flush=True)
                 ts = time.time()
 
-            # for j in range(0, len(videoframes[0])):
-                # encoded_video_samples.extend(videoframes[i][j])
-
-            # Hotfix: Reverse bits of each shift register for the faulty wiring
-            for j in range(0, len(videoframes[0]), 8):
-                for k in range(7, -1, -1):
-                    encoded_video_samples.extend(videoframes[i][j+k])
+            for j in range(0, len(videoframes[0])):
+                encoded_video_samples.extend(videoframes[i][j])
 
         while len(encoded_video_samples) % 8 != 0:
             encoded_video_samples.append(0)

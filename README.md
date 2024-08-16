@@ -21,9 +21,6 @@ Stuff that needs to be done, may be incomplete and not in order.
 ## Vivado
 - Make sure assertions trigger on synthesis and implementation aswell
 
-## Hardware
-- Fix driver board's backwards wiring of the shift registers
-
 ## Software
 - Codec development
   - Add resolution to media file
@@ -34,9 +31,6 @@ Stuff that needs to be done, may be incomplete and not in order.
 - Clean up main README and docs/ READMEs and restructure
   - One folder with docs containing all READMEs with an index README
   - or one README for subfolders like kicad/ python/
-
-## Compatibility
-- Check repo for Ubuntu Linux
 
 # How to open with Vivado
 
