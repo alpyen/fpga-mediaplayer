@@ -108,7 +108,10 @@ begin
 
     fpga_mediaplayer_inst: entity work.fpga_mediaplayer
     generic map(
-        SIMULATION => true
+        SIMULATION => true,
+
+        WIDTH      => 8,
+        HEIGHT     => 6
     )
     port map (
         clock100mhz                => clock,

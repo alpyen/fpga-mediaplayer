@@ -358,8 +358,8 @@ begin
     frame_buffer_0: entity work.frame_buffer
     generic map (
         SAMPLE_DEPTH => SAMPLE_DEPTH,
-        WIDTH  => WIDTH,
-        HEIGHT => HEIGHT
+        WIDTH        => WIDTH,
+        HEIGHT       => HEIGHT
     )
     port map (
         clock          => clock,
@@ -379,8 +379,8 @@ begin
     frame_buffer_1: entity work.frame_buffer
     generic map (
         SAMPLE_DEPTH => SAMPLE_DEPTH,
-        WIDTH  => WIDTH,
-        HEIGHT => HEIGHT
+        WIDTH        => WIDTH,
+        HEIGHT       => HEIGHT
     )
     port map (
         clock          => clock,

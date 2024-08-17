@@ -77,9 +77,9 @@ architecture arch of audio_driver is
 begin
     i2s_master_inst: entity work.i2s_master
     generic map (
-        SAMPLE_DEPTH => SAMPLE_DEPTH,
+        SAMPLE_DEPTH                 => SAMPLE_DEPTH,
 
-        I2S_MCLK_SPEED => I2S_MCLK_SPEED,
+        I2S_MCLK_SPEED               => I2S_MCLK_SPEED,
         TRANSFER_PARTNER_CLOCK_SPEED => CLOCK_SPEED
     )
     port map (

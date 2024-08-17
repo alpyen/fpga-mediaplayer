@@ -2,8 +2,6 @@
 
 Stuff that needs to be done, may be incomplete and not in order.
 
-## Project
-
 ## HDL
 - Video Driver
   - Fifo can contain bits after the last frame has been decoded due to the full byte padding

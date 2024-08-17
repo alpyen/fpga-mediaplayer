@@ -36,7 +36,7 @@ end entity;
 
 architecture arch of board_driver is
     constant FRAMES_PER_SECOND: positive := 24;
-    constant STROBES_PER_FRAME: positive := 2;
+    constant STROBES_PER_FRAME: positive := 5;
 
     -- The board is being driven by multiplexing. The clock rate is composed by:
     --   WIDTH * HEIGHT * BRIGHTNESS LEVELS * STROBES PER FRAME * FRAMES PER SECOND
@@ -292,8 +292,8 @@ begin
 
         CLOCK_ACCURACY => BOARD_CLOCK_ACCURACY,
 
-        MAX_BITWIDTH => 32,
-        MAX_PRECISION => false
+        MAX_BITWIDTH   => 32,
+        MAX_PRECISION  => false
     )
     port map (
         clock     => clock,

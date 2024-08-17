@@ -9,7 +9,10 @@ use unisim.vcomponents.all;
 
 entity fpga_mediaplayer is
     generic (
-        SIMULATION: boolean := false
+        SIMULATION: boolean := false;
+
+        WIDTH: positive := 32;
+        HEIGHT: positive := 24
     );
     port (
         clock100mhz: in std_ulogic;
@@ -49,7 +52,7 @@ architecture tle of fpga_mediaplayer is
 
     component clocking_wizard
         port (
-            clock100mhz : in  std_ulogic;
+            clock100mhz : in std_ulogic;
             reset : in std_ulogic;
             clock10mhz : out std_ulogic;
             clock11_2896mhz: out std_ulogic;
@@ -142,7 +145,7 @@ begin
     -- so it's easier for other boards to set up whose SPI SCLK pin is freely accessible.
     STARTUPE2_inst: STARTUPE2
     generic map (
-        PROG_USR => "FALSE",
+        PROG_USR      => "FALSE",
         SIM_CCLK_FREQ => 0.0
     )
     port map (
@@ -301,7 +304,7 @@ begin
 
     audio_driver_inst: entity work.audio_driver
     generic map (
-        CLOCK_SPEED => 10_000_000,
+        CLOCK_SPEED    => 10_000_000,
         I2S_MCLK_SPEED => 11_289_600
     )
     port map (
@@ -327,8 +330,8 @@ begin
     video_driver_inst: entity work.video_driver
     generic map (
         CLOCK_SPEED => 10_000_000,
-        WIDTH => 8,
-        HEIGHT => 6
+        WIDTH       => WIDTH,
+        HEIGHT      => HEIGHT
     )
     port map (
         clock                      => clock10mhz,
