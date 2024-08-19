@@ -87,10 +87,22 @@ With the encoding out of the way, let's define a simple file header for the cont
 
 ### Header
 
-``"A" (1B) #AudioBytes (4B) #VideoBytes (4B) "Z" (1B)``
+```
+"A"         (1B)
+Width       (1B)
+Height      (1B)
+#AudioBytes (4B)
+#VideoBytes (4B)
+"Z"         (1B)
+= 12 Bytes
+```
 
 - "A" (1 Byte):
   - This is part of the signature so the control unit can make sure that the contents at the given memory location (to look for the media) is actually a valid encoded file so we don't read garbage. Binary representation in 8-Bit ASCII.
+- "Width" (1 Byte):
+  - Unsigned byte that determines the width of the encoded video.
+- "Height" (1 Byte):
+  - Unsigned Byte that determines the height of the encoded video.
 - #AudioBytes (4 Bytes):
   - Little Endian encoded unsigned integer that contains the number of audio bytes contained within the media file.
 - #VideoBytes (4 Bytes):
@@ -98,11 +110,8 @@ With the encoding out of the way, let's define a simple file header for the cont
 - "Z" (1 Byte):
   - The end of the signature, analog to the "A". Binary representation in 8-Bit ASCII.
 
-As you can see the header contains no information about the actual encoding or the encoded format since this is irrelevant for the control unit which will only relay the data from the flash to the audio and video drivers.
-
-This is also the key reason why the data is padded to full bytes since we expect the flash to return one byte at a time.
-
-This allows us to vary the encoding without altering the control unit which only needs to read the header.
+As you can see the header contains little information about the metadata of the encoded file since it's mostly irrelevant for itself or the modules downstream.
+The only reason the resolution is encoded is to ease the use of the player script and perhaps modify the board driver in the future in such a way, that it will pad the video if the encoded file is smaller than its display.
 
 ### Data
 

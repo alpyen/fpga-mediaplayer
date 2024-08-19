@@ -16,10 +16,6 @@ Stuff that needs to be done, may be incomplete and not in order.
 - Board Driver
   - Adjust brightness comparison because one cycle is wasted completely
 
-## Software
-- Codec development
-  - Add resolution to media file
-
 ## Documentation
 - Write README on how to encode and load up the media file into the board's flash and play it back.
 - Write README for kicad/

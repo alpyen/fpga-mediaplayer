@@ -3,7 +3,8 @@ import os
 import sys
 import tkinter
 import time
-import struct
+
+from header import MediaHeader
 
 parser = argparse.ArgumentParser(
     prog="player",
@@ -12,7 +13,6 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument("-i", "--input", type=str, required=True, help="Input media file")
 parser.add_argument("-b", "--blocksize", action="store", default=32, type=int, required=False, help="Scales a pixel by this amount for a bigger preview window.\n(default: 32)")
-parser.add_argument("-r", "--resolution", type=str, required=False, default="32:24", help="Resolution in w:h.\n(default: 32:24)")
 
 args = parser.parse_args(args=None if sys.argv[1:] else ["--help"])
 
@@ -24,33 +24,29 @@ if int(args.blocksize) <= 0:
     print("Blocksize has to be a positive integer.")
     exit(0)
 
-resolution = args.resolution.split(":")
-if len(resolution) != 2 or any([not x.isnumeric() or int(x) <= 0 for x in resolution]):
-    print("Resolution format is incorrect. Example: -r 32:24.")
-
-WIDTH = int(resolution[0])
-HEIGHT = int(resolution[1])
-BLOCK_SIZE = args.blocksize
-
 file = open(args.input, "rb")
 binary = file.read()
 file.close()
 
 try:
-    header = struct.unpack("<B2IB", binary[0:10])
-    if not (header[0] == ord("A") and header[3] == ord("Z")):
-        print("File does not contain header.")
-        exit(0)
+    header = MediaHeader(binary)
 except Exception as e:
     print("Input file could not be parsed.")
     print("Error raised: " + str(e))
     exit(0)
 
-audio = binary[10:10+header[1]]
+# This is done for readability purposes, otherwise the code looks bloated.
+WIDTH = header.WIDTH
+HEIGHT = header.HEIGHT
+AUDIO_LENGTH = header.AUDIO_LENGTH
+VIDEO_LENGTH = header.VIDEO_LENGTH
+BLOCK_SIZE = args.blocksize
+
+audio = binary[12:12+header.AUDIO_LENGTH]
 video = []
 
 # Flatten to bit array to easier decode
-for i in range(10+header[1], 10+header[1]+header[2]):
+for i in range(12+AUDIO_LENGTH, 12+AUDIO_LENGTH+VIDEO_LENGTH):
     for j in range(8):
         video.append((binary[i] >> j) & 0b1)
 
@@ -93,7 +89,7 @@ for y in range(0, HEIGHT):
 
 canvas.pack()
 
-def get_color(sample: int):
+def get_color(sample: int) -> str:
     alphabet = list("0123456789abcdef")
     return "#" + alphabet[sample] * 6
 

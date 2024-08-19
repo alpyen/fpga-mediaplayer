@@ -16,6 +16,8 @@ import logging
 logging.getLogger("pyffmpeg.FFmpeg").setLevel(logging.FATAL)
 logging.getLogger("pyffmpeg.misc.Paths").setLevel(logging.FATAL)
 
+from header import MediaHeader
+
 parser = argparse.ArgumentParser(
     prog="codec",
     description="Encodes a given media file to the project's media format.\n" +
@@ -392,10 +394,13 @@ if output_file is not None:
     file = open(output_file, "wb+")
 
     # Write File Header
-    file.write("A".encode("ascii"))
-    file.write(struct.pack("<I", int(len(encoded_audio_samples) / 8)))
-    file.write(struct.pack("<I", int(len(encoded_video_samples) / 8)))
-    file.write("Z".encode("ascii"))
+    header = MediaHeader.as_bytes(
+        int(resolution[0]),
+        int(resolution[1]),
+        int(len(encoded_audio_samples) / 8),
+        int(len(encoded_video_samples) / 8)
+    )
+    file.write(header)
 
     for i in range(0, len(encoded_audio_samples), 8):
         if time.time() - ts > 0.1:
