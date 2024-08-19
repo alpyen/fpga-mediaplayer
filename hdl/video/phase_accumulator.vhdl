@@ -56,7 +56,7 @@ architecture arch of phase_accumulator is
 begin
     assert CLOCK_SOLUTION.exists = true
     report "phase_accumulator: No solution found that satisfies constraints. Achieved: " & real'image(CLOCK_SOLUTION.achieved) & " Hz " &
-           " at Target Deviation: " & real'image(abs(1.0 - (CLOCK_SOLUTION.achieved / real(TARGET_CLOCK))) * 100.0) & "%%"
+           " at Target Deviation: " & real'image(abs(1.0 - (CLOCK_SOLUTION.achieved / real(TARGET_CLOCK))) * 100.0) & "%"
     severity failure;
 
     process (clock) is

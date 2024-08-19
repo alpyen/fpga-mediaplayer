@@ -16,9 +16,6 @@ Stuff that needs to be done, may be incomplete and not in order.
 - Board Driver
   - Adjust brightness comparison because one cycle is wasted completely
 
-## Vivado
-- Make sure assertions trigger on synthesis and implementation aswell
-
 ## Software
 - Codec development
   - Add resolution to media file

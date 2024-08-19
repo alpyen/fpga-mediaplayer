@@ -67,3 +67,4 @@ Contains some thoughts over the development time of the project.
 - The v1.0 of the fullsize board has the row data shift registers wired up in a weird way
   - It was an accident when wiring them up to the connectors because the numbers were aligning so well and I didn't pay attention
   - However it's not too bad, this can either be fixed in HDL or more easily just in the codec and placing the samples reverse for every eight pixels. This fix is contained in the codec.py for this one commit as it will be fixed in the next version.
+- Vivado truncates the assert report for the phase_accumulator in the tcl window. But the messages window shows it as a whole?
