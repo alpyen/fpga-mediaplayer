@@ -131,7 +131,7 @@ As there is no difference in audio playback, dumping the audio will result in a 
 
 To accurately playback the video portion of the encoded file, this script will create a window with block tiles that are meant to simulate the LEDs on the board. It has a command line interface and it looks like this:
 ```
-usage: player [-h] -i INPUT [-b BLOCKSIZE] [-r RESOLUTION]
+usage: player [-h] -i INPUT [-b BLOCKSIZE]
 
 Plays a file that was encoded in the project's media format.
 
@@ -142,12 +142,8 @@ options:
   -b BLOCKSIZE, --blocksize BLOCKSIZE
                         Scales a pixel by this amount for a bigger preview window.
                         (default: 32)
-  -r RESOLUTION, --resolution RESOLUTION
-                        Resolution in w:h. Default: 32:24.
 ```
 
 It is pretty self explanatory, and if you want to playback a file simple run a command like: `python player.py -i media/demo.enc`
-
-For now the resolution has to be explicitly passed when calling the player if it differs from 32:24. It may be encoded into the media file later.
 
 The blocksize parameter is used to scale up the window by this factor. Meaning, if you have a target file of 8:6 resolution, the window will be too small to be usable, so the player will scale it up by a default of 32 so the window grows to a size of 256:192. Vary this parameter if it is still too small.
