@@ -44,8 +44,8 @@ architecture arch of board_driver is
     -- Note: The clock rate can be reduced by merging some FSM states and transitions
     constant BOARD_CLOCK_RATE: positive := ((((WIDTH + 2) * HEIGHT + 1) * (2 ** SAMPLE_DEPTH) + 1) * STROBES_PER_FRAME - 1) * FRAMES_PER_SECOND;
 
-    -- Defining an accuracy to achieve of 30 ms of cumulative skew over 4 minutes expressed in %.
-    constant BOARD_CLOCK_ACCURACY: real := (0.030 / 240.0) * 100.0;
+    -- Defining an accuracy to achieve of 30 ms of cumulative skew over 4 minutes.
+    constant BOARD_CLOCK_ACCURACY: real := 0.030 / 240.0;
 
     type state_t is (ENTER_PREPARE, PREPARE, LEAVE_PREPARE, IDLE, FEED_ROW_DATA, FEED_ROW_SELECTION, APPLY_BOTH, CHECK_FOR_FRAME_DONE);
     signal state, state_next: state_t;

@@ -40,7 +40,7 @@ architecture arch of phase_accumulator is
             values.increment := integer(round((target / source) * real(2 ** z)));
             values.achieved := (real(values.increment) / real(2 ** z)) * source;
 
-            if abs(1.0 - (values.achieved / target)) * 100.0 <= clock_accuracy then
+            if abs(1.0 - (values.achieved / target)) <= clock_accuracy then
                 values.exists := true;
                 if not MAX_PRECISION then
                     exit;
