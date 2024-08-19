@@ -12,7 +12,6 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Add Generic for the Base Address of the media file
     - This will be useful if we store a media file next to the bitstream or when we want to playback two files
   - Restructure to use less FFs
-  - Add check for resolution and don't playback when it's incorrect
 - Board Driver
   - Adjust brightness comparison because one cycle is wasted completely
 

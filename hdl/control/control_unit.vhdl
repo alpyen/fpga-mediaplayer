@@ -3,6 +3,10 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity control_unit is
+    generic (
+        WIDTH: positive;
+        HEIGHT: positive
+    );
     port (
         clock: in std_ulogic;
         reset: in std_ulogic;
@@ -43,11 +47,13 @@ architecture arch of control_unit is
     );
     signal state, state_next: state_t;
 
-    signal header, header_next: std_ulogic_vector(10 * 8 - 1 downto 0);
+    signal header, header_next: std_ulogic_vector(12 * 8 - 1 downto 0);
     alias signature_begin: std_ulogic_vector(7 downto 0) is header(7 downto 0);
-    alias audio_length: std_ulogic_vector(memory_driver_address'range) is header(8 + memory_driver_address'length - 1 downto 8);
-    alias video_length: std_ulogic_vector(memory_driver_address'range) is header(8 + 32 + memory_driver_address'length - 1 downto 8 + 32);
-    alias signature_end: std_ulogic_vector(7 downto 0) is header(7 + 32 + 32 + 8 downto 32 + 32 + 8);
+    alias video_width: std_ulogic_vector(7 downto 0) is header(7 + 8 downto 8);
+    alias video_height: std_ulogic_vector(7 downto 0) is header(7 + 8 + 8 downto 8 + 8);
+    alias audio_length: std_ulogic_vector(memory_driver_address'range) is header(8 + 2*8 + memory_driver_address'length - 1 downto 2*8 + 8);
+    alias video_length: std_ulogic_vector(memory_driver_address'range) is header(8 + 2*8 + 32 + memory_driver_address'length - 1 downto 2*8 + 8 + 32);
+    alias signature_end: std_ulogic_vector(7 downto 0) is header(7 + 2*8 + 2*32 + 8 downto 2*8 + 2*32 + 8);
 
     signal audio_pointer, audio_pointer_next: std_ulogic_vector(memory_driver_address'range);
     signal audio_end_address, audio_end_address_next: std_ulogic_vector(memory_driver_address'range);
@@ -178,6 +184,8 @@ begin
             when PARSE_HEADER =>
                 if unsigned(signature_begin) = to_unsigned(character'pos('A'), 8)
                     and unsigned(signature_end) = to_unsigned(character'pos('Z'), 8)
+                    and unsigned(video_width) <= WIDTH
+                    and unsigned(video_height) <= HEIGHT
                 then
                     audio_end_address_next <= std_ulogic_vector(u_audio_pointer + u_audio_length);
                     video_end_address_next <= std_ulogic_vector(u_audio_pointer + u_audio_length + u_video_length);
@@ -196,7 +204,7 @@ begin
                     end if;
                 else
                     state_next <= IDLE;
-                    report "No media file found in memory." severity failure;
+                    report "No media file found in memory or its resolution is too big for the instantiated module." severity failure;
                 end if;
 
             when PRELOAD_DATA =>

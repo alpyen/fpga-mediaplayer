@@ -269,6 +269,10 @@ begin
     video_fifo_data_out <= std_ulogic_vector(video_fifo_data_out_slv);
 
     control_unit_inst: entity work.control_unit
+    generic map (
+        WIDTH => WIDTH,
+        HEIGHT => HEIGHT
+    )
     port map (
         clock                   => clock10mhz,
         reset                   => reset_final,
