@@ -5,7 +5,9 @@ use ieee.numeric_std.all;
 entity control_unit is
     generic (
         WIDTH: positive;
-        HEIGHT: positive
+        HEIGHT: positive;
+
+        MEDIA_BASE_ADDRESS: std_ulogic_vector(23 downto 0) := (others => '0')
     );
     port (
         clock: in std_ulogic;
@@ -157,9 +159,9 @@ begin
                     state_next <= READ_HEADER;
 
                     memory_driver_start <= '1';
-                    memory_driver_address <= std_ulogic_vector(to_unsigned(0, memory_driver_address'length));
+                    memory_driver_address <= MEDIA_BASE_ADDRESS;
 
-                    audio_pointer_next <= std_ulogic_vector(to_unsigned(1, audio_pointer_next'length));
+                    audio_pointer_next <= std_ulogic_vector(unsigned(MEDIA_BASE_ADDRESS) + 1);
                 end if;
 
             when READ_HEADER =>
@@ -171,7 +173,7 @@ begin
                     -- Since we are reading from IDLE -> READ_HEADER the address was incremented already.
                     -- This means that address contains the next address so we have to check for
                     -- header'length / 8 and not -1.
-                    if u_audio_pointer = header'length / 8 then
+                    if u_audio_pointer = unsigned(MEDIA_BASE_ADDRESS) + header'length / 8 then
                         state_next <= PARSE_HEADER;
                     else
                         memory_driver_start <= '1';

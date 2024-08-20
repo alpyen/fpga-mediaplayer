@@ -70,3 +70,5 @@ Contains some thoughts over the development time of the project.
 - Vivado truncates the assert report for the phase_accumulator in the tcl window. But the messages window shows it as a whole?
 - Theoretically we could bloat up the media header to include detailed codec information so the audio and video driver could handle it accordingly, but the goal of this project is not to build a fully functional and configurable decoder in hdl.
   - The video resolution was included so maybe the video driver could pad the file accordingly.
+- The MEDIA_BASE_ADDRESS in the control unit's generics should probably be made a port so we could dynamically select different media files from memory.
+  - The main reason this is a generic now is that I only plan to store one file so I don't need to keep reflashing the player bitstream.

@@ -6,8 +6,6 @@ Stuff that needs to be done, may be incomplete and not in order.
 - Video Driver
   - Test FSM and generated clock skew over four minutes
 - Control Unit
-  - Add Generic for the Base Address of the media file
-    - This will be useful if we store a media file next to the bitstream or when we want to playback two files
   - Restructure to use less FFs
 - Board Driver
   - Adjust brightness comparison because one cycle is wasted completely
