@@ -4,9 +4,6 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## HDL
 - Video Driver
-  - Fifo can contain bits after the last frame has been decoded due to the full byte padding
-    - They need to be flushed out before marking playback as done.
-      - We need to make sure video_play is low and we encounter an empty video fifo during decoding.
   - Test FSM and generated clock skew over four minutes
 - Control Unit
   - Add Generic for the Base Address of the media file

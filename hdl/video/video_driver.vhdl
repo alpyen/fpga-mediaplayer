@@ -317,6 +317,17 @@ begin
                     decoder_state_next <= IDLE;
                     decoding_done <= '1';
                     board_driver_frame_available_next <= '1';
+
+                    -- Unlike the audio driver we have to check if the fifo is empty when trying to decode a frame.
+                    -- This is because the audio and video bytes are padded to full bytes at the end.
+                    -- While the audio driver can simply play a handful of unchanged samples,
+                    -- we need to make sure we catch this case for the video because they will not fill a full frame
+                    -- and we might end up reading from an empty fifo.
+                    --
+                    -- Simply don't set that a new frame is available.
+                    if video_fifo_empty = '1' then
+                        board_driver_frame_available_next <= '0';
+                    end if;
                 else
                     decoder_state_next <= BIT_0;
                     video_fifo_read_enable <= '1';
