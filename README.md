@@ -8,9 +8,6 @@ Stuff that needs to be done, may be incomplete and not in order.
 - Control Unit
   - Restructure to use less FFs
 
-## Software
-- Add wrap around for codec values
-
 ## Documentation
 - Write README on how to encode and load up the media file into the board's flash and play it back.
 - Write README for kicad/

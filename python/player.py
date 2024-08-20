@@ -55,6 +55,7 @@ last_frame = [0] * WIDTH * HEIGHT
 
 tk = tkinter.Tk()
 tk.title("fpga-mediaplayer")
+tk.bind("<Escape>", lambda event: tk.destroy())
 
 tk.minsize(WIDTH * BLOCK_SIZE, HEIGHT * BLOCK_SIZE)
 tk.maxsize(WIDTH * BLOCK_SIZE, HEIGHT * BLOCK_SIZE)

@@ -227,17 +227,16 @@ if audio_available:
 
         current_sample = mono_samples[i]
 
-        # Since the hardware register will wrap around from +7 to -8 we could implement it here aswell
-        # to save space when the audio waveform changes from +7 to -8 or -8 to +7 but that
-        # is almost never the case, so just ignore it, so we can encode faster.
+        # Since the hardware register will wrap around from +7 to -8 we should implement it aswell.
+        # While this will most likely never happen with audio, it is very possible with video!
 
         if current_sample - previous_sample == 0:
             encoded_audio_samples.extend([0])
 
-        elif current_sample - previous_sample == 1:
+        elif current_sample - previous_sample == 1 or (current_sample == -8 and previous_sample == 7):
             encoded_audio_samples.extend([1, 0])
 
-        elif current_sample - previous_sample == -1:
+        elif current_sample - previous_sample == -1 or (current_sample == 7 and previous_sample == -8):
             encoded_audio_samples.extend([1, 1, 0])
 
         else:
@@ -333,10 +332,10 @@ if video_available:
                 if current_sample - previous_sample == 0:
                     videoframes[i][j] = [0]
 
-                elif current_sample - previous_sample == 1:
+                elif current_sample - previous_sample == 1 or (current_sample == 0 and previous_sample == 15):
                     videoframes[i][j] = [1, 0]
 
-                elif current_sample - previous_sample == -1:
+                elif current_sample - previous_sample == -1 or (current_sample == 15 and previous_sample == 0):
                     videoframes[i][j] = [1, 1, 0]
 
                 else:
@@ -395,8 +394,8 @@ if output_file is not None:
 
     # Write File Header
     header = MediaHeader.as_bytes(
-        int(resolution[0]),
-        int(resolution[1]),
+        int(resolution[0]) if video_available else 0,
+        int(resolution[1]) if video_available else 0,
         int(len(encoded_audio_samples) / 8),
         int(len(encoded_video_samples) / 8)
     )
