@@ -42,7 +42,7 @@ architecture arch of board_driver is
     --   WIDTH * HEIGHT * BRIGHTNESS LEVELS * STROBES PER FRAME * FRAMES PER SECOND
     -- The actual clock rate is somewhat different due to the FSM transitions.
     -- Note: The clock rate can be reduced by merging some FSM states and transitions
-    constant BOARD_CLOCK_RATE: positive := ((((WIDTH + 2) * HEIGHT + 1) * (2 ** SAMPLE_DEPTH) + 1) * STROBES_PER_FRAME - 1) * FRAMES_PER_SECOND;
+    constant BOARD_CLOCK_RATE: positive := ((((WIDTH + 2) * HEIGHT + 1) * (2 ** SAMPLE_DEPTH - 1) + 1) * STROBES_PER_FRAME - 1) * FRAMES_PER_SECOND;
 
     -- Defining an accuracy to achieve of 30 ms of cumulative skew over 4 minutes.
     constant BOARD_CLOCK_ACCURACY: real := 0.030 / 240.0;
@@ -272,7 +272,10 @@ begin
                     pixel_y_counter_next <= to_unsigned(0, pixel_y_counter'length);
                     brightness_counter_next <= brightness_counter + 1;
 
-                    if brightness_counter = 2 ** SAMPLE_DEPTH - 1 then
+                    -- The brightness counter should not run from 0 to 15, but from 0 to 14.
+                    -- That is because all comparisons in FEED_ROW_DATA will not trigger for the last case (15).
+                    -- Meaning that we are not achieving maximum brightness this way.
+                    if brightness_counter = 2 ** SAMPLE_DEPTH - 1 - 1 then
                         brightness_counter_next <= to_unsigned(0, brightness_counter'length);
                         strobe_counter_next <= strobe_counter + 1;
 

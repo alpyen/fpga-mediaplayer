@@ -7,8 +7,9 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Test FSM and generated clock skew over four minutes
 - Control Unit
   - Restructure to use less FFs
-- Board Driver
-  - Adjust brightness comparison because one cycle is wasted completely
+
+## Software
+- Add wrap around for codec values
 
 ## Documentation
 - Write README on how to encode and load up the media file into the board's flash and play it back.
