@@ -72,3 +72,4 @@ Contains some thoughts over the development time of the project.
   - The video resolution was included so maybe the video driver could pad the file accordingly.
 - The MEDIA_BASE_ADDRESS in the control unit's generics should probably be made a port so we could dynamically select different media files from memory.
   - The main reason this is a generic now is that I only plan to store one file so I don't need to keep reflashing the player bitstream.
+- Technically there is no real necessity to write a script to merge the bitfile with an encoded file but since the commands are so radically different for Windows and Linux, it's easier to provide a script.

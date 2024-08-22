@@ -10,6 +10,7 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 ## Documentation
 - Write README on how to encode and load up the media file into the board's flash and play it back.
+- Update scripts README for merger.py
 - Write README for kicad/
 - Clean up main README and docs/ READMEs and restructure
   - One folder with docs containing all READMEs with an index README
