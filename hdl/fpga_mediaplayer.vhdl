@@ -279,6 +279,8 @@ begin
 
         start                   => start_final,
 
+        media_base_address      => (others => '0'),
+
         -- Memory Driver Interface
         memory_driver_start     => memory_driver_start,
         memory_driver_address   => memory_driver_address,

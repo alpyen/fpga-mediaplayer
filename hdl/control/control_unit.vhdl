@@ -5,15 +5,15 @@ use ieee.numeric_std.all;
 entity control_unit is
     generic (
         WIDTH: positive;
-        HEIGHT: positive;
-
-        MEDIA_BASE_ADDRESS: std_ulogic_vector(23 downto 0) := (others => '0')
+        HEIGHT: positive
     );
     port (
         clock: in std_ulogic;
         reset: in std_ulogic;
 
         start: in std_ulogic;
+
+        media_base_address: in std_ulogic_vector(23 downto 0);
 
         -- Memory Driver Interface
         memory_driver_start: out std_ulogic;
@@ -112,7 +112,7 @@ begin
     end process;
 
     fsm: process (
-        state, start,
+        state, start, media_base_address,
         header, memory_driver_done, memory_driver_data,
         audio_fifo_full, audio_pointer, audio_end_address,
         video_fifo_full, video_pointer, video_end_address,
@@ -159,9 +159,9 @@ begin
                     state_next <= READ_HEADER;
 
                     memory_driver_start <= '1';
-                    memory_driver_address <= MEDIA_BASE_ADDRESS;
+                    memory_driver_address <= media_base_address;
 
-                    audio_pointer_next <= std_ulogic_vector(unsigned(MEDIA_BASE_ADDRESS) + 1);
+                    audio_pointer_next <= std_ulogic_vector(unsigned(media_base_address) + 1);
                 end if;
 
             when READ_HEADER =>
@@ -173,7 +173,7 @@ begin
                     -- Since we are reading from IDLE -> READ_HEADER the address was incremented already.
                     -- This means that address contains the next address so we have to check for
                     -- header'length / 8 and not -1.
-                    if u_audio_pointer = unsigned(MEDIA_BASE_ADDRESS) + header'length / 8 then
+                    if u_audio_pointer = unsigned(media_base_address) + header'length / 8 then
                         state_next <= PARSE_HEADER;
                     else
                         memory_driver_start <= '1';
