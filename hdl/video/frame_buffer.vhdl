@@ -45,7 +45,7 @@ architecture arch of frame_buffer is
     -- This way we don't need to instantiate vendor-specific macros and most synthesis tools can understand it.
 
     -- Note that Vivado will still synthesize to LUTRAM if the memory is small enough.
-    -- This happens when we use the small board's resolution of 6x8. When using the bigger board
+    -- This happens when we use the small board's resolution of 8x6. When using the bigger board
     -- with 32x24, Vivado will decide to use Block RAM. We could enforce this with the ram_style attribute,
     -- but it's fine.
     type memory_t is array (0 to WIDTH * HEIGHT - 1) of std_ulogic_vector(SAMPLE_DEPTH - 1 downto 0);

@@ -129,7 +129,8 @@ def draw_frame():
 
                 case 1:
                     if video[videoindex] == 0:
-                        current_pixel = last_frame[index] + 1
+                        current_pixel = (last_frame[index] + 1) % 16
+                        # The %16 implements the hardware wraparound (15 to 0 and vice versa)
 
                         canvas.itemconfigure(pixels[index], fill=get_color(current_pixel))
                         last_frame[index] = current_pixel
@@ -143,7 +144,7 @@ def draw_frame():
 
                 case 2:
                     if video[videoindex] == 0:
-                        current_pixel = last_frame[index] - 1
+                        current_pixel = (last_frame[index] - 1) % 16
 
                         canvas.itemconfigure(pixels[index], fill=get_color(current_pixel))
                         last_frame[index] = current_pixel
