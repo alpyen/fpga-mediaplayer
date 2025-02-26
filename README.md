@@ -1,57 +1,83 @@
-# Todos
+
+# To-do List
 
 Stuff that needs to be done, may be incomplete and not in order.
 
-## HDL
-- Video Driver
-  - Test FSM and generated clock skew over four minutes
-- Control Unit
-  - Restructure to use less FFs
+- HDL
+  - Implement some sort of luminosity ramp or brightness control
+  - Pixels that should be very dim (brightness = 1) can shine very bright.
+- Software
+  - Implement play/pause into the player
+  - Implement audio playback into the player
+- Documentation
+  - Write README on how to encode and load up the media file into the board's flash and play it back.
+  - Update scripts README for merger.py
+  - Write README for kicad/
+  - Write README for vivado/
+    - Move the Vivado project stuff into the corresponding README
+  - Clean up main README and docs/ READMEs and restructure
+    - One README for subfolders like kicad/ python/
+    - Link the sub-READMEs in this project README
+  - System Diagram (Top-Level-View)
+- Vivado
+  - What happens if you try to recreate the project on a Vivado installation that is missing the board files?
 
-## Documentation
-- Write README on how to encode and load up the media file into the board's flash and play it back.
-- Update scripts README for merger.py
-- Write README for kicad/
-- Clean up main README and docs/ READMEs and restructure
-  - One folder with docs containing all READMEs with an index README
-  - or one README for subfolders like kicad/ python/
+<br>
+Below is the draft of the repository's readme once the To-do List above is completely worked out.
 
-# How to open with Vivado
+___
+<br>
 
-The vivado project has to be regenerated from the project tcl file.
-Simply run Vivado and use the tcl console to `cd` into the vivado subfolder of this repository and run `source ./fpga-mediaplayer.tcl`.
+# fpga-mediaplayer - learning FPGA development
 
-If you want to update the tcl file make sure to pass the correct project folder.
-Vivado creates a subfolder with the name of the project by default which creates unnecessary nesting so you need to run the tcl command manually.
+Hi there, and welcome to my FPGA project to deep dive into FPGA development and everything around it.
 
-To write the project tcl make sure you're in the vivado subfolder and run this command: `write_project_tcl -target_proj_dir . fpga-mediaplayer.tcl -force`
+Watch a demo of this project on YouTube!
 
-Vivado stores absolute paths in the tcl comments, make sure to delete those if you don't want them public.
-They can be found at the very top in the big comment.
+## Navigation
+1. [Introduction](#introduction)
+2. [Project Goal](#project-goal)
+3. [Vivado Build](#vivado-build)
+   1. [Opening the project](#opening-the-project)
+   2. [Saving the project](#saving-the-project)
 
-# Project Goal
+## Introduction
 
-This is a personal project to deep dive into FPGA development and get in touch with every part of it
-and to learn also a little bit about electrical engineering.
+This is a beginner project on hardware development with FPGAs and VHDL to create a system that can
+play audio and video through an FPGA.
 
-The vision is to have Basys3 board drive a selfmade LED matrix playing back a grayscale video and
-outputting sound simultaneously.
+A FPGA development board -- here a Digilent Basys3 -- fetches audio and video data stored on the on-board
+flash memory chip, decodes them and drives a Digilent i2s2-PMOD for audio output and a custom designed
+LED matrix as the video display.
 
-Some of the decisions along the way are deliberately made in a non-optimal way such as writing
-hdl descriptions for components that already exist to have it done myself and to constrain things.
+Originally the idea was to drive one of these standard Arduino LED shields (14x9 pixels) but that plan
+was scrapped due to the very low resolution.
 
-Topics I want to cover (includes, but is not limited to):
+The key focus of this project was to accomplish this vision with certain -- partially arbitrary -- constraints
+and to get the whole thing done while touching on many aspects of FPGA and electronics development.
+
+It is by no means perfect, but it is done while hitting all the project goal's I set for myself.
+
+## Project Goal
+
+The main goal of this project was to get my hands dirty with all parts of FPGA development.
+While the main focus is on the actual hardware description, a good amount of time was also spent
+on developing the software and electronics side of things to get the full picture.
+
+Besides getting this project actually done,
+there were a lot of topics I wanted to cover (which includes, but is not limited to):
 - Develop a full FPGA project with everything necessary
+- Keep it flexible that it could run on different devices without too much additional effort
 - Write HDL and verify with testbenches
 - Write packages and make them accessible
 - Make use of existing IP
 - Prototyping
 - Schematics, Layouting and Manufacturing a PCB
-- Interface with other onboard components such as memory
+- Interface with other onboard components such as the flash memory
 - Interface with prebuilt offboard components such as the Digilent I2S2 PMOD
 - Interface with external offboard components such as the LED board
 - Work within the limits of the given board such as the Digilent Basys3 (Artix7-35T)
-  - 4MB Flash (2MB with configuration)
+  - 4MB Flash (only ~2MB with configuration)
   - Available IO
   - Clock Speed to maintain realtime
 - Software development
@@ -62,4 +88,21 @@ Topics I want to cover (includes, but is not limited to):
 
 Please note that these constraints emerged from the components and devices I have at disposal.
 This project could be done with greater resolution and sound output but the goal is to bring it up
-and learn everything along the way, that's the reason behind the fullstack approach.
+and learn everything along the way, that's the reason behind this approach.
+
+## Vivado Build
+
+This project was developed using Xilinx Vivado using the non-project mode.
+
+### Opening the project
+The vivado project has to be regenerated from the project tcl file.
+Simply run Vivado and use the tcl console to `cd` into the vivado subfolder of this repository and run `source ./fpga-mediaplayer.tcl`.
+
+### Saving the project
+If you want to update the tcl file make sure to pass the correct project folder.
+Vivado creates a subfolder with the name of the project by default which creates unnecessary nesting so you need to run the tcl command manually.
+
+To write the project tcl make sure you're in the vivado subfolder and run this command:<br>`write_project_tcl -target_proj_dir . fpga-mediaplayer.tcl -force`
+
+> Note: Vivado stores absolute paths in the tcl comments, make sure to delete those if you don't want them public.
+They can be found at the very top in the big comment.
