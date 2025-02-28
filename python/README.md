@@ -4,8 +4,10 @@ This readme will guide you through the steps of how to get the scripts up and ru
 
 ### Requirements
 - Python >= 3.8
-- Pillow >= 10.2.0
-- pyFFmpeg >= 2.4.2.18.1
+- Pip Modules:
+  - pillow >= 10.2.0
+  - PyAudio >= 0.2.14
+  - pyffmpeg >= 2.4.2.18.1
 
 
 ## Setting up the virtual environment
@@ -20,7 +22,7 @@ Follow these steps to create the environment:
 3. Activate the virtual environment in your current shell/terminal
    1. Linux: `source .venv/bin/activate`
    2. Windows: `.venv\Scripts\activate.bat`
-4. Install Pillow and pyFFmpeg by running `pip install -r requirements.txt`
+4. Install the necessary modules by running `pip install -r requirements.txt`
 
 That's it! Make sure to always activate the environment first before running the scripts.
 

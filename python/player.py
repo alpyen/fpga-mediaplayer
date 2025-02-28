@@ -3,6 +3,8 @@ import os
 import sys
 import tkinter
 import time
+import pyaudio
+import struct
 
 from header import MediaHeader
 
@@ -42,16 +44,107 @@ AUDIO_LENGTH = header.AUDIO_LENGTH
 VIDEO_LENGTH = header.VIDEO_LENGTH
 BLOCK_SIZE = args.blocksize
 
-audio = binary[12:12+header.AUDIO_LENGTH]
-video = []
+audio = []
+audioindex = 0
 
-# Flatten to bit array to easier decode
+# Flatten to bit array to decode easier
+for i in range(12, 12+AUDIO_LENGTH):
+    for j in range(8):
+        audio.append((binary[i] >> j) & 0b1)
+
+last_sample = 0
+
+samples = []
+
+state = 0
+
+while audioindex < len(audio):
+    match state:
+        case 0:
+            if audio[audioindex] == 0:
+                current_sample = last_sample
+                samples.append(current_sample)
+                last_sample = current_sample
+
+                state = 0
+            else:
+                state = 1
+
+            audioindex += 1
+
+        case 1:
+            if audio[audioindex] == 0:
+                current_sample = last_sample + 1
+                if current_sample == 8:
+                    current_sample = -8
+
+                samples.append(current_sample)
+                last_sample = current_sample
+
+                state = 0
+            else:
+                state = 2
+
+            audioindex += 1
+
+        case 2:
+            if audio[audioindex] == 0:
+                current_sample = last_sample - 1
+                if current_sample == -9:
+                    current_sample = 7
+
+                samples.append(current_sample)
+                last_sample = current_sample
+
+                audioindex += 1
+            else:
+                # The new sample is Int4 so we need to respect the two's complement
+                # otherwise it will be parsed as a UInt4
+                current_sample = 0 \
+                    - 2 ** 3 * audio[audioindex + 1] \
+                    + 2 ** 2 * audio[audioindex + 2] \
+                    + 2 ** 1 * audio[audioindex + 3] \
+                    + 2 ** 0 * audio[audioindex + 4]
+
+                samples.append(current_sample)
+                last_sample = current_sample
+
+                audioindex += 5
+
+            state = 0
+
+# The selected playback format is Int8 so the 4-bit data needs to be expanded.
+samples = [v * 2 ** 4 for v in samples]
+
+audioindex = 0
+
+def audio_callback(in_data, frame_count, time_info, status):
+    global audioindex
+    samples_to_insert = min(len(audio) - audioindex, frame_count)
+
+    packed_samples = struct.pack(f"{samples_to_insert}b", *samples[audioindex:audioindex + samples_to_insert])
+    audioindex += samples_to_insert
+
+    return (packed_samples, pyaudio.paContinue)
+
+audio_manager = pyaudio.PyAudio()
+audio_stream = audio_manager.open(
+    rate=44000,
+    channels=1,
+    format=pyaudio.paInt8,
+    output=True,
+    start=False,
+    stream_callback=audio_callback
+)
+
+video = []
+videoindex = 0
+last_frame = [0] * WIDTH * HEIGHT
+
+# Flatten to bit array to decode easier
 for i in range(12+AUDIO_LENGTH, 12+AUDIO_LENGTH+VIDEO_LENGTH):
     for j in range(8):
         video.append((binary[i] >> j) & 0b1)
-
-videoindex = 0
-last_frame = [0] * WIDTH * HEIGHT
 
 tk = tkinter.Tk()
 tk.title("fpga-mediaplayer")
@@ -72,7 +165,7 @@ tk.geometry(
 canvas = tkinter.Canvas(tk, width=WIDTH * BLOCK_SIZE, height=HEIGHT * BLOCK_SIZE)
 
 framecounter = 0
-playback_started_time = time.time()
+playback_started_time = time.time() - 1 / 24
 pixels = []
 
 for y in range(0, HEIGHT):
@@ -103,7 +196,7 @@ def draw_frame():
 
     now_time = time.time()
 
-    if now_time - playback_started_time >= framecounter * 1/24:
+    if now_time - playback_started_time >= (framecounter + 1) * 1/24:
         index = 0
         state = 0
         while index < WIDTH * HEIGHT:
@@ -147,9 +240,6 @@ def draw_frame():
                         current_pixel = (last_frame[index] - 1) % 16
 
                         canvas.itemconfigure(pixels[index], fill=get_color(current_pixel))
-                        last_frame[index] = current_pixel
-                        index += 1
-                        state = 0
                         videoindex += 1
 
                     elif video[videoindex] == 1:
@@ -160,15 +250,19 @@ def draw_frame():
                             | (video[videoindex + 4] << 0)
 
                         canvas.itemconfigure(pixels[index], fill=get_color(current_pixel))
-                        last_frame[index] = current_pixel
-                        index += 1
-                        state = 0
                         videoindex += 5
 
-        tk.title("fpga-mediaplayer - " + args.input + " - " + str(round(framecounter / (now_time - playback_started_time), 1)) + " fps")
+                    last_frame[index] = current_pixel
+                    index += 1
+                    state = 0
+
         framecounter += 1
+        fps = round(framecounter / (now_time - playback_started_time), 1)
+        tk.title(f"fpga-mediaplayer - {args.input} - {fps} fps")
 
     tk.after(1, draw_frame)
 
 tk.after(1, draw_frame)
+audio_stream.start_stream()
+
 tk.mainloop()
