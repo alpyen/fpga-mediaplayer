@@ -6,7 +6,7 @@ import time
 import pyaudio
 import struct
 
-from header import MediaHeader
+from codec import MediaHeader
 
 parser = argparse.ArgumentParser(
     prog="player",

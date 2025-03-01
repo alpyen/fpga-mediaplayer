@@ -3,8 +3,8 @@ import sys
 import os
 
 parser = argparse.ArgumentParser(
-    prog="merger",
-    description="Merges two binary files together with an offset.\n",
+    prog="concat",
+    description="Concatenates two binary files together with an offset.\n",
     formatter_class=argparse.RawTextHelpFormatter
 )
 parser.add_argument("-i", "--input", type=str, required=True, help="Input fpga bitfile (or already concatenated binfile)")
