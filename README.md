@@ -7,8 +7,7 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Implement some sort of luminosity ramp or brightness control
   - Pixels that should be very dim (brightness = 1) can shine very bright.
 - Software
-  - Implement play/pause into the player
-  - Add "frameskipping" to audio aswell so they stay synced
+  - Add frameskipping for audio and video
   - Check if audio only or video only files work
 - Documentation
   - Write README on how to encode and load up the media file into the board's flash and play it back.

@@ -49,9 +49,40 @@ BLOCK_SIZE = args.blocksize
 COLORS = ["#" + c * 6 for c in "0123456789abcdef"]
 
 
+playing = True
+last_pause_time = 0
+total_pause = 0
+
+def toggle_playstate(event):
+    global playing, last_pause_time, total_pause
+
+    playing = not playing
+    now_time = time.time()
+
+    if playing:
+        total_pause += now_time - last_pause_time
+        total_elapsed_time = now_time - playback_started_time - total_pause
+
+        # PyAudio will start skewing if we keep start and stopping the audio stream
+        # because it is not as responsive as our video playback is.
+        # It results in slower playback due to the overhead so we need to remove
+        # the samples that should not be in there anymore.
+        expected_elapsed_samples = int(round(total_elapsed_time * 44100))
+        samples_to_pop = expected_elapsed_samples - len(audio_played_queue)
+
+        for i in range(samples_to_pop):
+            audio_played_queue.append(audio_queue.popleft())
+
+        audio_stream.start_stream()
+    else:
+        audio_stream.stop_stream()
+        last_pause_time = now_time
+
+
 tk = tkinter.Tk()
 tk.title("fpga-mediaplayer")
 tk.bind("<Escape>", lambda event: tk.destroy())
+tk.bind("<space>", toggle_playstate)
 
 tk.minsize(WIDTH * BLOCK_SIZE, HEIGHT * BLOCK_SIZE)
 tk.maxsize(WIDTH * BLOCK_SIZE, HEIGHT * BLOCK_SIZE)
@@ -86,9 +117,11 @@ canvas.pack()
 
 print("Decoding audio...", end="", flush=True)
 audio_queue = audio_decoder(mediafile.AUDIO)
+audio_played_queue = deque()
 print("done!")
 print("Decoding video...", end="", flush=True)
 video_queue = video_decoder(WIDTH * HEIGHT, mediafile.VIDEO)
+video_played_queue = deque()
 print("done!")
 
 
@@ -101,6 +134,8 @@ def audio_callback(in_data, frame_count, time_info, status):
         f"{insertable_frames}b",
         *[audio_queue.popleft() << 4 for _ in range(insertable_frames)]
     )
+
+    audio_played_queue.extend(packed_samples)
 
     return (packed_samples, pyaudio.paContinue)
 
@@ -120,6 +155,13 @@ def video_callback():
     global last_framedecode_time
     global frametimes
     global pixels
+
+    global total_pause
+    global playing
+
+    if not playing:
+        tk.after(2, video_callback)
+        return
 
     if len(video_queue) == 0:
         exit(0)
@@ -141,7 +183,7 @@ def video_callback():
     # we will just sleep the time until the frame is supposed to be played.
     # This works remarkably well if the decoding process only takes a millisecond or two
     # otherwise it will not play on time.
-    play_time = now_time - playback_started_time
+    play_time = now_time - playback_started_time - total_pause
     next_frame_time = framecounter * 1/24
 
     delay = max(int(round((next_frame_time - play_time) * 1000)), 1)
