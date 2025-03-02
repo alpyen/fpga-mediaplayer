@@ -18,7 +18,7 @@ import logging
 logging.getLogger("pyffmpeg.FFmpeg").setLevel(logging.FATAL)
 logging.getLogger("pyffmpeg.misc.Paths").setLevel(logging.FATAL)
 
-from codec import MediaHeader, audio_encoder, video_encoder
+from codec import MediaFile, audio_encoder, video_encoder
 
 parser = argparse.ArgumentParser(
     prog="convert",
@@ -231,7 +231,7 @@ if output_file is not None:
     file = open(output_file, "wb+")
 
     # Write File Header
-    header = MediaHeader.as_bytes(
+    header = MediaFile.as_bytes(
         int(resolution[0]) if video_available else 0,
         int(resolution[1]) if video_available else 0,
         len(encoded_audio_bytes),
@@ -264,14 +264,10 @@ if video_available:
     reduced_size += reduced_video_size
     encoded_size += encoded_video_size
 
-if reduced_size > 0:
+if audio_available or video_available:
     print("Uncompressed Size: ".ljust(20) + str(int(uncompressed_size / 1024)) + " K")
     print("Reduced Size: ".ljust(20) + str(int(reduced_size / 1024)) + " K")
     print("Encoded Size: ".ljust(20) + str(int(encoded_size / 1024)) + " K (" + str(round(encoded_size / reduced_size * 100, 2)) + "%)")
-else:
-    print("Uncompressed Size: ".ljust(20) + "0 K")
-    print("Reduced Size: ".ljust(20) + "0 K")
-    print("Encoded Size: ".ljust(20) + "0 K (100.0%)")
 
 print("========================================================")
 

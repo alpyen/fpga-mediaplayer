@@ -1,25 +1,29 @@
 from struct import pack, unpack
 from typing import List
 
-from multiprocessing import Queue
 from collections import deque
 
 # See the notes about the media encoding for the header structure description
-class MediaHeader:
+class MediaFile:
     A: bytes
     WIDTH: int
     HEIGHT: int
     AUDIO_LENGTH: int
     VIDEO_LENGTH: int
     Z: bytes
+    AUDIO: bytes
+    VIDEO: bytes
 
-    def __init__(self, header: bytes):
-        unpacked = unpack("<cBBIIc", header[0:12])
+    def __init__(self, file: bytes):
+        unpacked = unpack("<cBBIIc", file[0:12])
 
         self.A, self.WIDTH, self.HEIGHT, self.AUDIO_LENGTH, self.VIDEO_LENGTH, self.Z = unpacked
 
         if not (self.A == b"A" and self.Z == b"Z"):
             raise Exception("File does not contain header.")
+
+        self.AUDIO = file[12:12+self.AUDIO_LENGTH]
+        self.VIDEO = file[12+self.AUDIO_LENGTH:12+self.AUDIO_LENGTH+self.VIDEO_LENGTH]
 
     @staticmethod
     def as_bytes(width: int, height: int, audio_length: int, video_length: int) -> bytes:
@@ -28,7 +32,7 @@ class MediaHeader:
 
 
 # audio_data consists of Int16 44.1kHz WAVE frames
-def audio_encoder(channels: int, length: int, audio_data: bytes, output_queue: deque):
+def audio_encoder(channels: int, length: int, audio_data: bytes) -> deque:
     # We assume in HDL the previous sample to be 0 for the first sample.
     previous_sample = 0
 
@@ -36,11 +40,9 @@ def audio_encoder(channels: int, length: int, audio_data: bytes, output_queue: d
     encoded_bits = deque()
 
     for i in range(length):
+        # Sum up the samples across all available channels
         current_sample = 0
 
-        # Reduce to target quality and mono audio
-
-        # Sum up the samples across all available channels
         for j in range(channels):
             # Samples are Int16 coded by our ffmpeg call.
             current_sample += int.from_bytes(
@@ -59,9 +61,6 @@ def audio_encoder(channels: int, length: int, audio_data: bytes, output_queue: d
         # which is out of the signed 4 bit range -> clip that to +7.
         if current_sample == 8:
             current_sample = 7
-
-
-        # Encode the reduced sample and put it into the output queue
 
         # Since the hardware register will wrap around from +7 to -8 we should implement it aswell.
         if current_sample - previous_sample == 0:
@@ -85,18 +84,72 @@ def audio_encoder(channels: int, length: int, audio_data: bytes, output_queue: d
         encoded_bits.append(0)
 
     # Write output bytes
+    encoded_audio = deque()
+
     for i in range(0, len(encoded_bits), 8):
         byte = 0
 
         for j in range(8):
             byte |= encoded_bits.popleft() << j
 
-        output_queue.append(byte)
+        encoded_audio.append(byte)
+
+    return encoded_audio
 
 
-def audio_decoder(encoded_audio_data: bytes, output_queue: Queue):
-    pass
+def audio_decoder(encoded_audio_data: bytes) -> deque:
+    previous_sample = 0
 
+    encoded_bits = deque()
+    for i in range(len(encoded_audio_data)):
+        byte = encoded_audio_data[i]
+        for j in range(8):
+            encoded_bits.append((byte >> j) & 0b1)
+
+    decoded_audio = deque()
+    state = 0
+
+    while len(encoded_bits) > 0:
+        match state:
+            case 0:
+                if encoded_bits.popleft() == 0:
+                    decoded_audio.append(previous_sample)
+                else:
+                    state = 1
+
+            case 1:
+                if encoded_bits.popleft() == 0:
+                    current_sample = previous_sample + 1
+                    if current_sample == 8:
+                        current_sample = -8
+
+                    decoded_audio.append(current_sample)
+
+                    previous_sample = current_sample
+                    state = 0
+                else:
+                    state = 2
+
+            case 2:
+                if encoded_bits.popleft() == 0:
+                    current_sample = previous_sample - 1
+                    if current_sample == -9:
+                        current_sample = 7
+                else:
+                    # The new sample is Int4 so we need to respect the two's complement
+                    # otherwise it will be parsed as a UInt4
+                    current_sample = 0 \
+                        - 2 ** 3 * encoded_bits.popleft() \
+                        + 2 ** 2 * encoded_bits.popleft() \
+                        + 2 ** 1 * encoded_bits.popleft() \
+                        + 2 ** 0 * encoded_bits.popleft()
+
+                decoded_audio.append(current_sample)
+
+                previous_sample = current_sample
+                state = 0
+
+    return decoded_audio
 
 # video_data is list of deque (1d-frames in grayscale 0-255)
 def video_encoder(video_data: List[deque], output_queue: deque):
@@ -135,10 +188,10 @@ def video_encoder(video_data: List[deque], output_queue: deque):
 
             previous_pixel = current_pixel
 
-    encoded_bits = deque()
-
     # But we need to write then in the normal order into the file otherwise
     # we would have to run in a very weird bitwise way through the memory.
+    encoded_bits = deque()
+
     for i in range(len(video_data)):
         for j in range(framelength):
             encoded_bits.extend(encoded_video_frames[i][j])
@@ -157,5 +210,63 @@ def video_encoder(video_data: List[deque], output_queue: deque):
         output_queue.append(byte)
 
 
-def video_decoder(width: int, height: int, encoded_video_data: bytes, output_queue: Queue):
-    pass
+def video_decoder(framelength: int, encoded_video_data: bytes) -> deque:
+    previous_frame = [0] * framelength
+    pixel_counter = 0
+
+    encoded_bits = deque()
+    for i in range(len(encoded_video_data)):
+        byte = encoded_video_data[i]
+        for j in range(8):
+            encoded_bits.append((byte >> j) & 0b1)
+
+    decoded_video = deque()
+    state = 0
+
+    while len(encoded_bits) > 0:
+        match state:
+            case 0:
+                if encoded_bits.popleft() == 0:
+                    decoded_video.append(previous_frame[pixel_counter])
+                    pixel_counter += 1
+
+                    state = 0
+                else:
+                    state = 1
+
+            case 1:
+                if encoded_bits.popleft() == 0:
+                    current_pixel = previous_frame[pixel_counter] + 1
+                    if current_pixel == 16:
+                        current_pixel = 0
+
+                    decoded_video.append(current_pixel)
+                    previous_frame[pixel_counter] = current_pixel
+                    pixel_counter += 1
+
+                    state = 0
+                else:
+                    state = 2
+
+            case 2:
+                if encoded_bits.popleft() == 0:
+                    current_pixel = previous_frame[pixel_counter] - 1
+                    if current_pixel == -1:
+                        current_pixel = 15
+                else:
+                    current_pixel = 0 \
+                        | (encoded_bits.popleft() << 3) \
+                        | (encoded_bits.popleft() << 2) \
+                        | (encoded_bits.popleft() << 1) \
+                        | (encoded_bits.popleft() << 0)
+
+                decoded_video.append(current_pixel)
+                previous_frame[pixel_counter] = current_pixel
+                pixel_counter += 1
+
+                state = 0
+
+        if pixel_counter == framelength:
+            pixel_counter = 0
+
+    return decoded_video

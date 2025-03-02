@@ -8,15 +8,11 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Pixels that should be very dim (brightness = 1) can shine very bright.
 - Software
   - Implement play/pause into the player
-  - Implement multithreaded decoding for the player
-    - The player can take several seconds to fully decode the file before playing it back
-    - Refactor code while doing it
-    - Remove dump audio and video switch
-    - Check if audio only or video only files work
+  - Add player progress information on decode
+  - Check if audio only or video only files work
 - Documentation
   - Write README on how to encode and load up the media file into the board's flash and play it back.
   - Update scripts README for merger.py
-    - Rename merger.py to concat and update CLI to use positional arguments
   - Write README for kicad/
   - Write README for vivado/
     - Move the Vivado project stuff into the corresponding README
