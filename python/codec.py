@@ -32,7 +32,7 @@ class MediaFile:
 
 
 # audio_data consists of Int16 44.1kHz WAVE frames
-def audio_encoder(channels: int, length: int, audio_data: bytes) -> deque:
+def audio_encoder(channels: int, length: int, audio_data: bytes) -> bytes:
     # We assume in HDL the previous sample to be 0 for the first sample.
     previous_sample = 0
 
@@ -94,7 +94,7 @@ def audio_encoder(channels: int, length: int, audio_data: bytes) -> deque:
 
         encoded_audio.append(byte)
 
-    return encoded_audio
+    return bytes(encoded_audio)
 
 
 def audio_decoder(encoded_audio_data: bytes) -> deque:
@@ -152,7 +152,7 @@ def audio_decoder(encoded_audio_data: bytes) -> deque:
     return decoded_audio
 
 # video_data is list of deque (1d-frames in grayscale 0-255)
-def video_encoder(video_data: List[deque], output_queue: deque):
+def video_encoder(video_data: List[deque]) -> bytes:
     framelength = len(video_data[0])
 
     encoded_video_frames = []
@@ -201,13 +201,16 @@ def video_encoder(video_data: List[deque], output_queue: deque):
         encoded_bits.append(0)
 
     # Write output bytes
+    encoded_video = deque()
     for i in range(0, len(encoded_bits), 8):
         byte = 0
 
         for j in range(8):
             byte |= encoded_bits.popleft() << j
 
-        output_queue.append(byte)
+        encoded_video.append(byte)
+
+    return bytes(encoded_video)
 
 
 def video_decoder(framelength: int, encoded_video_data: bytes) -> deque:

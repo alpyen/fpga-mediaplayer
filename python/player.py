@@ -44,8 +44,6 @@ except Exception as e:
 # This is done for readability purposes, otherwise the code looks bloated.
 WIDTH = mediafile.WIDTH
 HEIGHT = mediafile.HEIGHT
-AUDIO_LENGTH = mediafile.AUDIO_LENGTH
-VIDEO_LENGTH = mediafile.VIDEO_LENGTH
 BLOCK_SIZE = args.blocksize
 
 COLORS = ["#" + c * 6 for c in "0123456789abcdef"]
@@ -133,7 +131,7 @@ def video_callback():
     # This works remarkably well if the decoding process only takes a millisecond or two
     # otherwise it will not play on time.
     play_time = now_time - playback_started_time
-    next_frame_time = (framecounter + 1) * 1/24
+    next_frame_time = framecounter * 1/24
 
     delay = max(int(round((next_frame_time - play_time) * 1000)), 1)
     tk.after(delay, video_callback)

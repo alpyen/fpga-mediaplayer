@@ -154,8 +154,7 @@ if audio_available:
 
     print("Encoding audio...", end="", flush=True)
 
-    encoded_audio_bytes = deque()
-    audio_encoder(channels, length, frames, encoded_audio_bytes)
+    encoded_audio_bytes = audio_encoder(channels, length, frames)
 
     print("done!")
     print()
@@ -195,8 +194,7 @@ if video_available:
 
     print("Encoding video...", end="", flush=True)
 
-    encoded_video_bytes = deque()
-    video_encoder(videoframes, encoded_video_bytes)
+    encoded_video_bytes = video_encoder(videoframes)
 
     print("done!")
     print()
@@ -230,20 +228,17 @@ if output_file is not None:
 
     file = open(output_file, "wb+")
 
-    # Write File Header
+    # Generate media header and write file contents
     header = MediaFile.as_bytes(
         int(resolution[0]) if video_available else 0,
         int(resolution[1]) if video_available else 0,
         len(encoded_audio_bytes),
         len(encoded_video_bytes)
     )
+
     file.write(header)
-
-    for i in range(len(encoded_audio_bytes)):
-        file.write(struct.pack("B", encoded_audio_bytes.popleft()))
-
-    for i in range(len(encoded_video_bytes)):
-        file.write(struct.pack("B", encoded_video_bytes.popleft()))
+    file.write(encoded_audio_bytes)
+    file.write(encoded_video_bytes)
 
     file.close()
 
