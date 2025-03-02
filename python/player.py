@@ -7,7 +7,7 @@ import pyaudio
 import struct
 
 from codec import MediaFile, audio_decoder, video_decoder
-from multiprocessing import Process, Queue
+from collections import deque
 
 parser = argparse.ArgumentParser(
     prog="player",
@@ -48,10 +48,6 @@ BLOCK_SIZE = args.blocksize
 
 COLORS = ["#" + c * 6 for c in "0123456789abcdef"]
 
-# Pre-Decode audio and video
-audio_queue = audio_decoder(mediafile.AUDIO)
-video_queue = video_decoder(WIDTH * HEIGHT, mediafile.VIDEO)
-
 
 tk = tkinter.Tk()
 tk.title("fpga-mediaplayer")
@@ -70,8 +66,6 @@ tk.geometry(
 )
 
 canvas = tkinter.Canvas(tk, width=WIDTH * BLOCK_SIZE, height=HEIGHT * BLOCK_SIZE)
-
-framecounter = 0
 pixels = []
 
 for y in range(0, HEIGHT):
@@ -88,6 +82,14 @@ for y in range(0, HEIGHT):
         )
 
 canvas.pack()
+
+
+print("Decoding audio...", end="", flush=True)
+audio_queue = audio_decoder(mediafile.AUDIO)
+print("done!")
+print("Decoding video...", end="", flush=True)
+video_queue = video_decoder(WIDTH * HEIGHT, mediafile.VIDEO)
+print("done!")
 
 
 def audio_callback(in_data, frame_count, time_info, status):
@@ -115,15 +117,24 @@ audio_stream = audio_manager.open(
 def video_callback():
     global playback_started_time
     global framecounter
+    global last_framedecode_time
+    global frametimes
     global pixels
 
+    if len(video_queue) == 0:
+        exit(0)
+
     now_time = time.time()
+
+    frametimes.append(now_time - last_framedecode_time)
+    last_framedecode_time = now_time
 
     for i in range(len(pixels)):
         canvas.itemconfigure(pixels[i], fill=COLORS[video_queue.popleft()])
 
     framecounter += 1
-    fps = round(framecounter / (now_time - playback_started_time), 1)
+
+    fps = round(len(frametimes) / sum(frametimes), 1)
     tk.title(f"fpga-mediaplayer - {args.input} - {fps} fps")
 
     # Instead of sleeping 1ms and checking if we need to display the frame
@@ -136,9 +147,15 @@ def video_callback():
     delay = max(int(round((next_frame_time - play_time) * 1000)), 1)
     tk.after(delay, video_callback)
 
+
+framecounter = 0
 playback_started_time = time.time()
 
-tk.after(1, video_callback)
+frametimes = deque([], 24 * 2)
+last_framedecode_time = time.time() - 1/24
+
+
 audio_stream.start_stream()
+tk.after(1, video_callback)
 
 tk.mainloop()
