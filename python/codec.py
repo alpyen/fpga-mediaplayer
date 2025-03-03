@@ -272,4 +272,10 @@ def video_decoder(framelength: int, encoded_video_data: bytes) -> deque:
         if pixel_counter == framelength:
             pixel_counter = 0
 
+            # Since we pad the data to full bytes there can be bits remaining.
+            # This can be atmost 7 bits and we need to check for this
+            # when we finished processing a frame (pixel_counter wraps to 0).
+            if len(encoded_bits) < 8:
+                break
+
     return decoded_video
