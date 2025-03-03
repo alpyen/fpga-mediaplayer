@@ -49,6 +49,11 @@ BLOCK_SIZE = args.blocksize
 COLORS = ["#" + c * 6 for c in "0123456789abcdef"]
 
 
+muted = False
+def toggle_mute(event):
+    global muted
+    muted = not muted
+
 playing = True
 last_pause_time = 0
 total_pause = 0
@@ -83,6 +88,7 @@ tk = tkinter.Tk()
 tk.title("fpga-mediaplayer")
 tk.bind("<Escape>", lambda event: tk.destroy())
 tk.bind("<space>", toggle_playstate)
+tk.bind("m", toggle_mute)
 
 tk.minsize(WIDTH * BLOCK_SIZE, HEIGHT * BLOCK_SIZE)
 tk.maxsize(WIDTH * BLOCK_SIZE, HEIGHT * BLOCK_SIZE)
@@ -135,7 +141,12 @@ def audio_callback(in_data, frame_count, time_info, status):
         *[audio_queue.popleft() << 4 for _ in range(insertable_frames)]
     )
 
+    # The shifted samples are packed into the buffer so we need to be careful
+    # when we are reading from this buffer in the future.
     audio_played_queue.extend(packed_samples)
+
+    if muted:
+        packed_samples = bytes(insertable_frames)
 
     return (packed_samples, pyaudio.paContinue)
 
