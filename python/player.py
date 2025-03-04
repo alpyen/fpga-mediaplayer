@@ -9,9 +9,13 @@ import struct
 from codec import MediaFile, audio_decoder, video_decoder
 from collections import deque
 
+from PIL import ImageTk, ImageDraw
+
+
 parser = argparse.ArgumentParser(
     prog="player",
-    description="Plays a file that was encoded in the project's media format.\n",
+    description="Plays a file that was encoded in the project's media format.\n"
+        + "Press [Space] to pause and [m] to mute.",
     formatter_class=argparse.RawTextHelpFormatter
 )
 parser.add_argument("-i", "--input", type=str, required=True, help="Input media file")
@@ -45,7 +49,6 @@ except Exception as e:
 WIDTH = mediafile.WIDTH
 HEIGHT = mediafile.HEIGHT
 BLOCK_SIZE = args.blocksize
-
 COLORS = ["#" + c * 6 for c in "0123456789abcdef"]
 
 
@@ -66,18 +69,6 @@ def toggle_playstate(event):
 
     if playing:
         total_pause += now_time - last_pause_time
-        total_elapsed_time = now_time - playback_started_time - total_pause
-
-        # PyAudio will start skewing if we keep start and stopping the audio stream
-        # because it is not as responsive as our video playback is.
-        # It results in slower playback due to the overhead so we need to remove
-        # the samples that should not be in there anymore.
-        expected_elapsed_samples = int(round(total_elapsed_time * 44100))
-        samples_to_pop = expected_elapsed_samples - len(audio_played_queue)
-
-        for i in range(samples_to_pop):
-            audio_played_queue.append(audio_queue.popleft())
-
         audio_stream.start_stream()
     else:
         audio_stream.stop_stream()
@@ -97,43 +88,58 @@ tk.geometry(
     "{}x{}+{}+{}".format(
         WIDTH * BLOCK_SIZE,
         HEIGHT * BLOCK_SIZE,
-        int((tk.winfo_screenwidth() - WIDTH * BLOCK_SIZE) / 2),
-        int((tk.winfo_screenheight() - HEIGHT * BLOCK_SIZE) / 2)
+        (tk.winfo_screenwidth() - WIDTH * BLOCK_SIZE) // 2,
+        (tk.winfo_screenheight() - HEIGHT * BLOCK_SIZE) // 2
     )
 )
 
 canvas = tkinter.Canvas(tk, width=WIDTH * BLOCK_SIZE, height=HEIGHT * BLOCK_SIZE)
-pixels = []
-
-for y in range(0, HEIGHT):
-    for x in range(0, WIDTH):
-        pixels.append(
-            canvas.create_rectangle(
-                x * BLOCK_SIZE,
-                y * BLOCK_SIZE,
-                x * BLOCK_SIZE + BLOCK_SIZE,
-                y * BLOCK_SIZE + BLOCK_SIZE,
-                fill="#000000",
-                width=0
-            )
-        )
-
 canvas.pack()
+
+frame_image = ImageTk.Image.new("L", (WIDTH * BLOCK_SIZE, HEIGHT * BLOCK_SIZE))
+frame_draw = ImageDraw.Draw(frame_image)
+frame_photo = ImageTk.PhotoImage(frame_image)
+
+canvas_image = canvas.create_image(0, 0, anchor="nw", image=frame_photo)
 
 
 print("Decoding audio...", end="", flush=True)
 audio_queue = audio_decoder(mediafile.AUDIO)
-audio_played_queue = deque()
 print("done!")
 print("Decoding video...", end="", flush=True)
 video_queue = video_decoder(WIDTH * HEIGHT, mediafile.VIDEO)
-video_played_queue = deque()
 print("done!")
 
 
+samples_skipped = 0
+samples_played = 0
+
 def audio_callback(in_data, frame_count, time_info, status):
+    global samples_played, samples_skipped
+
     # Check if we still have enough frames available.
     insertable_frames = min(len(audio_queue), frame_count)
+
+    # PyAudio will start skewing if we keep start and stopping the audio stream
+    # or if it can't keep up with the framerate.
+    # It results in slower playback due to the overhead so we need to remove
+    # the samples that should not be in there anymore.
+    total_elapsed_time = time.time() - playback_started_time - total_pause
+    expected_elapsed_samples = int(total_elapsed_time * 44100)
+    samples_behind = expected_elapsed_samples - samples_played
+
+    # Pyaudio calls this callback shortly before the data is necesssary
+    # so the expected_elapsed_samples does not really match.
+    # Otherwise we would also have it elastic like the video_callback
+    # to insert more samples when we are below the skipping threshold.
+
+    # Start skipping samples if we are behind.
+    if samples_behind > 0:
+        for i in range(samples_behind):
+            audio_queue.popleft()
+
+        samples_skipped += samples_behind
+        samples_played += samples_behind
 
     # The selected playback format is Int8 so the Int4 data needs to be expanded.
     packed_samples = struct.pack(
@@ -141,9 +147,7 @@ def audio_callback(in_data, frame_count, time_info, status):
         *[audio_queue.popleft() << 4 for _ in range(insertable_frames)]
     )
 
-    # The shifted samples are packed into the buffer so we need to be careful
-    # when we are reading from this buffer in the future.
-    audio_played_queue.extend(packed_samples)
+    samples_played += insertable_frames
 
     if muted:
         packed_samples = bytes(insertable_frames)
@@ -160,55 +164,103 @@ audio_stream = audio_manager.open(
     stream_callback=audio_callback
 )
 
-def video_callback():
-    global playback_started_time
-    global framecounter
-    global last_framedecode_time
-    global frametimes
-    global pixels
 
-    global total_pause
-    global playing
+frames_played = 0
+frames_skipped = 0
+
+def video_callback():
+    global frames_played, frames_skipped
+    global frametimes, last_framedecode_time
+    global frame_photo
 
     if not playing:
         tk.after(2, video_callback)
         return
 
     if len(video_queue) == 0:
+        # It does the job.
         exit(0)
 
     now_time = time.time()
 
+    # Frameskip implementation analoguous to the one in audio_callback.
+    total_elapsed_time = now_time - playback_started_time - total_pause
+    expected_elapsed_frames = int(total_elapsed_time * 24)
+    frames_behind = expected_elapsed_frames - frames_played
+
+    # Start skipping frames if we are more than one frame behind.
+    # If not, the rescheduling of the video_callback will be done
+    # automatically with a lower delay so we can catch back up.
+    if frames_behind > 1:
+        for i in range(frames_behind * WIDTH * HEIGHT):
+            video_queue.popleft()
+
+        frames_played += frames_behind
+        frames_skipped += frames_behind
+
+        play_time = now_time - playback_started_time - total_pause
+        next_frame_time = frames_played * 1/24
+
+        delay = max(int(round((next_frame_time - play_time) * 1000)), 1)
+        tk.after(delay, video_callback)
+        return
+
+
+    for y in range(HEIGHT):
+        for x in range(WIDTH):
+            frame_draw.rectangle(
+                (
+                    x * BLOCK_SIZE,
+                    y * BLOCK_SIZE,
+                    (x+1) * BLOCK_SIZE,
+                    (y+1) * BLOCK_SIZE
+                ),
+                fill=video_queue.popleft() << 4
+            )
+
+    frame_photo = ImageTk.PhotoImage(frame_image)
+    canvas.itemconfigure(canvas_image, image=frame_photo)
+
     frametimes.append(now_time - last_framedecode_time)
     last_framedecode_time = now_time
-
-    for i in range(len(pixels)):
-        canvas.itemconfigure(pixels[i], fill=COLORS[video_queue.popleft()])
-
-    framecounter += 1
-
-    fps = round(len(frametimes) / sum(frametimes), 1)
-    tk.title(f"fpga-mediaplayer - {args.input} - {fps} fps")
+    frames_played += 1
 
     # Instead of sleeping 1ms and checking if we need to display the frame
     # we will just sleep the time until the frame is supposed to be played.
     # This works remarkably well if the decoding process only takes a millisecond or two
     # otherwise it will not play on time.
     play_time = now_time - playback_started_time - total_pause
-    next_frame_time = framecounter * 1/24
+    next_frame_time = frames_played * 1/24
 
     delay = max(int(round((next_frame_time - play_time) * 1000)), 1)
     tk.after(delay, video_callback)
 
 
-framecounter = 0
+TOTAL_FRAMES = len(video_queue) // WIDTH // HEIGHT
+
+def update_title():
+    fps = round(len(frametimes) / sum(frametimes), 1)
+
+    tk.title(
+        f"fpga-mediaplayer" \
+        + f" - {args.input}" \
+        + f" - {fps} fps" \
+        + f" - Frame: {frames_played} / {TOTAL_FRAMES}" \
+        + f" - Skipped {frames_skipped} frames and {samples_skipped} samples" \
+        + (" [Paused]" if not playing else "") \
+        + (" [Muted]" if muted else "")
+    )
+
+    tk.after(5, update_title)
+
 playback_started_time = time.time()
 
-frametimes = deque([], 24 * 2)
-last_framedecode_time = time.time() - 1/24
+frametimes = deque([.1], 24)
+last_framedecode_time = time.time()
 
 
 audio_stream.start_stream()
 tk.after(1, video_callback)
+tk.after(1, update_title)
 
 tk.mainloop()
