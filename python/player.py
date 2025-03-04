@@ -14,8 +14,9 @@ from PIL import ImageTk, ImageDraw
 
 parser = argparse.ArgumentParser(
     prog="player",
-    description="Plays a file that was encoded in the project's media format.\n"
-        + "Press [Space] to pause and [m] to mute.",
+    description="Plays a file that was encoded in the project's media format.\n" +
+                "\n" +
+                "Press [Space] to pause and [m] to mute.",
     formatter_class=argparse.RawTextHelpFormatter
 )
 parser.add_argument("-i", "--input", type=str, required=True, help="Input media file")

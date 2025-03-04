@@ -9,11 +9,12 @@ Stuff that needs to be done, may be incomplete and not in order.
 - Software
   - Check if audio only or video only files work
 - Documentation
-  - Write README on how to encode and load up the media file into the board's flash and play it back.
-  - Update scripts README for merger.py
-  - Write README for kicad/
-  - Write README for vivado/
+  - python/README.md
+    - Write section about appending it to fpga bitfile (concat.py)
+  - kicad/README.md
+  - vivado/README.md
     - Move the Vivado project stuff into the corresponding README
+    - Write section about flashing memory and playing back the file
   - Clean up main README and docs/ READMEs and restructure
     - One README for subfolders like kicad/ python/
     - Link the sub-READMEs in this project README

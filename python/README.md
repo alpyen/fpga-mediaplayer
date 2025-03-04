@@ -1,10 +1,20 @@
-# Python Scripts - Codec and Player
+# Python Scripts
 
-This readme will guide you through the steps of how to get the scripts up and running to encode and playback files.
+This readme will guide you through the steps necessary to set up and run the python scripts.
 
-### Requirements
+
+## Navigation
+1. [Requirements](#requirements)
+2. [Setting up the virtual environment](#setting-up-the-virtual-environment)
+3. [Encoding media files into the project format](#encoding-media-files-into-the-project-format)
+4. [Playing the encoded media in a software player](#playing-the-encoded-media-in-a-software-player)
+5. [Appending the media onto a FPGA bitfile](#appending-the-media-onto-a-fpga-bitfile)
+
+
+## Requirements
+
 - Python >= 3.8
-- Pip Modules:
+- Pip Modules (requirements.txt):
   - pillow >= 10.2.0
   - PyAudio >= 0.2.14
   - pyffmpeg >= 2.4.2.18.1
@@ -20,18 +30,27 @@ Follow these steps to create the environment:
 1. Open a terminal and switch into the `python`-folder
 2. Create a virtual environment with `python -m venv .venv`
 3. Activate the virtual environment in your current shell/terminal
-   1. Linux: `source .venv/bin/activate`
-   2. Windows: `.venv\Scripts\activate.bat`
+   - Linux: `source .venv/bin/activate`
+   - Windows: `.venv\Scripts\activate.bat`
 4. Install the necessary modules by running `pip install -r requirements.txt`
 
 That's it! Make sure to always activate the environment first before running the scripts.
 
-## How to use the codec.py
+> Note: Linux users may have to install the `python3-tk` package in order to run the player script
+> as it uses the tkinter module for the GUI.
 
-This script will, as the name suggest, take care of the data encoding, like the player it has a command line interface that can be displayed with calling just the script or with the `--help` argument. Here's what it looks like:
+
+## Encoding media files into the project format
+
+`convert.py` takes care of the media encoding and is controlled by supplying command line arguments.
+An overview of the possible arguments can be displayed by just calling the script or
+with the `--help` flag and looks like this:
+
+<details>
+<summary>convert.py help - click to open</summary>
 
 ```
-usage: codec [-h] -i INPUT [-o OUTPUT] [-r RESOLUTION] [-dv] [-da]
+usage: convert [-h] -i INPUT [-o OUTPUT] [-r RESOLUTION]
 
 Encodes a given media file to the project's media format.
 
@@ -50,27 +69,31 @@ options:
   -o OUTPUT, --output OUTPUT
                         Output encoded file
   -r RESOLUTION, --resolution RESOLUTION
-                        Target resolution in w:h. Default: 32:24.
-  -dv, --dump-video     Dumps a video-only mp4 file with the target quality.
-  -da, --dump-audio     Dumps an unsigned 8 bit WAVE file with the target quality.
+                        Target resolution in w:h.
+                        (default: 32:24)
 ```
 
-Here are some example use cases:
-- Encode a file located at `media/demo.mp4` to 8:6 resolution: `python codec.py -i media/demo.mp4 -o media/demo.enc -r 8:6`
-- Display encoding statistics without writing an output file: `python codec.py -i media/demo.mp4 -r 8:6`
-- Dump audio and video to quickly playback on PC: `python codec.py -i media/demo.mp4 -r 8:6 -da -dv`
+</details><br>
 
-In general these parameters can be combined arbritrarily.
+Encoding a file that is located at `media/demo.mp4` to 8x6 resolution (small LED board) is done like this:<br>
+```console
+python convert.py -i media/demo.mp4 -o media/demo.bin -r 8:6
+```
 
-Here's what the output of `python codec.py -i media/video.mp4 -o media/video.env` looks like:
+> Note: If you don't supply an output file path the encoded file will be discarded
+> and only the encoding statistics will be printed.
+
+After the encoding process is done you will see information about the achieved compression in the terminal.
+
+<details>
+<summary>convert.py output example - click to open</summary>
+
 ```
 =================== File Information ===================
 Input:              media/video.mp4
 Size:               19126 K
-Output:             media/video.enc
+Output:             media/video.bin
 Resolution:         32:24
-Dump Audio?         No
-Dump Video?         No
 ========================================================
 
 ================== FFmpeg Processing ===================
@@ -82,9 +105,7 @@ Video stream detected.
 
 =================== Audio Processing ===================
 Reading audio file...done!
-
-Reducing to mono and 4 bits...done!
-Encoding reduced file...done!
+Encoding audio...done!
 
 Uncompressed Size:  37748 K
 Reduced Size:       4718 K
@@ -93,13 +114,11 @@ Encoded Size:       2467 K (52.29%)
 
 =================== Video Processing ===================
 Reading video frames...done!
-
-Reducing to 4 bits...done!
-Encoding reduced file...done!
+Encoding video...done!
 
 Uncompressed Size:  11835 K
 Reduced Size:       1972 K
-Encoded Size:       770 K (39.08%)
+Encoded Size:       760 K (38.54%)
 ========================================================
 
 ======================= Summary ========================
@@ -107,35 +126,33 @@ Writing output file...done!
 
 Uncompressed Size:  49583 K
 Reduced Size:       6691 K
-Encoded Size:       3238 K (48.4%)
+Encoded Size:       3227 K (48.24%)
 ========================================================
 ```
 
-The meaning of these values are explained here:
-- File Information
-  - Size: The original file size of the source media file
-- Audio Processing
-  - Uncompressed Size: The size of the audio when it's fully uncompressed
-  - Reduced Size: The size of the audio size with the project's target quality settings (1 channel, 4 bits, 44.1 kHz)
-  - Encoded Size: The final size of the reduced audio when it's encoded
-- Video Processing
-  - Uncompressed Size: The size of the video when it's fully uncompressed
-  - Reduced Size: The size of the video size with the project's target quality settings (4 bits, 24 fps, target resolution)
-  - Encoded Size: The final size of the reduced video when it's encoded
-- Summary
-  - Just contains the sum of the audio and video segments and most importantly the final encoded file size
+</details><br>
 
-While there is a player script supplied to playback the encoded media file (without audio), the codec can still dump a mp4 file to be played in any regular video player. Please keep in mind though, that the player might be interpolating the video when you scale it up, making it look very different from the real board, that's why there is the player.py aswell.
+The script outputs three size metrics for the audio and video encoding process:
+- Uncompressed: Size of the **raw data** in its uncompressed form
+- Reduced: Size of the **raw data after downscaling** to the target quality
+- Encoded: Size of the **encoded reduced data** with the compression ratio in comparison to the reduced size
 
-As there is no difference in audio playback, dumping the audio will result in a regular wave file but with the target quality even if the file says 8 bit, the used values are all on 4 bit intervals.
 
-## How to use the player.py
+## Playing the encoded media in a software player
 
-To accurately playback the video portion of the encoded file, this script will create a window with block tiles that are meant to simulate the LEDs on the board. It has a command line interface and it looks like this:
+A software player is included with `player.py` to playback encoded media files without having
+to build a LED board first. This is also helpful if you want to test the output file before
+going through the tedious process of bringing it onto the flash memory of the FPGA.
+
+<details>
+<summary style="color: #ffbb33;">player.py help - click to open</summary>
+
 ```
 usage: player [-h] -i INPUT [-b BLOCKSIZE]
 
 Plays a file that was encoded in the project's media format.
+
+Press [Space] to pause and [m] to mute.
 
 options:
   -h, --help            show this help message and exit
@@ -146,6 +163,16 @@ options:
                         (default: 32)
 ```
 
-It is pretty self explanatory, and if you want to playback a file simple run a command like: `python player.py -i media/demo.enc`
+</details><br>
 
-The blocksize parameter is used to scale up the window by this factor. Meaning, if you have a target file of 8:6 resolution, the window will be too small to be usable, so the player will scale it up by a default of 32 so the window grows to a size of 256:192. Vary this parameter if it is still too small.
+It is pretty self explanatory. You can playback a file at `media/demo.bin` like this:
+```console
+python player.py -i media/demo.bin
+```
+
+> Note: Adjust the blocksize parameter if the window is too big or small with the file's resolution.
+
+
+## Appending the media onto a FPGA bitfile
+
+...
