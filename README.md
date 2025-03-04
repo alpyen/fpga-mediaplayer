@@ -6,8 +6,6 @@ Stuff that needs to be done, may be incomplete and not in order.
 - HDL
   - Implement some sort of luminosity ramp or brightness control
   - Pixels that should be very dim (brightness = 1) can shine very bright.
-- Software
-  - Check if audio only or video only files work
 - Documentation
   - python/README.md
     - Write section about appending it to fpga bitfile (concat.py)

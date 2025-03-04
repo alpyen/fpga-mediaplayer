@@ -47,8 +47,8 @@ except Exception as e:
     exit(0)
 
 # This is done for readability purposes, otherwise the code looks bloated.
-WIDTH = mediafile.WIDTH
-HEIGHT = mediafile.HEIGHT
+WIDTH = mediafile.WIDTH if mediafile.WIDTH != 0 else 32
+HEIGHT = mediafile.HEIGHT if mediafile.HEIGHT != 0 else 24
 BLOCK_SIZE = args.blocksize
 COLORS = ["#" + c * 6 for c in "0123456789abcdef"]
 
@@ -70,9 +70,14 @@ def toggle_playstate(event):
 
     if playing:
         total_pause += now_time - last_pause_time
-        audio_stream.start_stream()
+
+        if audio_available:
+            audio_stream.start_stream()
+
     else:
-        audio_stream.stop_stream()
+        if audio_available:
+            audio_stream.stop_stream()
+
         last_pause_time = now_time
 
 
@@ -104,12 +109,16 @@ frame_photo = ImageTk.PhotoImage(frame_image)
 canvas_image = canvas.create_image(0, 0, anchor="nw", image=frame_photo)
 
 
+audio_available = mediafile.AUDIO_LENGTH > 0
+video_available = mediafile.VIDEO_LENGTH > 0
+
 print("Decoding audio...", end="", flush=True)
 audio_queue = audio_decoder(mediafile.AUDIO)
-print("done!")
+print("done!" + (" (No audio stream detected.)" if not audio_available else ""))
+
 print("Decoding video...", end="", flush=True)
 video_queue = video_decoder(WIDTH * HEIGHT, mediafile.VIDEO)
-print("done!")
+print("done!" + (" (No video stream detected.)" if not video_available else ""))
 
 
 samples_skipped = 0
@@ -178,10 +187,6 @@ def video_callback():
         tk.after(2, video_callback)
         return
 
-    if len(video_queue) == 0:
-        # It does the job.
-        exit(0)
-
     now_time = time.time()
 
     # Frameskip implementation analoguous to the one in audio_callback.
@@ -226,33 +231,54 @@ def video_callback():
     last_framedecode_time = now_time
     frames_played += 1
 
+
     # Instead of sleeping 1ms and checking if we need to display the frame
     # we will just sleep the time until the frame is supposed to be played.
     # This works remarkably well if the decoding process only takes a millisecond or two
     # otherwise it will not play on time.
-    play_time = now_time - playback_started_time - total_pause
-    next_frame_time = frames_played * 1/24
+    if len(video_queue) != 0:
+        play_time = now_time - playback_started_time - total_pause
+        next_frame_time = frames_played * 1/24
 
-    delay = max(int(round((next_frame_time - play_time) * 1000)), 1)
-    tk.after(delay, video_callback)
+        delay = max(int(round((next_frame_time - play_time) * 1000)), 1)
+        tk.after(delay, video_callback)
 
 
 TOTAL_FRAMES = len(video_queue) // WIDTH // HEIGHT
+TOTAL_SAMPLES = len(audio_queue)
 
 def update_title():
-    fps = round(len(frametimes) / sum(frametimes), 1)
-
-    tk.title(
+    title = \
         f"fpga-mediaplayer" \
-        + f" - {args.input}" \
-        + f" - {fps} fps" \
-        + f" - Frame: {frames_played} / {TOTAL_FRAMES}" \
-        + f" - Skipped {frames_skipped} frames and {samples_skipped} samples" \
-        + (" [Paused]" if not playing else "") \
-        + (" [Muted]" if muted else "")
-    )
+        + f" - {args.input}"
 
-    tk.after(5, update_title)
+    if video_available:
+        fps = round(len(frametimes) / sum(frametimes), 1)
+
+        title += "" \
+            + f" - {fps} fps" \
+            + f" - Frame: {frames_played} / {TOTAL_FRAMES} ({frames_skipped} skipped)"
+    else:
+        title += " - No Video"
+
+    if audio_available:
+        trackposition = samples_played // 44100
+
+        title += "" \
+            + f" - Audio: {trackposition} / {TOTAL_SAMPLES // 44100} secs ({samples_skipped} samples skipped)" \
+            + (" [Muted]" if muted else "")
+    else:
+        title += " - No Audio"
+
+    if not playing:
+        title += " [Paused]"
+
+    tk.title(title)
+
+    if len(video_queue) != 0 or len(audio_queue) != 0:
+        tk.after(5, update_title)
+    else:
+        exit(0)
 
 playback_started_time = time.time()
 
@@ -260,8 +286,12 @@ frametimes = deque([.1], 24)
 last_framedecode_time = time.time()
 
 
-audio_stream.start_stream()
-tk.after(1, video_callback)
+if audio_available:
+    audio_stream.start_stream()
+
+if video_available:
+    tk.after(1, video_callback)
+
 tk.after(1, update_title)
 
 tk.mainloop()

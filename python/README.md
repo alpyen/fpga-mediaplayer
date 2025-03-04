@@ -36,8 +36,8 @@ Follow these steps to create the environment:
 
 That's it! Make sure to always activate the environment first before running the scripts.
 
-> Note: Linux users may have to install the `python3-tk` package in order to run the player script
-> as it uses the tkinter module for the GUI.
+> Note: Linux users may have to install the `python3-venv` package in order to create a
+> a virtual environment and `python3-tk` to run the player script which uses tkinter for the GUI.
 
 
 ## Encoding media files into the project format
@@ -73,7 +73,7 @@ options:
                         (default: 32:24)
 ```
 
-</details><br>
+</details>
 
 Encoding a file that is located at `media/demo.mp4` to 8x6 resolution (small LED board) is done like this:<br>
 ```console
@@ -130,7 +130,7 @@ Encoded Size:       3227 K (48.24%)
 ========================================================
 ```
 
-</details><br>
+</details>
 
 The script outputs three size metrics for the audio and video encoding process:
 - Uncompressed: Size of the **raw data** in its uncompressed form
@@ -145,7 +145,7 @@ to build a LED board first. This is also helpful if you want to test the output 
 going through the tedious process of bringing it onto the flash memory of the FPGA.
 
 <details>
-<summary style="color: #ffbb33;">player.py help - click to open</summary>
+<summary>player.py help - click to open</summary>
 
 ```
 usage: player [-h] -i INPUT [-b BLOCKSIZE]
@@ -163,7 +163,7 @@ options:
                         (default: 32)
 ```
 
-</details><br>
+</details>
 
 It is pretty self explanatory. You can playback a file at `media/demo.bin` like this:
 ```console

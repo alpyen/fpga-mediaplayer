@@ -112,8 +112,8 @@ files = sorted(os.listdir(temp_dir))
 video_available = False
 audio_available = False
 
-encoded_audio_samples = []
-encoded_video_samples = []
+encoded_audio_bytes = bytes(0)
+encoded_video_bytes = bytes(0)
 
 if "audio.wav" in files:
     print("Audio stream detected.")
