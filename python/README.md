@@ -175,4 +175,62 @@ python player.py -i media/demo.bin
 
 ## Appending the media onto a FPGA bitfile
 
-...
+In order not to flash the FPGA with the bitfile every time you want to play something from memory
+you can store the bitfile in the flash chip aswell. This way the entire project can be run
+without the need of a PC by preloading the flash with the project and media files.
+
+The <a href="https://digilent.com/reference/programmable-logic/basys-3/reference-manual#fpga_configurations">Basys3 Reference Manual</a>
+states that the uncompressed bitfile can be 17,536,096 bits (2,192,012 Bytes) which is pretty much spot on
+to the size of the actual uncompressed implementation of 2,192,124 Bytes of which we'll use the latter.
+
+Since the bitfile needs to be stored at the beginning of the flash when choosing to boot over QSPI, we can assume
+for the first 2172FCh Bytes to be the bitfile. We can start our mediafile after this offset but should add a small offset
+on top just to be safe.
+
+> Note: This project still compresses the bitfile to save some time, using the additional space gained from compression
+> to put the media at an earlier offset has not been tested.
+
+I picked 21800h for my media file which leaves me with a little bit over 2 MB of space. That offset has to be wired
+into the top level entitiy as the media base address generic, otherwise it'll look at the default location (0).
+
+> Note: While there is no mechanism implemented to scan through the flash chip for media files
+> this can be implemented without too much effort.
+
+`concat.py` can be used to glue the bitfile and mediafile together. It can also concatenate two arbitrary files
+but the semantics are described for the FPGA bitfile and an encoded mediafile.
+
+<details>
+<summary>concat.py help - click to open</summary>
+
+```
+usage: concat [-h] -i INPUT -m MEDIAFILE [-p POSITION] -o OUTPUT
+
+Concatenates two binary files together with an offset.
+
+options:
+  -h, --help            show this help message and exit
+  -i INPUT, --input INPUT
+                        Input fpga bitfile (or already concatenated binfile)
+  -m MEDIAFILE, --mediafile MEDIAFILE
+                        Mediafile to append after the bitfile or at a specific index.
+  -p POSITION, --position POSITION
+                        Place the mediafile at this byte position (decimal or hex).
+                        Existing data will not be overwritten.
+                        (default: append after input file)
+  -o OUTPUT, --output OUTPUT
+                        Output binfile that contains both files.
+```
+
+</details>
+
+All that's left is to call the script (after implementation) and place the mediafile at the given offset like this:
+```console
+python concat.py \
+    -i ../vivado/fpga-mediaplayer.runs/impl_1/fpga-mediaplayer.bit \
+    -m media/demo.bin \
+    -p 0x2172fc \
+    -o media/combined.bin
+```
+
+The output file can be used to program the onboard flash and boot the board over QSPI which is explained
+in the README.md of the vivado subfolder.

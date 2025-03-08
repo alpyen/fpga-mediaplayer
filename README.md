@@ -7,8 +7,6 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Implement some sort of luminosity ramp or brightness control
   - Pixels that should be very dim (brightness = 1) can shine very bright.
 - Documentation
-  - python/README.md
-    - Write section about appending it to fpga bitfile (concat.py)
   - kicad/README.md
   - vivado/README.md
     - Move the Vivado project stuff into the corresponding README
