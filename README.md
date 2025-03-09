@@ -1,4 +1,3 @@
-
 # To-do List
 
 Stuff that needs to be done, may be incomplete and not in order.
@@ -14,7 +13,6 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Clean up main README and docs/ READMEs and restructure
     - One README for subfolders like kicad/ python/
     - Link the sub-READMEs in this project README
-  - System Diagram (Top-Level-View)
 - Vivado
   - What happens if you try to recreate the project on a Vivado installation that is missing the board files?
 
@@ -33,7 +31,8 @@ Watch a demo of this project on YouTube!
 ## Navigation
 1. [Introduction](#introduction)
 2. [Project Goal](#project-goal)
-3. [Vivado Build](#vivado-build)
+3. [Top Level Overview](#top-level-overview)
+4. [Vivado Build](#vivado-build)
    1. [Opening the project](#opening-the-project)
    2. [Saving the project](#saving-the-project)
 
@@ -42,9 +41,10 @@ Watch a demo of this project on YouTube!
 This is a beginner project on hardware development with FPGAs and VHDL to create a system that can
 play audio and video through an FPGA.
 
-A FPGA development board -- here a Digilent Basys3 -- fetches audio and video data stored on the on-board
-flash memory chip, decodes them and drives a Digilent i2s2-PMOD for audio output and a custom designed
-LED matrix as the video display.
+A FPGA development board -- here a <a href="https://digilent.com/reference/programmable-logic/basys-3/start">Digilent Basys3</a>
+-- fetches audio and video data stored on the on-board flash memory chip,
+decodes them and drives a <a href="https://digilent.com/reference/pmod/pmodi2s2/start">Digilent i2s2-PMOD</a>
+for audio output and a custom designedLED matrix as the video display.
 
 Originally the idea was to drive one of these standard Arduino LED shields (14x9 pixels) but that plan
 was scrapped due to the very low resolution.
@@ -85,6 +85,20 @@ there were a lot of topics I wanted to cover (which includes, but is not limited
 Please note that these constraints emerged from the components and devices I have at disposal.
 This project could be done with greater resolution and sound output but the goal is to bring it up
 and learn everything along the way, that's the reason behind this approach.
+
+## Top Level Overview
+
+Here's a top level view of the system. It is build in a modular fashion encapsulating functionality
+such that everything remains as local as possible so each module is easy to understand.
+Dataflow is indicated by the directional arrows.
+
+The Control Unit requests data from the memory driver which (here) accesses the onboard SPI flash.
+It then alternately fills the Audio and Video FIFO which are read by the respective modules
+on the other side. Those decode the data and fill up a FIFO for Audio and BRAMs for Video.
+After the data is available the i2s Master and Board Driver will read the data at the correct time and
+play them back by driving a Digilent i2s2 PMOD and a self designed LED multiplex display.
+
+<img src="docs/top-level-view.svg" />
 
 ## Vivado Build
 
