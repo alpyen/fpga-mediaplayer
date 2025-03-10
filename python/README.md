@@ -1,4 +1,4 @@
-# Python Scripts
+# Python Scripts Documentation
 
 This readme will guide you through the steps necessary to set up and run the python scripts.
 

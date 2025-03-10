@@ -8,19 +8,14 @@ Stuff that needs to be done, may be incomplete and not in order.
 - Documentation
   - kicad/README.md
   - vivado/README.md
-    - Move the Vivado project stuff into the corresponding README
     - Write section about flashing memory and playing back the file
-  - Clean up main README and docs/ READMEs and restructure
-    - One README for subfolders like kicad/ python/
-    - Link the sub-READMEs in this project README
-- Vivado
-  - What happens if you try to recreate the project on a Vivado installation that is missing the board files?
 
 <br>
 Below is the draft of the repository's readme once the To-do List above is completely worked out.
 
 ___
 <br>
+
 
 # fpga-mediaplayer - learning FPGA development
 
@@ -51,8 +46,8 @@ was scrapped due to the very low resolution.
 
 The key focus of this project was to accomplish this vision with certain -- partially arbitrary -- constraints
 and to get the whole thing done while touching on many aspects of FPGA and electronics development.
-
 It is by no means perfect, but it is done while hitting all the project goal's I set for myself.
+
 
 ## Project Goal
 
@@ -85,6 +80,7 @@ there were a lot of topics I wanted to cover (which includes, but is not limited
 Please note that these constraints emerged from the components and devices I have at disposal.
 This project could be done with greater resolution and sound output but the goal is to bring it up
 and learn everything along the way, that's the reason behind this approach.
+
 
 ## Top Level Overview
 
