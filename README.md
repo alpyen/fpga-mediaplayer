@@ -3,12 +3,17 @@
 Stuff that needs to be done, may be incomplete and not in order.
 
 - HDL
+  - Last line does not get the same screen time as other lines
+    - the FSM has to be fixed and the board clock recalculated
   - Implement some sort of luminosity ramp or brightness control
   - Pixels that should be very dim (brightness = 1) can shine very bright.
 - Documentation
-  - kicad/README.md
-  - vivado/README.md
-    - Write section about flashing memory and playing back the file
+  - Move all README.md files into docs/
+  - Write documentation for KiCad PCBs
+  - Write documentation for Vivado
+    - Write section about flashing memory
+  - Write documentation for HDL
+  - Add Documentation section to project README.md
 
 <br>
 Below is the draft of the repository's readme once the To-do List above is completely worked out.

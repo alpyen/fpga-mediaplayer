@@ -228,7 +228,7 @@ All that's left is to call the script (after implementation) and place the media
 python concat.py \
     -i ../vivado/fpga-mediaplayer.runs/impl_1/fpga-mediaplayer.bit \
     -m media/demo.bin \
-    -p 0x2172fc \
+    -p 0x21800h \
     -o media/combined.bin
 ```
 
