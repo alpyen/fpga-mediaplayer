@@ -341,7 +341,7 @@ begin
     )
     port map (
         clock                      => clock10mhz,
-        reset                      => reset,
+        reset                      => reset_final,
 
         -- Video Driver Interface
         video_driver_play          => video_driver_play,
