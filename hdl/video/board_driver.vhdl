@@ -42,7 +42,7 @@ architecture arch of board_driver is
     --   WIDTH * HEIGHT * BRIGHTNESS LEVELS * STROBES PER FRAME * FRAMES PER SECOND
     -- The actual clock rate is somewhat different due to the FSM transitions.
     -- Note: The clock rate can be reduced by merging some FSM states and transitions
-    constant BOARD_CLOCK_RATE: positive := ((((WIDTH + 2) * HEIGHT + 1) * (2 ** SAMPLE_DEPTH - 1) + 1) * STROBES_PER_FRAME - 1) * FRAMES_PER_SECOND;
+    constant BOARD_CLOCK_RATE: positive := (((WIDTH + 2) * (HEIGHT + 1) * (2 ** SAMPLE_DEPTH - 1)) * STROBES_PER_FRAME + 1) * FRAMES_PER_SECOND;
 
     -- Defining an accuracy to achieve of 30 ms of cumulative skew over 4 minutes.
     constant BOARD_CLOCK_ACCURACY: real := 0.030 / 240.0;
@@ -186,11 +186,15 @@ begin
                 if board_clock_history = "001" then
                     state_next <= IDLE;
                     board_apply_row_and_strobe_int_next <= '1';
-                    board_output_enable_n_int_next <= '0';
                 end if;
 
             when IDLE =>
+                -- This fixes the last line being still displayed after the frame has been played
+                -- and no further frames are left to play. It's not pretty but it works.
+                board_output_enable_n_int_next <= '1';
+
                 if frame_available = '1' and board_clock_history = "111" then
+                    board_output_enable_n_int_next <= '0';
                     state_next <= FEED_ROW_DATA;
 
                     frame_pixel_counter_next <= to_unsigned(0, frame_pixel_counter'length);
@@ -259,7 +263,10 @@ begin
                     pixel_x_counter_next <= to_unsigned(0, pixel_x_counter'length);
                     pixel_y_counter_next <= pixel_y_counter + 1;
 
-                    if pixel_y_counter = HEIGHT - 1 then
+                    -- We are scanning one line extra to get rid of the ghosting.
+                    -- If we immediately start from the first line, the last line will light up
+                    -- a little bit aswell.
+                    if pixel_y_counter = HEIGHT then
                         state_next <= CHECK_FOR_FRAME_DONE;
                     end if;
                 end if;
