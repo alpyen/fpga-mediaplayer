@@ -5,7 +5,6 @@ Stuff that needs to be done, may be incomplete and not in order.
 - HDL
   - Implement some sort of luminosity ramp or brightness control
   - Pixels that should be very dim (brightness = 1) can shine very bright.
-  - Flush out the last frame/last line out of the display when playback stops on a white frame.
 - Documentation
   - Move all README.md files into docs/
   - Write documentation for KiCad PCBs
