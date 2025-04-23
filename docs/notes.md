@@ -75,3 +75,6 @@ Contains some thoughts over the development time of the project.
 - Technically there is no real necessity to write a script to merge the bitfile with an encoded file but since the commands are so radically different for Windows and Linux, it's easier to provide a script.
 - PyAudio runs only single-threaded and therefore it's crucial to have minimal latency in the audio callback which feeds the audio buffer.
   - The decode routine is very slow since it's very unoptimized (to showcase the simplicity), so decoding audio while playback causes audible stuttering.
+- The bitdepth of the video for the LED matrix is needlessly high.
+  - Due to the LEDs manufacturing inconsistency and non-linear luminosity ramp there's barely any visible difference.
+  - To make use of the bitdepth a non-linear luminosity ramp has to be implemented and the blocks clock speed has to be dramatically increased due to the additional strobing necessary.

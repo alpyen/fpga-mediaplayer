@@ -1,21 +1,23 @@
 # Media
 
-This document contains all the information about the mediatype used in this project.
+This document contains all the information about the media and codec used in this project - especially the how and why.
 
-First we identify natural constraints which emerge from the devices and peripheral used. Second we set boundary constraints to limit the scope of this project to something doable.
-Lastly there is the specification of the media format.
 
-- [Media](#media)
-  - [Constraints](#constraints)
-  - [Goals to achieve](#goals-to-achieve)
-  - [Specification](#specification)
-  - [Codec](#codec)
-  - [File Structure](#file-structure)
-    - [Header](#header)
-    - [Data](#data)
+## Navigation
+1. [Constraints](#constraints)
+2. [Goals](#goals)
+3. [Codec Specification](#codec-specification)
+4. [File Structure](#file-structure)
+
 
 ## Constraints
-- Digilent Basys3 (Artix7-35T)
+
+Most of the constraints emerged from the Digilent Basys3 development board which is the board
+I wanted to accomplish this project on. Other constraints are purely for educational purposes only
+such as not using pre-existing IP blocks in order to have done most of the workflow myself even though
+this is far from the reality of developing on FPGAs.
+
+- Digilent Basys3 (Artix7-35T FPGA)
 - Flash Chip has 4MB/32Mbit of space available
   - Configuration uses 17,536,096 bits
   - with Configuration: 16,018,336 bits (~1,905K)
@@ -25,7 +27,11 @@ Lastly there is the specification of the media format.
 - Decoder (Software counterpart) has to be implemented in hardware
   - therefore the encoder can't be too complex -> sacrificing on compression ratio
 
-## Goals to achieve
+## Goals
+
+With the idea in mind to playback a certain video (see the demo on the main page), the goals
+were also easy to define. It's mostly about the quality of the media file in relation to the available space onboard.
+
 - Implementation musn't be linked to loaded media
   - Design should be able to handle all kinds of media configurations
     - pad the video if it's smaller, do not play if it's bigger
@@ -42,28 +48,42 @@ Lastly there is the specification of the media format.
   - Channels: Mono
   - Depth: 16 amplitudes (4 bits)
 
-Calculated file size for uncompressed media:
-- Video:
-  - 4 mins * 60 * 32 * 24 pixels * 24 fps * 4 bits
-  - 17,694,720 bits
-- Audio:
-  - 4 mins * 60 * 44,100 Hz * 1 * 4 bits
-  - 42,336,000 bits
-- Total:
-  - 60,030,720 bits
+According to these audio and video configurations the calculated file size for uncompressed media is:
+
+```
+Video: 4 mins * 60 * 32 * 24 pixels * 24 fps * 4 bits => 17,694,720 bits.
+Audio: 4 mins * 60 * 44,100 Hz * 1 channel * 4 bits => 42,336,000 bits.
+----------------------
+Total: 60,030,720 bits
+
+Available (no bitstream):   33,554,432 bits
+Available (with bitstream): 16,018,336 bits
+```
+
+If no compression is used, around 134 seconds (2:14) can be stored on the flash without the bitstream next to it.
+This number drops down to 64 seconds (1:04) if the bitstream is stored next to it.
+
+For the full four minutes, the target file has to be compressed down to 56% of the
+uncompressed file's size which will be tough but achievable while not storing the bitstream on the flash.
+With the bitstream next to the media file, the target file size has to be 26% which is basically impossible
+for a simple and straight forward codec.
+
+> Note: While there is an option in Vivado to compress the bitstream to save space on the flash chip,
+> the calculations have been done without it as its size changes depending on the HDL and is not consistent
+> over different versions of this project. The compression referred to in this document is about the media compression.
 
 
-Around 134 seconds (2:14) are available without any compression at all if the configuration is not present on the flash.
+## Codec Specification
 
-For the full four minutes, the target file has to be compressed down to 56% of the original file size which will be tough, but achievable.  With the configuration the target file size has to be 26% which is basically impossible for a simple and straight forward codec.
+Since the bitwidth of the audio and video are very low it allows us to keep the codec very simple.
 
-## Specification
+It works by encoding the differences of the pixels/samples over time so the "current" sample is
+directly compared to the "previous" sample and then storing a code word for the difference.
+The idea behind this approach is that audio signals consist of waves which have smooth transitions
+and do not rapidly jump. Video data behaves somewhat similarly.
 
-## Codec
-
-Since the bitwidth of the audio and video is so low the codec will be very simple.
-
-The codec works by encoding differences over time so we compare the current sample to encode with the previous sample and write the data according to the table.
+Now all that's left is to define a code that will encode these transitions between samples/pixels.
+In order to pack the data as tight as possible, we will store these code words sequentially on bit-level.
 
 | Coding Table                         | Bit representation |
 |--------------------------------------|--------------------|
@@ -76,44 +96,52 @@ So as an example if the previous sample is a `4` and the current sample is also 
 For the case where the current sample is `5` we simply write the bits `1 0` into the file indicating that the sample is one higher than the previous saving two bits to the non-encoded counterpart.
 For samples that differ too much (e.g. 2 or more) we write `1 1 1` to indicate that the next four bits `x x x x` will define a sample as a whole.
 
-Analysis of some encoded files show that most differences are 0, +-1 and +-2. So even though the last case seems three bits longer than the non-encoded version, it happens less frequently.
+Analysis of some encoded files show that most differences are 0, +-1 and +-2. So even though the last case seems three bits longer than the non-encoded version, it happens less frequently. This code is similar to what a Huffmann tree would generate but the occurences of the differences are not
+analyzed and then encoded based on frequency.
 
-For simplicity's sake audio and video will be padded to full bytes.
-This only happens at the end of the file!
+> Note: Making this a true Huffmann code would be quite easy by storing the encoding inside the media file and parsing it on the hardware
+> but since this yields close to no compression improvements, it was just skipped.
 
-With the encoding out of the way, let's define a simple file header for the control unit to read out the metadata of the encoded media file.
+For simplicity's sake, the whole audio segment and whole video segment will be padded to full bytes.
+**This only happens once at the end of the file segments!**
+
 
 ## File Structure
 
-### Header
+Now all that's left is to define the structure of the encoded media file so it can be properly read on the FPGA.
+We start with the header which contains the necessary information about the media file.
+
+In order to make sure, we are actually reading a media file and not some random data, the header is encapsulated
+with a signature at the beginning with an ASCII 'A' and at the end with an ASCII 'Z' each 1 byte big.
+
+After the first byte, two bytes follow indicating the width and height of the encoded video.
+This information will be used to block playback if the video does not fit onto the LED board with the size
+specified in the Control Unit's generics.
+
+Afterwards a 4 byte field contains the number of audio bytes available formatted as an unsigned integer in little-endian.
+Analogous to the number of audio bytes, the number of vidoe bytes follow.
+
+> Note: While the HDL only supports at most 24 bits for addressing the flash chip, it is more convenient
+> to store the size in 32 bits. Otherwise bit-masking is necessary and bloats the encoding script.
+
+Summarized the header looks lke this:
 
 ```
-"A"         (1B)
+ASCII "A"   (1B)
 Width       (1B)
 Height      (1B)
 #AudioBytes (4B)
 #VideoBytes (4B)
-"Z"         (1B)
-= 12 Bytes
+ASCII "Z"   (1B)
+----------------
+Total:  12 Bytes
 ```
 
-- "A" (1 Byte):
-  - This is part of the signature so the control unit can make sure that the contents at the given memory location (to look for the media) is actually a valid encoded file so we don't read garbage. Binary representation in 8-Bit ASCII.
-- "Width" (1 Byte):
-  - Unsigned byte that determines the width of the encoded video.
-- "Height" (1 Byte):
-  - Unsigned Byte that determines the height of the encoded video.
-- #AudioBytes (4 Bytes):
-  - Little Endian encoded unsigned integer that contains the number of audio bytes contained within the media file.
-- #VideoBytes (4 Bytes):
-  - Little Endian encoded unsigned integer that contains the number of video bytes contained within the media file.
-- "Z" (1 Byte):
-  - The end of the signature, analog to the "A". Binary representation in 8-Bit ASCII.
+As you can see the header contains little information about the metadata of the encoded file
+since it's mostly irrelevant for itself or the modules downstream.
+The only reason the resolution is encoded is to ease the use of the player script and perhaps
+modify the board driver in the future in such a way, that it will pad the video if the encoded file is smaller than its display.
 
-As you can see the header contains little information about the metadata of the encoded file since it's mostly irrelevant for itself or the modules downstream.
-The only reason the resolution is encoded is to ease the use of the player script and perhaps modify the board driver in the future in such a way, that it will pad the video if the encoded file is smaller than its display.
-
-### Data
-
-Audio and video data follow immediately the header with the complete audio first, then video.
-The data is **not** interleaved.
+Immediately after the header the encoded audio and video begin. First all audio bytes are written
+and then the video bytes. **The data is not interleaved.** This means that the audio (if present)
+starts at file offset `0xC` (12) of the file, and video (if present) starts at offset `0xC + #AudioBytes`.

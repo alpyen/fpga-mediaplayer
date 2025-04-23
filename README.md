@@ -2,16 +2,15 @@
 
 Stuff that needs to be done, may be incomplete and not in order.
 
-- HDL
-  - Implement some sort of luminosity ramp or brightness control
-  - Pixels that should be very dim (brightness = 1) can shine very bright.
 - Documentation
-  - Move all README.md files into docs/
+  - Write docs/README.md
+  - Add Documentation section to project README.md
   - Write documentation for KiCad PCBs
   - Write documentation for Vivado
-    - Write section about flashing memory
+    - Regenerating the project from tcl
+    - Saving the project in tcl
+    - How to burn media/bitfile onto onboard flash memory
   - Write documentation for HDL
-  - Add Documentation section to project README.md
 
 <br>
 Below is the draft of the repository's readme once the To-do List above is completely worked out.
@@ -34,6 +33,7 @@ Watch a demo of this project on YouTube!
    1. [Opening the project](#opening-the-project)
    2. [Saving the project](#saving-the-project)
 
+
 ## Introduction
 
 This is a beginner project on hardware development with FPGAs and VHDL to create a system that can
@@ -49,7 +49,7 @@ was scrapped due to the very low resolution.
 
 The key focus of this project was to accomplish this vision with certain -- partially arbitrary -- constraints
 and to get the whole thing done while touching on many aspects of FPGA and electronics development.
-It is by no means perfect, but it is done while hitting all the project goal's I set for myself.
+It is by no means perfect, but it is done while hitting all the project's goals I set for myself.
 
 
 ## Project Goal
