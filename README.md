@@ -7,8 +7,6 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Add Documentation section to project README.md
   - Write documentation for KiCad PCBs
   - Write documentation for Vivado
-    - Regenerating the project from tcl
-    - Saving the project in tcl
     - How to burn media/bitfile onto onboard flash memory
   - Write documentation for HDL
 
@@ -29,9 +27,6 @@ Watch a demo of this project on YouTube!
 1. [Introduction](#introduction)
 2. [Project Goal](#project-goal)
 3. [Top Level Overview](#top-level-overview)
-4. [Vivado Build](#vivado-build)
-   1. [Opening the project](#opening-the-project)
-   2. [Saving the project](#saving-the-project)
 
 
 ## Introduction
@@ -98,20 +93,3 @@ After the data is available the i2s Master and Board Driver will read the data a
 play them back by driving a Digilent i2s2 PMOD and a self designed LED multiplex display.
 
 <img src="docs/top-level-view.svg" />
-
-## Vivado Build
-
-This project was developed using Xilinx Vivado using the non-project mode.
-
-### Opening the project
-The vivado project has to be regenerated from the project tcl file.
-Simply run Vivado and use the tcl console to `cd` into the vivado subfolder of this repository and run `source ./fpga-mediaplayer.tcl`.
-
-### Saving the project
-If you want to update the tcl file make sure to pass the correct project folder.
-Vivado creates a subfolder with the name of the project by default which creates unnecessary nesting so you need to run the tcl command manually.
-
-To write the project tcl make sure you're in the vivado subfolder and run this command:<br>`write_project_tcl -target_proj_dir . fpga-mediaplayer.tcl -force`
-
-> Note: Vivado stores absolute paths in the tcl comments, make sure to delete those if you don't want them public.
-They can be found at the very top in the big comment.

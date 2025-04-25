@@ -1,4 +1,4 @@
-# Media
+# Media Documentation
 
 This document contains all the information about the media and codec used in this project - especially the how and why.
 
