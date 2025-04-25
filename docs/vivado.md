@@ -9,7 +9,7 @@ This document guides you through the steps in Vivado to get this project running
    2. [Saving](#saving)
 2. [Simulation differences](#simulation-differences)
 3. [Synthesizing bitfile](#synthesizing-bitfile)
-4. [Flashing onto the FPGA](#flashing-onto-the-fpga)
+4. [Flashing the FPGA](#flashing-the-fpga)
 
 
 ## Managing the project
@@ -63,7 +63,7 @@ Even though I mainly verified the circuit with behavioral simulation, it can
 take up a lot of time to simulate the peripheral components such as the
 flash chip or the LED board.
 
-For the simulation only the small version of the LED board (8x6) is simulated
+For the simulation, only the small version of the LED board (8x6) is simulated
 and the flash chip has not only been capped to 8 kilobytes (instead of 4 Megabytes) but also only implements the basic READ command.
 That also means that the media files ingested into the simulation are also
 rather tiny.
@@ -73,7 +73,7 @@ on the real hardware. This has also been disabled for the simulation.
 
 These differences are toggled through the parameter `SIMULATION` in the
 top level entity's generic map which is false by default but enabled
-by the testbench `hdl/fpga_mediaplayer_tb.vhdl`.
+by the testbench file `sim/fpga_mediaplayer_tb.vhdl`.
 
 With these modifications the simulation time is cut down to a fraction of the
 time actually needed for the full hardware.
@@ -90,4 +90,46 @@ and adjust your constraints accordingly.
 If everything is set, you can directly generate the bitstream.
 
 
-## Flashing onto the FPGA
+## Flashing the FPGA
+
+Loading the synthesized bitfile onto the FPGA is done the usual way so we'll only
+discuss the steps to write the bitstream and media on the onboard flash memory
+and boot it from there. See <a href="python.md">Python Scripts Documentation</a>
+on how to generate the media files or combine them with the bitstream.
+
+> Note: The project supports only loading the media file through an SPI connection
+> which means only boards that have an onboard flash memory with SPIs are
+> supported. Loading the media through USB or other means is theoretically
+> possible but outside the scope of this project.
+
+Plug in your board and connect to it via the Vivado hardware manager.
+
+First we need to set up the memory configuration. As stated in the
+<a href="memory.md">Memory Documentation</a> the Basys3 comes with different
+memory chips - I happend to have the MX25L3233F.
+Right click the xc7a35t chip and select "Add Configuration Memory Device...".
+Search for the chip you have, you may not find the exact one but as long
+as the name pops up on the alias column it's fine.
+
+Vivado will prompt you to program the memory device, you can select "no".
+Programming this through the hardware manager is done by right clicking the
+memory chip entry that popped up below the chip in the hardware window.
+Select the option "Program Configuration Memory Device...".
+
+In the following window select an encoded media file or a bitstream concatenated
+with a mediafile and click on "OK". The programming will take a few seconds
+depending on how big the file size is.
+
+> Note: Flashing will fail if the file to write is larger than the memory capacity.
+
+Programming the flash will load a different bitstream onto the FPGA so
+reprogram the FPGA with the bitstream afterwards if you don't have the bitstream
+burned onto the flash chip.
+
+If you've opted to write the bitstream also on the flash make sure you
+power off the board, move the "JP1" boot mode jumper to QSPI from USB
+and power it back up.
+
+Once everything is set up correctly, you should be able to play back the media
+file by pressing the right push button on the board and resetting the board by
+pressing the left push button.

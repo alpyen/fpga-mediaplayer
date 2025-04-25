@@ -6,8 +6,6 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Write docs/README.md
   - Add Documentation section to project README.md
   - Write documentation for KiCad PCBs
-  - Write documentation for Vivado
-    - How to burn media/bitfile onto onboard flash memory
   - Write documentation for HDL
 
 <br>
