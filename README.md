@@ -7,6 +7,7 @@ Stuff that needs to be done, may be incomplete and not in order.
   - Add Documentation section to project README.md
   - Write documentation for KiCad PCBs
   - Write documentation for HDL
+- Migrate to KiCAD 9.0
 
 <br>
 Below is the draft of the repository's readme once the To-do List above is completely worked out.

@@ -1,9 +1,11 @@
-# KiCad - only track the project, schematics and pcb file
+# KiCad - only track the project, schematics, pcb file and symbol libraries
 kicad/**
 !kicad/**/
 !kicad/**/*.kicad_pcb
 !kicad/**/*.kicad_sch
 !kicad/**/*.kicad_pro
+!kicad/**/*.kicad_sym
+!kicad/**/*sym-lib-table
 
 # Vivado - only track the project tcl, and xci from generated IP
 vivado/**
