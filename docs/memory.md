@@ -1,4 +1,4 @@
-# Memory
+# Memory Considerations
 
 Notes on the memory driver interfacing with the onboard Macronix MX25L3233F ([Datasheet](https://www.macronix.com/Lists/Datasheet/Attachments/8933/MX25L3233F,%203V,%2032Mb,%20v1.7.pdf)).
 
@@ -7,7 +7,12 @@ Notes on the memory driver interfacing with the onboard Macronix MX25L3233F ([Da
 The onboard flash chip has different READ commands, to figure out which one we should use we have to determine
 the minimum bandwidth from the media file.
 
-The [Bandwidth minimum](memory.md#goals-to-achieve) is 161,928 bits/s which is 20,241 B/s.
+The [Bandwidth minimum](media.md#goals) for a four minute uncompressed media file is 250,128 bits/s (31,266 B/s). Since this file is being encoded,
+the file size will shrink and the bandwidth requirement will decrease too.
+For the unlikely case of the absolute worst case however, this requirement
+rises to 437,724 bits/s (54,715.5 B/s).
+Usually the file will shrink to around half of it's original size.
+
 Now we need to calculate the minimum clock frequency for the FPGA to achieve this bandwidth.
 
 The standard READ command `(p.29, 10-7. Read Data Bytes (READ))` needs 8 cycles for the command, 24 cycles for the address and 8 cycles to return the data without pipelining which is 40 cycles in total.
