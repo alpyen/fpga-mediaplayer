@@ -96,6 +96,8 @@ So as an example if the previous sample is a `4` and the current sample is also 
 For the case where the current sample is `5` we simply write the bits `1 0` into the file indicating that the sample is one higher than the previous saving two bits to the non-encoded counterpart.
 For samples that differ too much (e.g. 2 or more) we write `1 1 1` to indicate that the next four bits `x x x x` will define a sample as a whole.
 
+Since there is no previous sample when encoding the first sample we will hardcode this to be 0 for both audio and video.
+
 Analysis of some encoded files show that most differences are 0, +-1 and +-2. So even though the last case seems three bits longer than the non-encoded version, it happens less frequently. This code is similar to what a Huffmann tree would generate but the occurences of the differences are not
 analyzed and then encoded based on frequency.
 

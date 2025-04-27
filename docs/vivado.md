@@ -94,7 +94,7 @@ If everything is set, you can directly generate the bitstream.
 
 Loading the synthesized bitfile onto the FPGA is done the usual way so we'll only
 discuss the steps to write the bitstream and media on the onboard flash memory
-and boot it from there. See <a href="python.md">Python Scripts Documentation</a>
+and boot it from there. See [Python Scripts Documentation](python.md)
 on how to generate the media files or combine them with the bitstream.
 
 > Note: The project supports only loading the media file through an SPI connection
@@ -105,7 +105,7 @@ on how to generate the media files or combine them with the bitstream.
 Plug in your board and connect to it via the Vivado hardware manager.
 
 First we need to set up the memory configuration. As stated in the
-<a href="memory.md">Memory Documentation</a> the Basys3 comes with different
+[Memory Documentation](memory.md) the Basys3 comes with different
 memory chips - I happend to have the MX25L3233F.
 Right click the xc7a35t chip and select "Add Configuration Memory Device...".
 Search for the chip you have, you may not find the exact one but as long

@@ -3,10 +3,11 @@
 Stuff that needs to be done, may be incomplete and not in order.
 
 - Documentation
-  - Write docs/README.md
-  - Add Documentation section to project README.md
-  - Write documentation for KiCad PCBs
-  - Write documentation for HDL
+  - Write docs/kicad.md
+  - Write docs/hdl.md
+  - Update docs/README.md with kicad and hdl description
+- Main README.md
+  - Record YouTube-Video and link it
 
 <br>
 Below is the draft of the repository's readme once the To-do List above is completely worked out.
@@ -21,10 +22,12 @@ Hi there, and welcome to my FPGA project to deep dive into FPGA development and 
 
 Watch a demo of this project on YouTube!
 
+
 ## Navigation
 1. [Introduction](#introduction)
 2. [Project Goal](#project-goal)
 3. [Top Level Overview](#top-level-overview)
+4. [Documentation](#documentation)
 
 
 ## Introduction
@@ -91,3 +94,10 @@ After the data is available the i2s Master and Board Driver will read the data a
 play them back by driving a Digilent i2s2 PMOD and a self designed LED multiplex display.
 
 <img src="docs/top-level-view.svg" />
+
+
+## Documentation
+
+A technical reference as well as project notes and decision making
+can be found in the documentation.
+Find the documentation overview [here](docs/README.md).
