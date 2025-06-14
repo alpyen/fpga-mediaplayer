@@ -27,7 +27,8 @@ with a short description:
 - [General Notes](notes.md)
   - Scratchpad used during the development of the project to note down thoughts.
 - [HDL Code](hdl.md)
-  - TODO!
+  - Notes about the inner workings of the modules.
+  - Notes about the high level interactions between the moduels.
 - [KiCAD PCBs](kicad.md)
   - TODO!
 - [Python Scripts](python.md)

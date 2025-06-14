@@ -98,6 +98,6 @@ play them back by driving a Digilent i2s2 PMOD and a self designed LED multiplex
 
 ## Documentation
 
-A technical reference as well as project notes and decision making
+A technical overview as well as project notes and decision making
 can be found in the documentation.
 Find the documentation overview [here](docs/README.md).
