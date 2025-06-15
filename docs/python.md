@@ -169,8 +169,9 @@ It is pretty self explanatory. You can playback a file at `media/demo.bin` like 
 ```console
 python player.py -i media/demo.bin
 ```
+<img src="player.gif" />
 
-> Note: Adjust the blocksize parameter if the window is too big or small with the file's resolution.
+###### Clip Source: <a href="https://www.nicovideo.jp/watch/sm8628149">[Touhou] Bad Apple!! PV [Shadow]</a>
 
 
 ## Appending the media onto a FPGA bitfile
