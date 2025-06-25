@@ -4,7 +4,6 @@ Stuff that needs to be done, may be incomplete and not in order.
 
 - Documentation
   - Write docs/kicad.md
-  - Update docs/README.md with kicad and hdl description
 - Main README.md
   - Record YouTube-Video and link it
 

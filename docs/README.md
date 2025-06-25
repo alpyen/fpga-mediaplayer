@@ -30,7 +30,8 @@ with a short description:
   - Notes about the inner workings of the modules.
   - Notes about the high level interactions between the moduels.
 - [KiCAD PCBs](kicad.md)
-  - TODO!
+  - General overview and considerations of the PCBs
+  - Notes about the different LED Board iterations
 - [Python Scripts](python.md)
   - Generate a virtual environment to execute python scripts in.
   - Encode media files into the project format.
