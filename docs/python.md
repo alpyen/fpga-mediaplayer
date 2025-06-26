@@ -73,7 +73,7 @@ options:
                         (default: 32:24)
 ```
 
-</details>
+</details><br>
 
 Encoding a file that is located at `media/demo.mp4` to 8x6 resolution (small LED board) is done like this:<br>
 ```console
@@ -130,7 +130,7 @@ Encoded Size:       3227 K (48.24%)
 ========================================================
 ```
 
-</details>
+</details><br>
 
 The script outputs three size metrics for the audio and video encoding process:
 - Uncompressed: Size of the **raw data** in its uncompressed form
@@ -163,16 +163,20 @@ options:
                         (default: 32)
 ```
 
-</details>
+</details><br>
 
 It is pretty self explanatory. You can playback a file at `media/demo.bin` like this:
 ```console
 python player.py -i media/demo.bin
 ```
-<img src="player.gif" />
 
-###### Clip Source: <a href="https://www.nicovideo.jp/watch/sm8628149">[Touhou] Bad Apple!! PV [Shadow]</a>
+After a small amount of time to decode the file (check the console), the player will show up:
+<div align="center" style="font-size: 12px;">
+    <img src="images/player.gif" /><br>
+    Clip Source: <a href="https://www.nicovideo.jp/watch/sm8628149">[Touhou] Bad Apple!! PV [Shadow]</a>
+</div><br>
 
+You can pause/play by pressing [Space] and mute/unmute the audio by pressing [m].
 
 ## Appending the media onto a FPGA bitfile
 

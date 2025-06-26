@@ -26,7 +26,7 @@ To better illustrate how the modules interconnect, here's the top level view of 
 It is not exactly identical to the actual code as some modules are contained within others but the general
 dataflow is shown pretty well.
 
-<img src="top-level-view.svg" />
+<img src="images/top-level-view.svg" />
 
 
 ## Top Level Entity (TLE)

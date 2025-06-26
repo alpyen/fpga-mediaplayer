@@ -2,8 +2,6 @@
 
 Stuff that needs to be done, may be incomplete and not in order.
 
-- Documentation
-  - Write docs/kicad.md
 - Main README.md
   - Record YouTube-Video and link it
 
@@ -91,7 +89,7 @@ on the other side. Those decode the data and fill up a FIFO for Audio and BRAMs 
 After the data is available the i2s Master and Board Driver will read the data at the correct time and
 play them back by driving a Digilent i2s2 PMOD and a self designed LED multiplex display.
 
-<img src="docs/top-level-view.svg" />
+<img src="docs/images/top-level-view.svg" />
 
 
 ## Documentation
