@@ -11,8 +11,10 @@ This document guides you through the steps in Vivado to get this project running
 3. [Synthesizing bitfile](#synthesizing-bitfile)
 4. [Flashing the FPGA](#flashing-the-fpga)
 
-
 ## Managing the project
+
+> Note: This project was developed with Vivado 2023.2 and uses basic Xilinx IP cores
+> which should be also be compatible with previous/future versions of Vivado.
 
 Vivado generates a lot of intermediate files when synthesizing a project which
 dramatically increases the repository's size and bloats it unncessarily.
