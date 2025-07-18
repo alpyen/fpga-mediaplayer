@@ -1,22 +1,12 @@
-# To-do List
-
-Stuff that needs to be done, may be incomplete and not in order.
-
-- Main README.md
-  - Record YouTube-Video and link it
-
-<br>
-Below is the draft of the repository's readme once the To-do List above is completely worked out.
-
-___
-<br>
-
-
 # fpga-mediaplayer - learning FPGA development
 
 Hi there, and welcome to my FPGA project to deep dive into FPGA development and everything around it.
 
-Watch a demo of this project on YouTube!
+Watch a demo of this project on YouTube by clicking on this picture!
+
+<a href="https://www.youtube.com/watch?v=gHJqdB4B8SA">
+    <img style="width: 50%;" src="https://i.ytimg.com/vi/gHJqdB4B8SA/hq720.jpg" />
+</a>
 
 
 ## Navigation
@@ -24,6 +14,7 @@ Watch a demo of this project on YouTube!
 2. [Project Goal](#project-goal)
 3. [Top Level Overview](#top-level-overview)
 4. [Documentation](#documentation)
+5. [Todo-List](#todo-list)
 
 
 ## Introduction
@@ -97,3 +88,9 @@ play them back by driving a Digilent i2s2 PMOD and a self designed LED multiplex
 A technical overview as well as project notes and decision making
 can be found in the documentation.
 Find the documentation overview [here](docs/README.md).
+
+
+## Todo-List
+
+- KiCAD docs
+  - Add parts list under pcb renders
