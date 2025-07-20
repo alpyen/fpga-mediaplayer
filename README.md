@@ -92,5 +92,5 @@ Find the documentation overview [here](docs/README.md).
 
 ## Todo-List
 
-- KiCAD docs
-  - Add parts list under pcb renders
+- Top Level Overview
+  - fix svg that it also works on light mode

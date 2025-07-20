@@ -87,6 +87,24 @@ input voltage.
     KiCAD 3D Render of the Small LED Board v1
 </div><br>
 
+<div align="center">
+<details>
+    <summary>Bill of Materials - click to open</summary>
+
+| Type             | Component Name | Amount |
+| ---------------- | -------------- | ------ |
+| LED              | QUAD 1802O025  | 48     |
+| N-channel MOSFET | IRLZ44N        | 14     |
+| P-channel MOSFET | IRF4905        | 6      |
+| Shift IC         | 74HC595        | 3      |
+| Resistor         | 66 Ω, 1/4 W    | 8      |
+| Resistor         | 1k Ω, 1/4 W    | 26     |
+| Pin Socket       | 2x4 2.54mm     | 1      |
+| Power Input      | Barrel Jack    | 1      |
+
+</details>
+</div>
+
 The shift registers are driven by the FPGA through logic-level-shifter transistors.
 Supplying a logic '1' (3.3V) to the gate of the transistor drives the shift regiters'
 pins actively low while supplying a logic '0' (0V) causes the transistor
@@ -128,6 +146,28 @@ the shortcomings of the first one.
     <img style="width: 45%;" src="images/small_led_board_v2_back_render.jpg" /><br>
     KiCAD 3D Render of the Small LED Board v2
 </div><br>
+
+<div align="center">
+<details>
+    <summary>Bill of Materials - click to open</summary>
+
+| Type             | Component Name | Amount |
+| ---------------- | -------------- | ------ |
+| LED              | QUAD 1802O025  | 48     |
+| P-channel MOSFET | SQ2351CES      | 6      |
+| Buffer IC        | 74HCT541       | 1      |
+| Shift IC         | 74HCT595       | 1      |
+| Shift IC         | TPIC6B595N     | 1      |
+| Capacitor        | 100 nF         | 3      |
+| Resistor         | 1M Ω, 1/4 W    | 12     |
+| Resistor         | 150 Ω, 1/4 W   | 6      |
+| Resistor         | 56 Ω, 1/4 W    | 8      |
+| Pin Header       | 1x2 2.54mm     | 1      |
+| Pin Header       | 2x5 2.54mm     | 1      |
+| Power Input      | Barrel Jack    | 1      |
+
+</details>
+</div>
 
 The shift registers for the column selection along with the MOSFETs were
 switched out with a open-drain power shift register TPIC6B595N. Unlike the
@@ -182,6 +222,19 @@ and having a row-column interface allows this matrix to be used for other projec
     KiCAD 3D Render of the Fullsize LED Board Display
 </div><br>
 
+<div align="center">
+<details>
+    <summary>Bill of Materials - click to open</summary>
+
+| Type       | Component Name | Amount |
+| ---------- | -------------- | ------ |
+| LED        | QUAD 1802O025  | 768    |
+| Pin Socket | 1x32 2.54mm    | 1      |
+| Pin Socket | 1x24 2.54mm    | 1      |
+
+</details>
+</div>
+
 The header on the right side is used to select a row and connects to the LED anodes, while
 the header on the bottom is used to select the columns and connects to the LED cathodes.
 
@@ -195,6 +248,29 @@ remains pretty much the same concentrating all ICs in the bottom right corner.
     <img style="width: 45%;" src="images/fullsize_led_board_driver_back_render.jpg" /><br>
     KiCAD 3D Render of the Fullsize LED Board Driver
 </div><br>
+
+<div align="center">
+<details>
+    <summary>Bill of Materials - click to open</summary>
+
+| Type             | Component Name | Amount |
+| ---------------- | -------------- | ------ |
+| P-channel MOSFET | SQ2351CES      | 24     |
+| Buffer IC        | 74HCT541       | 1      |
+| Shift IC         | 74HCT595       | 3      |
+| Shift IC         | TPIC6B595N     | 4      |
+| Capacitor        | 100 nF         | 8      |
+| Resistor         | 10k Ω, 1/4 W   | 30     |
+| Resistor         | 150 Ω, 1/4 W   | 24     |
+| Resistor         | 20 Ω, 1/4 W    | 32     |
+| Pin Header       | 1x2 2.54mm     | 1      |
+| Pin Header       | 2x5 2.54mm     | 1      |
+| Pin Socket       | 1x32 2.54mm    | 1      |
+| Pin Socket       | 1x24 2.54mm    | 1      |
+| Power Input      | Barrel Jack    | 1      |
+
+</details>
+</div>
 
 A design quirk of this stacked/dual PCB approach is that the view on the left (front) is what you'd see through the LED matrix. Turning around the whole assembly reveals the picture
 on the right (back) with the components facing the table. This has been done to be
