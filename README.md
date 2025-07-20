@@ -14,7 +14,6 @@ Watch a demo of this project on YouTube by clicking on this picture!
 2. [Project Goal](#project-goal)
 3. [Top Level Overview](#top-level-overview)
 4. [Documentation](#documentation)
-5. [Todo-List](#todo-list)
 
 
 ## Introduction
@@ -80,7 +79,10 @@ on the other side. Those decode the data and fill up a FIFO for Audio and BRAMs 
 After the data is available the i2s Master and Board Driver will read the data at the correct time and
 play them back by driving a Digilent i2s2 PMOD and a self designed LED multiplex display.
 
-<img src="docs/images/top-level-view.svg" />
+<picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/top-level-view-dark.png">
+    <img src="docs/images/top-level-view-light.png">
+</picture>
 
 
 ## Documentation
@@ -88,9 +90,3 @@ play them back by driving a Digilent i2s2 PMOD and a self designed LED multiplex
 A technical overview as well as project notes and decision making
 can be found in the documentation.
 Find the documentation overview [here](docs/README.md).
-
-
-## Todo-List
-
-- Top Level Overview
-  - fix svg that it also works on light mode
