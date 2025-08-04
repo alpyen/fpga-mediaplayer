@@ -8,14 +8,16 @@ This document will give you an overview of the project's schematics and PCBs.
 
 ## Navigation
 
-1. [KiCAD Specifics](#kicad-specifics)
-2. [General overview and considerations](#general-overview-and-considerations)
-3. [Small LED Board](#small-led-board)
-   1. [v1 - Proof of Concept](#v1---proof-of-concept)
-   2. [v2 - Improvements and Fabrication](#v2---improvements-and-fabrication)
-4. [Fullsize LED Board](#fullsize-led-board)
-   1. [Display PCB](#display-pcb)
-   2. [Driver PCB](#driver-pcb)
+- [KiCAD PCBs Documentation](#kicad-pcbs-documentation)
+  - [Navigation](#navigation)
+  - [KiCAD Specifics](#kicad-specifics)
+  - [General overview and considerations](#general-overview-and-considerations)
+  - [Small LED Board](#small-led-board)
+    - [v1 - Proof of Concept](#v1---proof-of-concept)
+    - [v2 - Improvements and Fabrication](#v2---improvements-and-fabrication)
+  - [Fullsize LED Board](#fullsize-led-board)
+    - [Display PCB](#display-pcb)
+    - [Driver PCB](#driver-pcb)
 
 
 ## KiCAD Specifics
@@ -163,7 +165,7 @@ the shortcomings of the first one.
 | Resistor         | 150 Ω, 1/4 W   | 6      |
 | Resistor         | 56 Ω, 1/4 W    | 8      |
 | Pin Header       | 1x2 2.54mm     | 1      |
-| Pin Header       | 2x5 2.54mm     | 1      |
+| Pin Header       | 2x6 2.54mm     | 1      |
 | Power Input      | Barrel Jack    | 1      |
 
 </details>
@@ -264,7 +266,7 @@ remains pretty much the same concentrating all ICs in the bottom right corner.
 | Resistor         | 150 Ω, 1/4 W   | 24     |
 | Resistor         | 20 Ω, 1/4 W    | 32     |
 | Pin Header       | 1x2 2.54mm     | 1      |
-| Pin Header       | 2x5 2.54mm     | 1      |
+| Pin Header       | 2x6 2.54mm     | 1      |
 | Pin Socket       | 1x32 2.54mm    | 1      |
 | Pin Socket       | 1x24 2.54mm    | 1      |
 | Power Input      | Barrel Jack    | 1      |

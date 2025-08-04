@@ -9,8 +9,8 @@
 	(paper "A4")
 	(title_block
 		(title "Fullsize LED Board (Driver)")
-		(date "2024-08-17")
-		(rev "v1.1")
+		(date "2025-08-04")
+		(rev "v1.2")
 	)
 	(layers
 		(0 "F.Cu" signal)
@@ -5140,6 +5140,7 @@
 		(property "Reference" "J3"
 			(at 5.655 -2.27 0)
 			(layer "F.SilkS")
+			(hide yes)
 			(uuid "fbaae13e-82b2-4866-b6db-087532dda562")
 			(effects
 				(font
