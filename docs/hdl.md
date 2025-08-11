@@ -27,8 +27,8 @@ It is not exactly identical to the actual code as some modules are contained wit
 dataflow is shown pretty well.
 
 <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/top-level-view-dark.png">
-    <img src="docs/images/top-level-view-light.png">
+    <source media="(prefers-color-scheme: dark)" srcset="images/top-level-view-dark.png">
+    <img src="images/top-level-view-light.png">
 </picture>
 
 
